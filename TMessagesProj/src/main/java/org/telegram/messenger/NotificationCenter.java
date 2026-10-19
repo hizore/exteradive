@@ -299,6 +299,10 @@ public class NotificationCenter {
     public static final int didReceiveCall = totalEvents++;
     public static final int emojiLoaded = totalEvents++;
     public static final int invalidateMotionBackground = totalEvents++;
+    // exteradive: события функций DiveLite
+    public static final int DiveGramBadgesChanged = totalEvents++;
+    public static final int DiveGramStreakChanged = totalEvents++;
+    public static final int DiveGramNftsChanged = totalEvents++;
     public static final int closeOtherAppActivities = totalEvents++;
     public static final int cameraInitied = totalEvents++;
     public static final int didReplacedPhotoInMemCache = totalEvents++;

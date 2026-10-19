@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="OpenExteraPlugins">الإضافات</string>
-    <string name="PluginsSafeMode">الوضع الآمن</string>
-    <string name="PluginsSafeModeEnabled">تم تفعيل الوضع الآمن. يسري مفعوله عند التشغيل التالي.</string>
-    <string name="PluginsSafeModeDisabled">تم إيقاف الوضع الآمن. يسري مفعوله عند التشغيل التالي.</string>
-    <string name="PluginsSafeModeSummary">عند تفعيل الوضع الآمن، لا تُحمَّل أي إضافات. استخدمه إذا تسببت إضافة في تعطيل التطبيق.</string>
-    <string name="PluginsUnsafeMode">الوضع غير الآمن</string>
-    <string name="PluginsUnsafeModeInfo">تعمل الإضافات دون أي قيود</string>
-    <string name="PluginsUnsafeModeSummary">لا تُطلب الأذونات ولا تُفرض. تحصل كل إضافة على الرسائل والملفات والشبكة والخطافات والشيفرة الأصلية بغض النظر عن مستواها. فعّله فقط للإضافات التي كتبتها أو تثق بها تمامًا.</string>
-    <string name="PluginsUnsafeModeConfirm">هذا يزيل كل الحواجز بين الإضافات وبياناتك. ستتمكن الإضافة من قراءة محادثاتك وإرسال الرسائل باسمك والاستيلاء على ملفاتك وتشغيل شيفرة أصلية دون أي قيود على الإطلاق.\n\nفعّله فقط إذا كنت تفهم ما تقوم بتثبيته.</string>
-    <string name="PluginsUnsafeModeEnable">التفعيل على أي حال</string>
-    <string name="PluginsUnsafeModeOn">الوضع غير الآمن مفعّل</string>
-    <string name="PluginsUnsafeModeActive">هذه المفاتيح لا تحدد شيئًا ما دام الوضع غير الآمن مفعّلًا: الإضافة تملك كل شيء بالفعل. أوقف الوضع غير الآمن في إعدادات الإضافات لاستعادتها.</string>
     <string name="PluginsDeveloperMode">وضع المطوّر</string>
     <string name="PluginsInstallFromFile">التثبيت من ملف</string>
     <string name="PluginsInstalling">جارٍ تثبيت الإضافة…</string>
@@ -183,6 +172,4 @@
     <string name="PluginOverlayTitle">الظهور فوق التطبيقات الأخرى</string>
     <string name="PluginOverlayText">تريد %1$s عرض نافذة فوق التطبيقات الأخرى. اسمح بذلك في إعدادات النظام ثم حاول مرة أخرى.</string>
     <string name="PluginOverlayOpen">فتح الإعدادات</string>
-    <string name="PluginsSafeModeEnabledNow">تم تفعيل الوضع الآمن، وأُوقفت جميع الإضافات.</string>
-    <string name="PluginsSafeModeDisabledNow">تم إيقاف الوضع الآمن، جارٍ تحميل الإضافات.</string>
 </resources>

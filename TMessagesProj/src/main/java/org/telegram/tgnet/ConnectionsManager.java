@@ -440,18 +440,6 @@ public class ConnectionsManager extends BaseController {
 
         // --- exteraless plugins: pre_request_hook (CANCEL = запрос не уходит) ---
         TLObject pluginRequest = object;
-        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
-            app.exteraless.plugins.HookResult preHook = app.exteraless.plugins.PluginsController.getInstance()
-                    .executePreRequestHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(object), object);
-            if (preHook.isCancel()) {
-                FileLog.d("Plugins: request " + object.getClass().getSimpleName() + " cancelled by plugin");
-                return;
-            }
-            TLObject replacement = preHook.replacement(TLObject.class);
-            if (replacement != null) {
-                pluginRequest = replacement;
-            }
-        }
         // --- exteraless plugins ---
 
         try {
@@ -522,24 +510,6 @@ public class ConnectionsManager extends BaseController {
                     Utilities.stageQueue.postRunnable(() -> {
                         TLObject pluginResponse = finalResponse;
                         // exteraless plugins: post_request_hook
-                        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyRequestHooks()) {
-                            app.exteraless.plugins.HookResult postHook = app.exteraless.plugins.PluginsController.getInstance()
-                                    .executePostRequestHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(normalizedObject), finalResponse, finalError);
-                            if (postHook.isCancel()) {
-                                if (onComplete == null && onCompleteTimestamp == null
-                                        && finalResponse instanceof TLRPC.Updates) {
-                                    KeepAliveJob.finishJob();
-                                }
-                                if (finalResponse != null) {
-                                    finalResponse.freeResources();
-                                }
-                                return;
-                            }
-                            TLObject replacement = postHook.replacement(TLObject.class);
-                            if (replacement != null) {
-                                pluginResponse = replacement;
-                            }
-                        }
                         if (onComplete != null) {
                             onComplete.run(pluginResponse, finalError);
                         } else if (onCompleteTimestamp != null) {

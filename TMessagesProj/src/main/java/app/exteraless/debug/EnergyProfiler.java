@@ -46,8 +46,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
-import app.exteraless.plugins.xposed.HookStats;
-import app.exteraless.plugins.xposed.XposedHooks;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 
@@ -361,10 +359,6 @@ public final class EnergyProfiler {
             ((Application) context).registerActivityLifecycleCallbacks(lifecycleCallbacks);
         }
 
-        if (!JankProfiler.isRunning() && !HookStats.isEnabled()) {
-            HookStats.start();
-            ownHookStats = true;
-        }
         handler.post(() -> {
             installWakelockHooks();
             tick();
@@ -384,9 +378,6 @@ public final class EnergyProfiler {
         }
         if (wakelocksWaiting) {
             installWakelockHooks();
-        }
-        if (ownHookStats) {
-            HookStats.armPython();
         }
         sample();
         handler.removeCallbacks(tick);
@@ -573,11 +564,6 @@ public final class EnergyProfiler {
             wakelockStatus = "not tracked: hooking wake locks killed the process earlier";
             return;
         }
-        if (!XposedHooks.isReady()) {
-            wakelocksWaiting = true;
-            wakelockStatus = "not tracked: native hooks are not active (no plugin uses hooks)";
-            return;
-        }
         wakelocksWaiting = false;
         prefs.edit().putBoolean(KEY_WAKELOCK_PENDING, true).commit();
         try {
@@ -738,9 +724,6 @@ public final class EnergyProfiler {
         if (context instanceof Application) {
             ((Application) context).unregisterActivityLifecycleCallbacks(lifecycleCallbacks);
         }
-        if (ownHookStats) {
-            HookStats.stop();
-        }
         stateFile(context).delete();
         thread.quitSafely();
     }
@@ -817,9 +800,6 @@ public final class EnergyProfiler {
             out.append("none recorded\n");
         }
 
-        if (ownHookStats) {
-            HookStats.appendReport(out);
-        }
 
         final File file = new File(AndroidUtilities.getLogsDir(), REPORT_PREFIX
                 + new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date()) + ".txt");

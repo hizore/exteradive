@@ -242,6 +242,44 @@ public class SharedConfig {
     public static boolean fastWallpaperDisabled;
     public static boolean frameMetricsEnabled;
 
+    // ---- exteradive: функции DiveLite ----
+    public static boolean infiniteRecents;
+    public static boolean infinitePinnedChats;
+    public static boolean hideAllStories;
+    public static boolean useSystemFont;
+    public static int stickerScale = 100;
+    public static int gifScale = 100;
+    public static boolean oldDesign = true;
+    public static boolean hideCameraInPicker;
+
+    // Значки и серии (DiveGram)
+    public static boolean badgesEnabled = true;
+    public static long badgesFetchTime;
+    public static boolean streaksEnabled = true;
+    public static long streakFetchTime;
+    public static boolean nftsEnabled = true;
+    public static long nftsFetchTime;
+
+    // Показывать, в каком чате собеседник печатает (DiveGram)
+    public static boolean showTypingLocation = false;
+
+    // Погода
+    public static boolean weatherEnabled;
+    public static String weatherCity = "";
+    public static String weatherText = "";
+    public static long weatherTime;
+    public static double weatherLat;
+    public static double weatherLon;
+
+    // Аудиокодек
+    public static final int AUDIO_CODEC_AUTO = 0;
+    public static final int AUDIO_CODEC_AAC = 1;
+    public static final int AUDIO_CODEC_LDAC = 2;
+
+    // Флаги, которые крутит экран функций DiveGram
+    public static boolean playerLyricsEnabled = true;
+    public static boolean playerLyricsHideControls;
+
     public static String directShareHash;
 
     @PasscodeType
@@ -647,6 +685,31 @@ public class SharedConfig {
             BackgroundActivityPrefs.prefs = ApplicationLoader.applicationContext.getSharedPreferences("background_activity", Context.MODE_PRIVATE);
 
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
+            // exteradive: функции DiveLite
+            infiniteRecents = preferences.getBoolean("infiniteRecents", false);
+            infinitePinnedChats = preferences.getBoolean("dgInfinitePinnedChats", false);
+            hideAllStories = preferences.getBoolean("hideAllStories", false);
+            useSystemFont = preferences.getBoolean("useSystemFont", false);
+            stickerScale = preferences.getInt("stickerScale", 100);
+            gifScale = preferences.getInt("gifScale", 100);
+            oldDesign = preferences.getBoolean("dgOldDesign", true);
+            hideCameraInPicker = preferences.getBoolean("dgHideCameraInPicker", false);
+            // Значки и серии
+            badgesEnabled = preferences.getBoolean("dgBadgesEnabled", true);
+            badgesFetchTime = preferences.getLong("dgBadgesFetchTime", 0);
+            streaksEnabled = preferences.getBoolean("dgStreaksEnabled", true);
+            streakFetchTime = preferences.getLong("dgStreaksFetchTime", 0);
+            nftsEnabled = preferences.getBoolean("dgNftsEnabled", true);
+            nftsFetchTime = preferences.getLong("dgNftsFetchTime", 0);
+            showTypingLocation = preferences.getBoolean("dgShowTypingLocation", false);
+            // Погода
+            weatherEnabled = preferences.getBoolean("dgWeatherEnabled", false);
+            weatherCity = preferences.getString("dgWeatherCity", "");
+            weatherText = preferences.getString("dgWeatherText", "");
+            weatherTime = preferences.getLong("dgWeatherTime", 0);
+            weatherLat = Double.longBitsToDouble(preferences.getLong("dgWeatherLat", 0));
+            weatherLon = Double.longBitsToDouble(preferences.getLong("dgWeatherLon", 0));
+            // Аудио и прочее
             saveIncomingPhotos = preferences.getBoolean("saveIncomingPhotos", false);
             passcodeHash = preferences.getString("passcodeHash1", "");
             appLocked = preferences.getBoolean("appLocked", false);
@@ -1500,6 +1563,99 @@ public class SharedConfig {
         editor.commit();
     }
 
+    // ---- exteradive: функции DiveLite ----
+
+    public static void setInfiniteRecents(boolean value) {
+        infiniteRecents = value;
+        MessagesController.getGlobalMainSettings().edit().putBoolean("infiniteRecents", value).apply();
+    }
+
+    public static void setInfinitePinnedChats(boolean value) {
+        infinitePinnedChats = value;
+        MessagesController.getGlobalMainSettings().edit().putBoolean("dgInfinitePinnedChats", value).apply();
+    }
+
+    public static void setHideAllStories(boolean value) {
+        hideAllStories = value;
+        MessagesController.getGlobalMainSettings().edit().putBoolean("hideAllStories", value).apply();
+    }
+
+    public static void setUseSystemFont(boolean value) {
+        if (useSystemFont == value) {
+            return;
+        }
+        useSystemFont = value;
+        MessagesController.getGlobalMainSettings().edit().putBoolean("useSystemFont", value).apply();
+        AndroidUtilities.clearTypefaceCache();
+        NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_ALL);
+    }
+
+    public static void setStickerScale(int value) {
+        stickerScale = Math.max(50, Math.min(200, value));
+        MessagesController.getGlobalMainSettings().edit().putInt("stickerScale", stickerScale).apply();
+        NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_ALL);
+    }
+
+    public static void setGifScale(int value) {
+        gifScale = Math.max(50, Math.min(200, value));
+        MessagesController.getGlobalMainSettings().edit().putInt("gifScale", gifScale).apply();
+        NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_ALL);
+    }
+
+    public static void setHideCameraInPicker(boolean value) {
+        hideCameraInPicker = value;
+        MessagesController.getGlobalMainSettings().edit().putBoolean("dgHideCameraInPicker", value).apply();
+    }
+
+    public static boolean isStoryHidden(long userId) {
+        return hideAllStories;
+    }
+
+    public static void saveBadgesFetchTime() {
+        badgesFetchTime = System.currentTimeMillis();
+        MessagesController.getGlobalMainSettings().edit()
+                .putLong("dgBadgesFetchTime", badgesFetchTime)
+                .putBoolean("dgBadgesEnabled", badgesEnabled)
+                .apply();
+    }
+
+    public static void saveStreakFetchTime() {
+        streakFetchTime = System.currentTimeMillis();
+        MessagesController.getGlobalMainSettings().edit()
+                .putLong("dgStreaksFetchTime", streakFetchTime)
+                .putBoolean("dgStreaksEnabled", streaksEnabled)
+                .apply();
+    }
+
+    public static void saveNftsFetchTime() {
+        nftsFetchTime = System.currentTimeMillis();
+        MessagesController.getGlobalMainSettings().edit()
+                .putLong("dgNftsFetchTime", nftsFetchTime)
+                .putBoolean("dgNftsEnabled", nftsEnabled)
+                .apply();
+    }
+
+    public static void setShowTypingLocation(boolean value) {
+        showTypingLocation = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgShowTypingLocation", value)
+                .apply();
+    }
+
+    public static void saveWeatherCache(String text, double lat, double lon) {
+        weatherText = text == null ? "" : text;
+        weatherTime = System.currentTimeMillis();
+        if (lat != 0 || lon != 0) {
+            weatherLat = lat;
+            weatherLon = lon;
+        }
+        MessagesController.getGlobalMainSettings().edit()
+                .putString("dgWeatherText", weatherText)
+                .putLong("dgWeatherTime", weatherTime)
+                .putLong("dgWeatherLat", Double.doubleToRawLongBits(weatherLat))
+                .putLong("dgWeatherLon", Double.doubleToRawLongBits(weatherLon))
+                .apply();
+    }
     public static void togglePauseMusicOnRecord() {
         pauseMusicOnRecord = !pauseMusicOnRecord;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();

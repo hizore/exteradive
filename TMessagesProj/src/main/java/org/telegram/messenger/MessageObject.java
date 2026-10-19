@@ -2089,9 +2089,9 @@ public class MessageObject {
 
         currentAccount = accountNum;
         messageOwner = message;
-        LinkedCustomEmoji.parse(message.message, message.entities);
+        LinkedCustomEmoji.parseMessage(message);
         if (message.reply_to != null) {
-            LinkedCustomEmoji.parse(message.reply_to.quote_text, message.reply_to.quote_entities);
+            LinkedCustomEmoji.parseQuote(message.reply_to);
         }
         replyMessageObject = replyToMessage;
         eventId = eid;

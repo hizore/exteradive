@@ -42,7 +42,6 @@ import org.telegram.ui.GroupCreateActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.SettingsActivity;
-import app.exteraless.plugins.ui.PluginsActivity;
 
 import org.telegram.ui.Wallet.WalletActivity;
 import org.telegram.ui.WebAppDisclaimerAlert;
@@ -138,9 +137,6 @@ public final class MainMenuHelper {
         if (item == MainMenuItem.BOTS) {
             return addAttachMenuBotMenuItems(io, ctx);
         }
-        if (item == MainMenuItem.PLUGINS) {
-            return addPluginsMenuItem(io, ctx);
-        }
         final MenuItemInfo info = resolveMenuItem(id, ctx);
         if (info == null || info.onClick() == null) {
             return false;
@@ -150,37 +146,6 @@ public final class MainMenuHelper {
         return true;
     }
 
-    public static boolean addPluginsMenuItem(ItemOptions io, MenuContext ctx) {
-        final MenuItemInfo info = resolveMenuItem(MainMenuItem.PLUGINS.getId(), ctx);
-        if (info == null || info.onClick() == null) {
-            return false;
-        }
-        final List<MenuItemInfo> plugins = app.exteraless.plugins.menus.MenuInjector.mainMenuItems(ctx.currentAccount(), ctx.fragment());
-        if (plugins.isEmpty()) {
-            io.add(info.iconRes(), info.text(), info.onClick());
-            return true;
-        }
-        final ItemOptions swipeback = io.makeSwipeback();
-        swipeback.add(R.drawable.ic_ab_back, LocaleController.getString(R.string.Back), io::closeSwipeback);
-        swipeback.addGap();
-        for (MenuItemInfo plugin : plugins) {
-            swipeback.add(plugin.iconRes(), plugin.text(), () -> {
-                io.dismiss();
-                plugin.onClick().run();
-            });
-        }
-        io.add(info.iconRes(), info.text(), () -> io.openSwipeback(swipeback));
-        final ActionBarMenuSubItem last = io.getLast();
-        if (last != null) {
-            last.setRightIcon(R.drawable.msg_arrowright);
-            last.setOnLongClickListener(v -> {
-                io.dismiss();
-                info.onClick().run();
-                return true;
-            });
-        }
-        return true;
-    }
 
     private static boolean addAttachMenuBotMenuItems(ItemOptions io, MenuContext ctx) {
         final List<AttachMenuBotInfo> bots = getAttachMenuBotItems(ctx);
@@ -219,28 +184,12 @@ public final class MainMenuHelper {
         if (item == MainMenuItem.BOTS) {
             return resolveDrawerBotMenuItems(ctx);
         }
-        if (item == MainMenuItem.PLUGINS) {
-            return resolveDrawerPluginMenuItems(ctx);
-        }
         if (item == MainMenuItem.ARCHIVE && !hasArchivedChats(ctx.currentAccount())) {
             // Пустой архив в шторке не показывается.
             return Collections.emptyList();
         }
         final MenuItemInfo info = resolveMenuItem(id, ctx);
         return info == null ? Collections.emptyList() : Collections.singletonList(info);
-    }
-
-    private static List<MenuItemInfo> resolveDrawerPluginMenuItems(MenuContext ctx) {
-        final MenuItemInfo info = resolveMenuItem(MainMenuItem.PLUGINS.getId(), ctx);
-        final ArrayList<MenuItemInfo> result = new ArrayList<>();
-        if (info != null) {
-            result.add(info);
-        }
-        for (MenuItemInfo plugin : app.exteraless.plugins.menus.MenuInjector.mainMenuItems(ctx.currentAccount(), ctx.fragment())) {
-            final Runnable openPlugins = info != null ? info.onClick() : null;
-            result.add(new MenuItemInfo(plugin.iconRes() != 0 ? plugin.iconRes() : R.drawable.msg_plugins, plugin.text(), plugin.onClick(), openPlugins));
-        }
-        return result;
     }
 
     private static List<MenuItemInfo> resolveDrawerBotMenuItems(MenuContext ctx) {
@@ -310,9 +259,6 @@ public final class MainMenuHelper {
             case BROWSER:
                 return new MenuItemInfo(R.drawable.msg2_language, LocaleController.getString(R.string.BrowserSettingsTitle),
                         () -> openBrowserHomepage(fragment), null);
-            case PLUGINS:
-                return new MenuItemInfo(R.drawable.msg_plugins, LocaleController.getString(R.string.OpenExteraPlugins),
-                        () -> fragment.presentFragment(new PluginsActivity()), null);
             case QR:
                 return new MenuItemInfo(R.drawable.msg_qrcode, LocaleController.getString(R.string.AuthAnotherClient),
                         () -> openQrScanner(fragment), null);
@@ -455,7 +401,6 @@ public final class MainMenuHelper {
             case FEED -> new MenuItemInfo(R.drawable.ic_feed, LocaleController.getString(R.string.Feed), null, null);
             case SETTINGS -> new MenuItemInfo(R.drawable.msg_settings, LocaleController.getString(R.string.Settings), null, null);
             case BROWSER -> new MenuItemInfo(R.drawable.msg2_language, LocaleController.getString(R.string.BrowserSettingsTitle), null, null);
-            case PLUGINS -> new MenuItemInfo(R.drawable.msg_plugins, LocaleController.getString(R.string.OpenExteraPlugins), null, null);
             case QR -> new MenuItemInfo(R.drawable.msg_qrcode, LocaleController.getString(R.string.AuthAnotherClient), null, null);
             case GHOST_MODE -> new MenuItemInfo(R.drawable.ayu_ghost, ghostModeTitle(), null, null);
             case RECENT_CHATS -> new MenuItemInfo(R.drawable.menu_recent, LocaleController.getString(R.string.RecentChats), null, null);

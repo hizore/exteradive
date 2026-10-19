@@ -22,6 +22,9 @@ subprojects {
         if (plugins.hasPlugin("com.android.application")) {
             android {
                 compileSdk = 37
+                // Платформы с Android 15 версионируются по минору (android-37.x),
+                // поэтому 37 без минора не находится: нужна именно android-37.2.
+                compileSdkMinor = 2
                 buildToolsVersion = "36.0.0"
                 ndkVersion = "27.2.12479018"
 

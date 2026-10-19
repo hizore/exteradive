@@ -31,7 +31,6 @@ import app.exteraless.drawer.MainMenuLayout;
 import app.exteraless.general.GeneralConfig;
 import app.exteraless.icons.IconPacksConfig;
 import app.exteraless.pillstack.PillStackConfig;
-import app.exteraless.plugins.PluginsConstants;
 import app.exteraless.utils.UtilsConfig;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.config.ConfigItem;
@@ -131,7 +130,7 @@ public final class EtgBackup {
     }
 
     public static String generateBackupName() {
-        return "exteraless-" + Utilities.generateRandomString(4) + EXTENSION;
+        return "exteradive-" + Utilities.generateRandomString(4) + EXTENSION;
     }
 
     /** Файл похож на бэкап exteraGram: расширение на месте и внутри есть хоть один знакомый ключ. */
@@ -297,10 +296,6 @@ public final class EtgBackup {
         return ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
     }
 
-    private static SharedPreferences pluginPreferences() {
-        return ApplicationLoader.applicationContext
-                .getSharedPreferences(PluginsConstants.PREFS_NAME, Context.MODE_PRIVATE);
-    }
 
     // ---- Таблица соответствий ----
 
@@ -458,7 +453,6 @@ public final class EtgBackup {
 
         addMainMenuEntries(list);
         addCompositeEntries(list);
-        addPluginEntries(list);
         addMainConfigEntries(list);
 
         entries = list;
@@ -559,12 +553,6 @@ public final class EtgBackup {
                 value -> MainMenuLayout.save(MainMenuLayout.getLayout(), parseIds(value.getAsString()))));
     }
 
-    private static void addPluginEntries(List<Entry> list) {
-        pluginFlag(list, "pluginsSafeMode", PluginsConstants.KEY_SAFE_MODE);
-        pluginFlag(list, "pluginsDevMode", PluginsConstants.KEY_DEVELOPER_MODE);
-        pluginFlag(list, "pluginsCompactView", PluginsConstants.KEY_COMPACT_VIEW);
-        pluginFlag(list, "pluginsDisableArtOpts", PluginsConstants.KEY_COMPATIBILITY_MODE);
-    }
 
     /**
      * mainconfig — настройки самого Telegram. Пишем в тот же файл, что и SharedConfig,
@@ -660,11 +648,6 @@ public final class EtgBackup {
                 value -> item.setConfigString(value.getAsString())));
     }
 
-    private static void pluginFlag(List<Entry> list, String key, String prefsKey) {
-        list.add(new Entry(SECTION_EXTERA, key, KIND_BOOL, 0, 0, null,
-                () -> new JsonPrimitive(pluginPreferences().getBoolean(prefsKey, false)),
-                value -> pluginPreferences().edit().putBoolean(prefsKey, value.getAsBoolean()).apply()));
-    }
 
     // ---- Проверки строковых значений ----
 

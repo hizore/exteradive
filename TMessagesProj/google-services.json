@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "335004274031",
-    "project_id": "exteraless",
-    "storage_bucket": "exteraless.firebasestorage.app"
+    "project_number": "930738329393",
+    "project_id": "exteradive",
+    "storage_bucket": "exteradive.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:335004274031:android:e06325b96c4b17732eac9a",
+        "mobilesdk_app_id": "1:930738329393:android:6326deebc1e48663780210",
         "android_client_info": {
-          "package_name": "com.exteraless.app"
+          "package_name": "org.divelite.messenger"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBuCdqzdLtlstYvdiSnVJmVoxusxFKlabc"
+          "current_key": "AIzaSyBl9UlUpRz6KUYi4KlJFhENnrUguIc4B6U"
         }
       ],
       "services": {

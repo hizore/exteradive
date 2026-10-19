@@ -200,6 +200,26 @@ public class MessagesController extends BaseController implements NotificationCe
     public ConcurrentHashMap<Long, ConcurrentHashMap<Integer, ArrayList<PrintingUser>>> printingUsers = new ConcurrentHashMap<>(20, 1.0f, 2);
     public LongSparseArray<LongSparseArray<CharSequence>> printingStrings = new LongSparseArray<>();
     public LongSparseArray<LongSparseArray<Integer>> printingStringsTypes = new LongSparseArray<>();
+
+    /**
+     * Где собеседник печатает, если не в том чате, который сейчас открыт.
+     *
+     * Telegram присылает статус набора и для чатов, которые пользователь не
+     * открывает - достаточно быть их участником. Этим и пользуется DiveGram:
+     * запоминаем dialogId, в котором печатает собеседник, и показываем его
+     * под именем, когда открыт другой чат с тем же человеком.
+     */
+    public static class ElsewhereTyping {
+        public long dialogId;
+        public int lastTime;
+
+        public ElsewhereTyping(long dialogId, int lastTime) {
+            this.dialogId = dialogId;
+            this.lastTime = lastTime;
+        }
+    }
+
+    public final LongSparseArray<ElsewhereTyping> elsewhereTypingUsers = new LongSparseArray<>();
     public LongSparseArray<LongSparseArray<Boolean>>[] sendingTypings = new LongSparseArray[12];
     public ConcurrentHashMap<Long, Integer> onlinePrivacy = new ConcurrentHashMap<>(20, 1.0f, 2);
     private LongSparseIntArray pendingUnreadCounter = new LongSparseIntArray();
@@ -11656,7 +11676,105 @@ public class MessagesController extends BaseController implements NotificationCe
         AndroidUtilities.runOnUIThread(() -> {
             printingStrings = newStrings;
             printingStringsTypes = newTypes;
+            applyElsewhereTypingToStrings();
         });
+    }
+
+    /**
+     * Убирает протухшие записи и дорисовывает текст "печатает в &lt;чат&gt;"
+     * тем, кто печатает в другом чате (DiveGram).
+     *
+     * Запись живёт 15 секунд с последнего апдейта набора - столько же сервер
+     * держит статус. Если статус пропал или пришёл для того же чата, который
+     * открыт, собственную строку печати не трогаем.
+     */
+    private void applyElsewhereTypingToStrings() {
+        if (!SharedConfig.showTypingLocation || elsewhereTypingUsers.isEmpty()) {
+            return;
+        }
+        final int now = getConnectionsManager().getCurrentTime();
+        boolean changed = false;
+        for (int i = elsewhereTypingUsers.size() - 1; i >= 0; i--) {
+            final long userIdKey = elsewhereTypingUsers.keyAt(i);
+            final ElsewhereTyping et = elsewhereTypingUsers.valueAt(i);
+            if (et == null) {
+                elsewhereTypingUsers.removeAt(i);
+                continue;
+            }
+
+            boolean stillTyping = false;
+            ConcurrentHashMap<Integer, ArrayList<PrintingUser>> threads = printingUsers.get(et.dialogId);
+            if (threads != null) {
+                for (ArrayList<PrintingUser> arr : threads.values()) {
+                    if (arr != null) {
+                        for (PrintingUser pu : arr) {
+                            if (pu.userId == userIdKey) {
+                                stillTyping = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (stillTyping) {
+                        break;
+                    }
+                }
+            }
+            if (!stillTyping || Math.abs(now - et.lastTime) > 15) {
+                elsewhereTypingUsers.removeAt(i);
+                if (printingStrings.get(userIdKey) != null && !isDialogTypingDirectly(userIdKey)) {
+                    printingStrings.remove(userIdKey);
+                    printingStringsTypes.remove(userIdKey);
+                    changed = true;
+                }
+                continue;
+            }
+        }
+
+        if (!changed && elsewhereTypingUsers.size() == 0) {
+            return;
+        }
+        for (int i = 0; i < elsewhereTypingUsers.size(); i++) {
+            final long userIdKey = elsewhereTypingUsers.keyAt(i);
+            final ElsewhereTyping et = elsewhereTypingUsers.valueAt(i);
+            if (et == null || isDialogTypingDirectly(userIdKey) || printingStrings.get(userIdKey) != null) {
+                continue;
+            }
+            TLRPC.Chat typingChat = getChat(-et.dialogId);
+            if (typingChat == null || TextUtils.isEmpty(typingChat.title)) {
+                continue;
+            }
+            LongSparseArray<CharSequence> threads = new LongSparseArray<>();
+            LongSparseArray<Integer> types = new LongSparseArray<>();
+            threads.put(0, LocaleController.formatString("TypingInChat",
+                    R.string.TypingInChat, typingChat.title));
+            types.put(0, 0);
+            printingStrings.put(userIdKey, threads);
+            printingStringsTypes.put(userIdKey, types);
+            changed = true;
+        }
+
+        if (changed) {
+            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_USER_PRINT);
+        }
+    }
+
+    /** Печатает ли этот человек прямо в том чате, который сейчас открыт. */
+    private boolean isDialogTypingDirectly(long userId) {
+        ConcurrentHashMap<Integer, ArrayList<PrintingUser>> threads = printingUsers.get(userId);
+        if (threads == null) {
+            return false;
+        }
+        for (ArrayList<PrintingUser> arr : threads.values()) {
+            if (arr == null) {
+                continue;
+            }
+            for (PrintingUser pu : arr) {
+                if (pu.userId == userId) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void cancelTyping(int action, long dialogId, long threadMsgId) {
@@ -18212,17 +18330,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     // must be run from Utilities.stageQueue
     public void processUpdates(final TLRPC.Updates originalUpdates, boolean fromQueue) {
-        // exteraless plugins: on_updates_hook (CANCEL = контейнер не обрабатывается)
-        app.exteraless.plugins.HookResult hookResult = app.exteraless.plugins.PluginsController.getInstance().hasAnyUpdatesContainerHooks()
-                ? app.exteraless.plugins.PluginsController.getInstance()
-                        .executeOnUpdatesHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(originalUpdates), originalUpdates)
-                : app.exteraless.plugins.HookResult.DEFAULT;
-        if (hookResult.isCancel()) {
-            return;
-        }
-        TLRPC.Updates replacement = hookResult.replacement(TLRPC.Updates.class);
-        final TLRPC.Updates updates = replacement != null ? replacement : originalUpdates;
-        processUpdatesInternal(updates, fromQueue);
+        processUpdatesInternal(originalUpdates, fromQueue);
     }
 
     private void processUpdatesInternal(final TLRPC.Updates updates, boolean fromQueue) {
@@ -18797,31 +18905,6 @@ public class MessagesController extends BaseController implements NotificationCe
         // Список принадлежит вызывающему (res.other_updates, updates.updates) и в
         // некоторых ветках обрабатывается повторно, поэтому фильтруем в копию,
         // а не мутируем чужое.
-        if (app.exteraless.plugins.PluginsController.getInstance().hasAnyUpdateHooks()) {
-            ArrayList<TLRPC.Update> allowed = null;
-            int updateIndex = 0;
-            for (TLRPC.Update u : updates) {
-                app.exteraless.plugins.HookResult updateResult = app.exteraless.plugins.PluginsController.getInstance()
-                        .executeOnUpdateHook(currentAccount, app.exteraless.plugins.PluginsController.hookName(u), u);
-                TLRPC.Update replacement = updateResult.replacement(TLRPC.Update.class);
-                if (allowed == null && (updateResult.isCancel() || (replacement != null && replacement != u))) {
-                    allowed = new ArrayList<>(updates.size());
-                    allowed.addAll(updates.subList(0, updateIndex));
-                }
-                if (!updateResult.isCancel()) {
-                    if (allowed != null) {
-                        allowed.add(replacement != null ? replacement : u);
-                    }
-                }
-                updateIndex++;
-            }
-            if (allowed != null) {
-                if (allowed.isEmpty()) {
-                    return true;
-                }
-                updates = allowed;
-            }
-        }
         long currentTime = System.currentTimeMillis();
         boolean printChanged = false;
 
@@ -19380,6 +19463,15 @@ public class MessagesController extends BaseController implements NotificationCe
                                     }
                                 }
                             }
+                            // exteradive (DiveGram): собеседник перестал печатать -
+                            // убираем его запись "печатает в <чат>".
+                            if (SharedConfig.showTypingLocation && uid != userId) {
+                                final long stopUserId = userId;
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    elsewhereTypingUsers.remove(stopUserId);
+                                    applyElsewhereTypingToStrings();
+                                });
+                            }
                         } else {
                             if (threads == null) {
                                 threads = new ConcurrentHashMap<>();
@@ -19408,6 +19500,19 @@ public class MessagesController extends BaseController implements NotificationCe
                                 newUser.action = action;
                                 arr.add(newUser);
                                 printChanged = true;
+                            }
+                            // exteradive (DiveGram): запоминаем, в каком чате печатает
+                            // собеседник, чтобы показать это под именем, когда открыт
+                            // другой чат с ним.
+                            if (SharedConfig.showTypingLocation && uid != userId
+                                    && !DialogObject.isEncryptedDialog(uid)) {
+                                final long fUserId = userId;
+                                final long fDialogId = uid;
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    elsewhereTypingUsers.put(fUserId,
+                                            new ElsewhereTyping(fDialogId, getConnectionsManager().getCurrentTime()));
+                                    applyElsewhereTypingToStrings();
+                                });
                             }
                         }
                     }
@@ -22387,7 +22492,12 @@ public class MessagesController extends BaseController implements NotificationCe
         if (isDialog && DialogObject.isUserDialog(dialogId)) {
             TLRPC.User user = getUser(dialogId);
             if (user != null && user.status != null && user.status.expires < 0) {
-                return null;
+                // Невидимка: своя строка печати скрывается, но "печатает в <чат>"
+                // из другого чата остаётся видно - так делает DiveGram.
+                if (!SharedConfig.showTypingLocation || elsewhereTypingUsers.indexOfKey(dialogId) < 0
+                        || printingStrings.get(dialogId) == null) {
+                    return null;
+                }
             }
         }
         LongSparseArray<CharSequence> threads = printingStrings.get(dialogId);

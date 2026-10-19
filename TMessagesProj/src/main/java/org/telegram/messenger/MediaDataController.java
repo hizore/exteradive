@@ -923,7 +923,7 @@ public class MediaDataController extends BaseController {
         if (type == TYPE_FAVE && NekoConfig.unlimitedFavedStickers.Bool()) {
             return new ArrayList<>(recentStickers[type]);
         }
-        ArrayList<TLRPC.Document> result = new ArrayList<>(arrayList.subList(0, Math.min(arrayList.size(), NekoConfig.maxRecentStickerCount.Int())));
+        ArrayList<TLRPC.Document> result = new ArrayList<>(arrayList.subList(0, SharedConfig.infiniteRecents ? arrayList.size() : Math.min(arrayList.size(), NekoConfig.maxRecentStickerCount.Int())));
         if (firstEmpty && !result.isEmpty() && !StickersAlert.DISABLE_STICKER_EDITOR && !NekoConfig.minimizedStickerCreator.Bool()) {
             result.add(0, new TLRPC.TL_documentEmpty());
         }
@@ -1031,7 +1031,7 @@ public class MediaDataController extends BaseController {
                     }
                 });
             }
-            maxCount = NekoConfig.maxRecentStickerCount.Int()/*getMessagesController().maxRecentStickersCount*/;
+            maxCount = SharedConfig.infiniteRecents ? Integer.MAX_VALUE : NekoConfig.maxRecentStickerCount.Int()/*getMessagesController().maxRecentStickersCount*/;
         }
         if (recentStickers[type].size() > maxCount || remove) {
             TLRPC.Document old = remove ? document : recentStickers[type].remove(recentStickers[type].size() - 1);
@@ -1126,7 +1126,7 @@ public class MediaDataController extends BaseController {
         if (!found) {
             recentGifs.add(0, document);
         }
-        if (!NaConfig.INSTANCE.getUnlimitedSavedGifs().Bool()
+        if (!SharedConfig.infiniteRecents && !NaConfig.INSTANCE.getUnlimitedSavedGifs().Bool()
                 && ((recentGifs.size() > getMessagesController().savedGifsLimitDefault && !UserConfig.getInstance(currentAccount).isPremium()) || recentGifs.size() > getMessagesController().savedGifsLimitPremium)) {
             TLRPC.Document old = recentGifs.remove(recentGifs.size() - 1);
             getMessagesStorage().getStorageQueue().postRunnable(() -> {
@@ -2124,14 +2124,14 @@ public class MediaDataController extends BaseController {
                     SQLiteDatabase database = getMessagesStorage().getDatabase();
                     int maxCount;
                     if (gif) {
-                        maxCount = NaConfig.INSTANCE.getUnlimitedSavedGifs().Bool() ? Integer.MAX_VALUE : getMessagesController().maxRecentGifsCount;
+                        maxCount = (SharedConfig.infiniteRecents || NaConfig.INSTANCE.getUnlimitedSavedGifs().Bool()) ? Integer.MAX_VALUE : getMessagesController().maxRecentGifsCount;
                     } else {
                         if (type == TYPE_GREETINGS || type == TYPE_PREMIUM_STICKERS) {
                             maxCount = 200;
                         } else if (type == TYPE_FAVE) {
                             maxCount = NekoConfig.unlimitedFavedStickers.Bool() ? Integer.MAX_VALUE : getUserConfig().isPremium() ? 10 : getMessagesController().maxFaveStickersCount;
                         } else {
-                            maxCount = NekoConfig.maxRecentStickerCount.Int()/*getMessagesController().maxRecentStickersCount*/;
+                            maxCount = SharedConfig.infiniteRecents ? Integer.MAX_VALUE : NekoConfig.maxRecentStickerCount.Int()/*getMessagesController().maxRecentStickersCount*/;
                         }
                     }
                     // For unlimited faved stickers, merge with existing database entries
@@ -8016,7 +8016,13 @@ public class MediaDataController extends BaseController {
         }
         if (entities != null && !entities.isEmpty()) {
             draftMessage.entities = new ArrayList<>(entities);
-            LinkedCustomEmoji.replaceForSend(currentAccount, dialogId, draftMessage.entities);
+            // exteradive: премиум-эмодзи уходят ссылкой dive://emoji/<id>, а не
+            // text_url - иначе DiveGram/DiveLite не узнают формат и покажут стикер.
+            CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji
+                    .replaceTextForSend(currentAccount, dialogId, draftMessage.message, draftMessage.entities);
+            if (diveText != draftMessage.message) {
+                draftMessage.message = diveText.toString();
+            }
             draftMessage.flags |= 8;
         }
 

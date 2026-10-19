@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="OpenExteraPlugins">插件</string>
-    <string name="PluginsSafeMode">安全模式</string>
-    <string name="PluginsSafeModeSummary">开启安全模式后不会加载任何插件。当某个插件导致应用异常时可以使用。</string>
-    <string name="PluginsUnsafeMode">不安全模式</string>
-    <string name="PluginsUnsafeModeInfo">插件不受任何限制</string>
-    <string name="PluginsUnsafeModeSummary">不再询问也不再校验权限。无论等级如何，任何插件都能获得消息、文件、网络、钩子和原生代码。只对自己编写或完全信任的插件开启。</string>
-    <string name="PluginsUnsafeModeConfirm">这会移除插件与你的数据之间的全部检查。插件将能读取聊天记录、以你的名义发送消息、取走文件并执行原生代码，不受任何限制。\n\n只有在清楚自己安装的是什么时才开启。</string>
-    <string name="PluginsUnsafeModeEnable">仍然开启</string>
-    <string name="PluginsUnsafeModeOn">不安全模式已开启</string>
-    <string name="PluginsUnsafeModeActive">在不安全模式开启期间，这些开关不起任何作用：插件已经拥有全部权限。在插件设置中关闭该模式即可恢复。</string>
     <string name="PluginsDeveloperMode">开发者模式</string>
     <string name="PluginsInstallFromFile">从文件安装</string>
     <string name="PluginsInstalling">正在安装插件…</string>
@@ -181,6 +172,4 @@
     <string name="PluginOverlayTitle">在其他应用上层显示</string>
     <string name="PluginOverlayText">%1$s 想在其他应用上层显示窗口。请在系统设置中允许后重试。</string>
     <string name="PluginOverlayOpen">打开设置</string>
-    <string name="PluginsSafeModeEnabledNow">安全模式已开启，所有插件已停用。</string>
-    <string name="PluginsSafeModeDisabledNow">安全模式已关闭，正在加载插件。</string>
 </resources>

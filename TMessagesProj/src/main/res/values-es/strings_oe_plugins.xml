@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="OpenExteraPlugins">Plugins</string>
-    <string name="PluginsSafeMode">Modo seguro</string>
-    <string name="PluginsSafeModeSummary">Con el modo seguro activado no se carga ningún plugin. Úsalo si un plugin rompe la app.</string>
-    <string name="PluginsUnsafeMode">Modo inseguro</string>
-    <string name="PluginsUnsafeModeInfo">Los plugins funcionan sin restricciones</string>
-    <string name="PluginsUnsafeModeSummary">Los permisos no se piden ni se comprueban. Cualquier plugin obtiene mensajes, archivos, red, hooks y código nativo sin importar su nivel. Actívalo solo para plugins que hayas escrito tú o en los que confíes por completo.</string>
-    <string name="PluginsUnsafeModeConfirm">Esto elimina todas las comprobaciones entre los plugins y tus datos. Un plugin podrá leer tus chats, enviar mensajes en tu nombre, llevarse tus archivos y ejecutar código nativo sin restricción alguna.\n\nActívalo solo si entiendes lo que estás instalando.</string>
-    <string name="PluginsUnsafeModeEnable">Activar de todos modos</string>
-    <string name="PluginsUnsafeModeOn">El modo inseguro está activado</string>
-    <string name="PluginsUnsafeModeActive">Mientras el modo inseguro esté activado, estos interruptores no deciden nada: el plugin ya lo tiene todo. Desactiva el modo en los ajustes de plugins para recuperarlos.</string>
     <string name="PluginsDeveloperMode">Modo desarrollador</string>
     <string name="PluginsInstallFromFile">Instalar desde un archivo</string>
     <string name="PluginsInstalling">Instalando el plugin…</string>
@@ -181,6 +172,4 @@ Código:
     <string name="PluginOverlayTitle">Mostrar sobre otras apps</string>
     <string name="PluginOverlayText">%1$s quiere mostrar una ventana sobre otras apps. Permítelo en los ajustes del sistema e inténtalo de nuevo.</string>
     <string name="PluginOverlayOpen">Abrir ajustes</string>
-    <string name="PluginsSafeModeEnabledNow">Modo seguro activado: todos los plugins están desactivados.</string>
-    <string name="PluginsSafeModeDisabledNow">Modo seguro desactivado: cargando los plugins.</string>
 </resources>

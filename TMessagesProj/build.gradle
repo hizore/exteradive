@@ -4,8 +4,6 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
-    id 'com.chaquo.python'
     id 'org.telegram.lottie-meta'
     id 'idea'
 }
@@ -51,25 +49,14 @@ if (properties != null) {
     pwd = properties.getProperty('ALIAS_PASS')
 }
 
-def chaquopyBuildPython = properties?.getProperty('CHAQUOPY_BUILD_PYTHON') ?: System.getenv('CHAQUOPY_BUILD_PYTHON')
-
 keystorePwd = keystorePwd ?: System.getenv('KEYSTORE_PASS')
 alias = alias ?: System.getenv('ALIAS_NAME')
 pwd = pwd ?: System.getenv('ALIAS_PASS')
 
+// Система Python-плагинов (Chaquopy) удалена: она требовала 64-битный Python
+// и делала armeabi-v7a невозможным. NATIVE_TARGET остался, но SKIP-ветка убрана —
+// она гасила cmake/jni-задачи, а нам нужен libtmessages.so.
 def nativeTarget = System.getenv('NATIVE_TARGET') ?: ''
-
-if (nativeTarget == 'SKIP') {
-    tasks.configureEach { task ->
-        if (
-            task.name.toLowerCase().contains('cmake') ||
-            task.name.toLowerCase().contains('jni') ||
-            task.name.toLowerCase().contains('test')
-        ) {
-            task.enabled = false
-        }
-    }
-}
 
 android {
     defaultConfig.applicationId = APP_PACKAGE
@@ -96,13 +83,11 @@ android {
     // машине сборки, включая CI.
     def targetAbis
     if (nativeTarget == 'universal') {
-        targetAbis = ['arm64-v8a', 'x86_64']
-    } else if (nativeTarget == 'SKIP') {
-        targetAbis = ['arm64-v8a']
+        targetAbis = ['arm64-v8a', 'armeabi-v7a']
     } else if (!nativeTarget.isBlank()) {
         targetAbis = [nativeTarget]
     } else {
-        targetAbis = ['arm64-v8a', 'x86_64']
+        targetAbis = ['arm64-v8a', 'armeabi-v7a']
     }
 
     // splits.abi выключен намеренно, а не по недосмотру. Два ограничения
@@ -132,25 +117,9 @@ android {
         versionName verName
         versionCode verCode
 
-        // Python plugin engine (Chaquopy). ABI restriction is here (not in splits).
+        // Python plugin engine удалён, ограничение ABI теперь только наше собственное.
         ndk {
             abiFilters(*targetAbis)
-        }
-
-        python {
-            version '3.11'
-            if (chaquopyBuildPython != null && !chaquopyBuildPython.isBlank()) {
-                buildPython chaquopyBuildPython
-            }
-            pip {
-                install 'beautifulsoup4'
-                install 'debugpy'
-                install 'lxml'
-                install 'packaging'
-                install 'pillow'
-                install 'requests'
-                install 'PyYAML'
-            }
         }
 
         // obtain your own keys at https://core.telegram.org/api/obtaining_api_id
@@ -394,8 +363,15 @@ dependencies {
     implementation 'com.alphacephei:vosk-android:0.3.75'
     compileOnly 'org.checkerframework:checker-qual:2.5.2'
     compileOnly 'org.checkerframework:checker-compat-qual:2.5.0'
+    // firebase-messaging 22.0.0 (как в DiveLite) вернул ровно тот же 403
+    // API_KEY_ANDROID_APP_BLOCKED, что и 25.1.2, но заодно сломал инициализацию
+    // MLKit (InvalidRegistrarException на LanguageId/CommonComponentRegistrar).
+    // Значит дело не в версии SDK, а в ограничениях ключа в консоли Firebase.
     implementation 'com.google.firebase:firebase-messaging:25.1.2'
-    implementation 'com.google.firebase:firebase-crashlytics:20.1.0'
+    // firebase-crashlytics убран: плагина com.google.firebase.crashlytics в сборке
+    // нет (в google-services.json нет секции crashlytics), а FirebaseCrashlytics
+    // в ApplicationLoader.postInitApplication() ронял приложение при старте.
+    // Отчёты о падениях пишет свой обработчик app.exteraless.crash.CrashLog.
     implementation 'com.google.android.gms:play-services-cast-framework:22.3.1'
     implementation 'com.google.android.gms:play-services-maps:20.0.0'
     implementation 'com.google.android.gms:play-services-auth:21.6.0'

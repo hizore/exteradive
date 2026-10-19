@@ -232,6 +232,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         pushStatusRow = addRow("pushStatus");
         batteryOptimizationRow = addRow("batteryOptimization");
         glyphRow = Build.MANUFACTURER.equalsIgnoreCase("Nothing") ? addRow("glyph") : -1;
+        // exteradive: функции, перенесённые из DiveLite
         notificationsDividerRow = addRow();
     }
 
@@ -283,7 +284,6 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             presentFragment(new OpenExteraGlyphActivity());
             return;
         }
-
         if (position == pushStatusRow) {
             copyPushStatus();
             return;

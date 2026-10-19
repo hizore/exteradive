@@ -52,7 +52,7 @@
     <string name="OEGeneralImportEtgDone">Zaimportowane ustawienia: %1$d</string>
     <string name="OEGeneralResetSettings">Zresetuj ustawienia</string>
     <string name="OEGeneralResetSettingsInfo">Wszystkie ustawienia zostaną przywrócone do wartości domyślnych, a aplikacja uruchomi się ponownie.</string>
-    <string name="OEGeneralResetSettingsDone">Ustawienia exteraless zostały zresetowane.</string>
+    <string name="OEGeneralResetSettingsDone">Ustawienia exteradive zostały zresetowane.</string>
     <string name="OEGeneralDeleteAccount">Usuń konto</string>
     <string name="DeepLFormalityDefault">Ton: jak w oryginale</string>
     <string name="DeepLFormalityInformal">Ton: nieformalny</string>
@@ -94,7 +94,7 @@
     <string name="OEGeneralMapProvider">Dostawca map</string>
     <string name="OEGeneralMapPreview">Podglądy lokalizacji</string>
     <string name="OEGeneralMapDriftingFix">Popraw przesunięcie mapy</string>
-    <string name="OECrashTitle">exteraless uległ awarii</string>
+    <string name="OECrashTitle">exteradive uległ awarii</string>
     <string name="OEGeneralNetworkHeader">Sieć</string>
     <string name="OEPrivacyFalseBottom">Podwójne dno</string>
     <string name="OEPrivacyFalseBottomShowIn">Pokazuj w sekcji „%1$s”</string>
@@ -129,7 +129,7 @@
     <string name="OEAyuSaveInArchivedInfo">Usunięte i edytowane wiadomości z zarchiwizowanych czatów też są zapisywane.</string>
     <string name="OEAyuDatabaseExport">Eksportuj bazę danych</string>
     <string name="OEAyuDatabaseImport">Importuj bazę danych</string>
-    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z exteraless i AyuGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
+    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z exteradive i AyuGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
     <string name="OEAyuDatabaseImportDone">Dodano wiadomości: %1$d</string>
     <string name="OEAyuDatabaseImportFailed">Nie udało się zaimportować pliku</string>
     <string name="OEAyuRegexReversed">Odwrócony</string>
@@ -149,4 +149,14 @@
     <string name="OEUpdaterChannelStableInfo">Nowe wydania na GitHubie są sprawdzane co 6 godzin.</string>
     <string name="OEUpdaterChannelBetaInfo">Oferuje też wydania wstępne z GitHuba, zanim staną się wydaniami.</string>
     <string name="OEUpdaterAllReleases">Wszystkie wydania na GitHubie</string>
+<string name="OEDiveHeader">DiveLite</string>
+    <string name="OEDiveBadges">Odznaki</string>
+    <string name="OEDiveStreaks">Serie</string>
+    <string name="OEDiveNfts">Prezenty NFT</string>
+    <string name="OEDiveInfo">Odznaki, serie i prezenty NFT pochodzą z DiveLite. Wyłącz przełącznik, aby ukryć funkcję.</string>
+    <string name="OEDiveTitle">Funkcje DiveLite</string>
+    <string name="TypingInChat">pisze w %s</string>
+    <string name="OEDiveTypingInfo">Działa tylko z osobami, z którymi masz wspólny czat: Telegram wysyła status pisania dla czatów, których jesteś uczestnikiem.</string>
+    <string name="OEDiveTypingHeader">Pisanie</string>
+    <string name="OEDiveShowTypingLocation">Pokaż, w którym czacie pisze</string>
 </resources>

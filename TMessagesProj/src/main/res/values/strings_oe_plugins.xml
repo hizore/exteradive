@@ -1,18 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- exteraless: Python-плагины -->
+    <!-- exteradive: Python-плагины -->
     <string name="OpenExteraPlugins">Plugins</string>
-    <string name="PluginsSafeMode">Safe mode</string>
-    <string name="PluginsSafeModeEnabled">Safe mode turned on. It takes effect on the next start.</string>
-    <string name="PluginsSafeModeDisabled">Safe mode turned off. It takes effect on the next start.</string>
-    <string name="PluginsSafeModeSummary">When safe mode is on, no plugins are loaded. Use it if a plugin breaks the app.</string>
-    <string name="PluginsUnsafeMode">Unsafe mode</string>
-    <string name="PluginsUnsafeModeInfo">Plugins run with no restrictions</string>
-    <string name="PluginsUnsafeModeSummary">Permissions are not asked for and not enforced. Every plugin gets messages, files, network, hooks and native code, whatever its level says. Turn this on only for plugins you wrote or fully trust.</string>
-    <string name="PluginsUnsafeModeConfirm">This removes every check between plugins and your data. A plugin will be able to read your chats, send messages as you, take your files and run native code with no restrictions whatsoever.\n\nTurn it on only if you understand what you are installing.</string>
-    <string name="PluginsUnsafeModeEnable">Turn on anyway</string>
-    <string name="PluginsUnsafeModeOn">Unsafe mode is on</string>
-    <string name="PluginsUnsafeModeActive">These switches decide nothing while unsafe mode is on: the plugin already has everything. Turn unsafe mode off in the plugin settings to get them back.</string>
     <string name="PluginsDeveloperMode">Developer mode</string>
     <string name="PluginsInstallFromFile">Install from file</string>
     <string name="PluginsInstalling">Installing plugin…</string>
@@ -60,7 +49,7 @@
     <string name="PluginsNotFound">No plugins found</string>
     <string name="EnablePluginsEngine">Enable Plugins Engine</string>
     <string name="RestartRequired">Restart the app to apply</string>
-    <!-- exteraless: разрешения плагинов. Формулировка — последствие для человека,
+    <!-- exteradive: разрешения плагинов. Формулировка — последствие для человека,
          а не имя ключа: решение принимают по тому, что плагин сможет сделать. -->
     <string name="PluginPermissions">Permissions</string>
     <string name="PluginPermissionsHeader">Permissions</string>
@@ -195,6 +184,4 @@ Source:
     <string name="PluginOverlayTitle">Display over other apps</string>
     <string name="PluginOverlayText">%1$s wants to show a window over other apps. Allow it in system settings and try again.</string>
     <string name="PluginOverlayOpen">Open settings</string>
-    <string name="PluginsSafeModeEnabledNow">Safe mode is on, all plugins are turned off.</string>
-    <string name="PluginsSafeModeDisabledNow">Safe mode is off, plugins are loading.</string>
 </resources>

@@ -65,7 +65,6 @@ import java.util.concurrent.CountDownLatch;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.utils.AndroidUtil;
 import xyz.nextalone.nagram.NaConfig;
-import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import androidx.camera.camera2.Camera2Config;
 import androidx.camera.core.CameraXConfig;
@@ -103,7 +102,8 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
     private static PushListenerController.IPushListenerServiceProvider pushProvider;
     private static IMapsProvider mapsProvider;
     private static ILocationServiceProvider locationServiceProvider;
-    private Thread.UncaughtExceptionHandler systemUncaughtExceptionHandler;
+    private static Thread.UncaughtExceptionHandler systemUncaughtExceptionHandler;
+    private static boolean crashReportFilterInstalled;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -232,6 +232,11 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             return;
         }
         applicationInited = true;
+        // Обработчик ставим здесь, а не в onCreate(): этот метод зовут ресиверы,
+        // провайдеры виджетов и сам onCreate, то есть он выполняется раньше него.
+        // Раньше падение в инициализации конфигов ниже происходило до установки
+        // обработчика — приложение умирало молча, без диалога и без записи.
+        installCrashReportFilter();
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
 
         try {
@@ -302,12 +307,18 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             // умолчанию — патчим assetName после инициализации конфигов.
             org.telegram.ui.ActionBar.Theme.reloadMonetThemes();
         }
-        app.exteraless.plugins.PluginsController.getInstance().init(applicationContext);
         if (BuildConfig.DEBUG_TOOLS) {
             app.exteraless.debug.EnergyProfiler.resumeIfEnabled(applicationContext);
         }
         SharedPrefsHelper.init(applicationContext);
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(AndroidUtil.shouldEnableCrashlytics());
+        // exteradive: функции DiveLite — значки, серии и NFT подгружаются с сервера
+        try {
+            DiveGramBadge.fetch();
+            DiveGramStreak.init();
+            DiveGramNfts.fetch();
+        } catch (Throwable t) {
+            FileLog.e(t);
+        }
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
             UserConfig.getInstance(a).loadConfig();
             MessagesController.getInstance(a);
@@ -898,10 +909,19 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         return null;
     }
 
-    private void installCrashReportFilter() {
+    private static void installCrashReportFilter() {
+        if (crashReportFilterInstalled) {
+            return;
+        }
+        crashReportFilterInstalled = true;
         Thread.UncaughtExceptionHandler crashlyticsHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
-            app.exteraless.crash.CrashLog.record(thread, error);
+            // Своя запись ломается вместе с приложением — падение в обработчике
+            // не должно приводить к «приложение зависло и не закрывается».
+            try {
+                app.exteraless.crash.CrashLog.record(thread, error);
+            } catch (Throwable ignore) {
+            }
             if (AndroidUtil.shouldReportCrashToCrashlytics(error)) {
                 if (crashlyticsHandler != null) {
                     crashlyticsHandler.uncaughtException(thread, error);

@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="OpenExteraPlugins">Wtyczki</string>
-    <string name="PluginsSafeMode">Tryb awaryjny</string>
-    <string name="PluginsSafeModeSummary">Przy włączonym trybie awaryjnym żadne wtyczki nie są ładowane. Użyj go, jeśli wtyczka psuje aplikację.</string>
-    <string name="PluginsUnsafeMode">Tryb bez zabezpieczeń</string>
-    <string name="PluginsUnsafeModeInfo">Wtyczki działają bez ograniczeń</string>
-    <string name="PluginsUnsafeModeSummary">Uprawnienia nie są pytane ani egzekwowane. Każda wtyczka dostaje wiadomości, pliki, sieć, hooki i kod natywny niezależnie od swojego poziomu. Włączaj tylko dla wtyczek, które sam napisałeś lub którym w pełni ufasz.</string>
-    <string name="PluginsUnsafeModeConfirm">To usuwa wszystkie kontrole między wtyczkami a Twoimi danymi. Wtyczka będzie mogła czytać rozmowy, wysyłać wiadomości w Twoim imieniu, zabrać pliki i uruchomić kod natywny bez jakichkolwiek ograniczeń.\n\nWłącz tylko, jeśli rozumiesz, co instalujesz.</string>
-    <string name="PluginsUnsafeModeEnable">Włącz mimo to</string>
-    <string name="PluginsUnsafeModeOn">Tryb bez zabezpieczeń jest włączony</string>
-    <string name="PluginsUnsafeModeActive">Dopóki tryb bez zabezpieczeń jest włączony, te przełączniki niczego nie decydują: wtyczka i tak ma wszystko. Wyłącz ten tryb w ustawieniach wtyczek, aby znów działały.</string>
     <string name="PluginsDeveloperMode">Tryb dewelopera</string>
     <string name="PluginsInstallFromFile">Zainstaluj z pliku</string>
     <string name="PluginsInstalling">Instalowanie wtyczki…</string>
@@ -181,6 +172,4 @@ Wtyczka: %1$s
     <string name="PluginOverlayTitle">Wyświetlanie nad innymi aplikacjami</string>
     <string name="PluginOverlayText">%1$s chce wyświetlić okno nad innymi aplikacjami. Zezwól na to w ustawieniach systemu i spróbuj ponownie.</string>
     <string name="PluginOverlayOpen">Otwórz ustawienia</string>
-    <string name="PluginsSafeModeEnabledNow">Tryb awaryjny włączony, wszystkie wtyczki są wyłączone.</string>
-    <string name="PluginsSafeModeDisabledNow">Tryb awaryjny wyłączony, wtyczki się ładują.</string>
 </resources>

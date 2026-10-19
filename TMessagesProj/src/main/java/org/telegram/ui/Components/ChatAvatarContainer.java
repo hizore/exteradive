@@ -56,6 +56,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
@@ -1368,6 +1369,19 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
         subtitleIsThinkingBot = false;
         CharSequence printString = MessagesController.getInstance(currentAccount).getPrintingString(parentFragment.getDialogId(), parentFragment.getThreadId(), false);
+        // exteradive (DiveGram): собеседник печатает не здесь, а в другом чате -
+        // показываем это в шапке под именем.
+        if (printString == null && SharedConfig.showTypingLocation && user != null
+                && parentFragment.getDialogId() == user.id) {
+            MessagesController.ElsewhereTyping elsewhere =
+                    MessagesController.getInstance(currentAccount).elsewhereTypingUsers.get(user.id);
+            if (elsewhere != null) {
+                TLRPC.Chat typingChat = MessagesController.getInstance(currentAccount).getChat(-elsewhere.dialogId);
+                if (typingChat != null && !TextUtils.isEmpty(typingChat.title)) {
+                    printString = LocaleController.formatString("TypingInChat", R.string.TypingInChat, typingChat.title);
+                }
+            }
+        }
         if (printString == null && UserObject.isBotForum(user)) {
             //if (BotForumHelper.getInstance(currentAccount).isThinking(user.id, (int) parentFragment.getTopicId())) {
             //    printString = "thinking";

@@ -1603,19 +1603,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     // before, вернувший true, глотает интент (оригинальная обработка не выполняется);
     // after зовётся всегда (finally) после оригинальной обработки.
     private boolean handleIntent(Intent intent, boolean isNew, boolean restore, boolean fromPassword, Browser.Progress progress, boolean rebuildFragments, boolean openedTelegram) {
-        if (intent != null && app.exteraless.plugins.PluginsController.getInstance().isEngineEnabled()
-                && app.exteraless.plugins.intents.IntentsDispatcher.hasHandlers()) {
-            java.util.Map<String, Object> pluginContext = app.exteraless.plugins.intents.IntentsDispatcher.buildIntentContext(
-                    intent, intent.getIntExtra("currentAccount", UserConfig.selectedAccount), true);
-            if (app.exteraless.plugins.intents.IntentsDispatcher.dispatchBefore(pluginContext)) {
-                return true;
-            }
-            try {
-                return handleIntentInternal(intent, isNew, restore, fromPassword, progress, rebuildFragments, openedTelegram);
-            } finally {
-                app.exteraless.plugins.intents.IntentsDispatcher.dispatchAfter(pluginContext);
-            }
-        }
         return handleIntentInternal(intent, isNew, restore, fromPassword, progress, rebuildFragments, openedTelegram);
     }
 
@@ -2023,9 +2010,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
                     // exteraless plugins: файл плагина, открытый снаружи (тап в чате,
                     // файловый менеджер). Проверка по расширению, до разбора ссылок.
-                    if (app.exteraless.plugins.PluginInstallHelper.handleViewIntent(this, data)) {
-                        return true;
-                    }
 
                     final LinkManager linkManager = new LinkManager(this, intentAccount[0], progress, openedTelegram);
                     if (linkManager.handle(data)) {
@@ -6962,7 +6946,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         MediaController.getInstance().pauseInBackgroundIfNeeded();
         super.onPause();
         isResumed = false;
-        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_PAUSE);
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
         ApplicationLoader.mainInterfacePaused = true;
@@ -7089,7 +7072,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onDestroy() {
         app.exteraless.icons.picker.IconPickerController.onDestroy();
-        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_STOP);
         GramWalletStorageAuth.onActivityDestroyed(this);
         isActive = false;
         activeInstanceCount--;
@@ -7211,8 +7193,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onResume() {
         super.onResume();
         isResumed = true;
-        app.exteraless.plugins.PluginsController.getInstance().executeOnAppEvent(app.exteraless.plugins.PluginsConstants.EVENT_APP_RESUME);
-        app.exteraless.plugins.PluginDenialNotice.flush();
         app.exteraless.crash.CrashReportDialog.showIfPending(this);
         pipActivityHandler.onResume();
         if (onResumeStaticCallback != null) {

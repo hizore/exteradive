@@ -1368,6 +1368,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private String currentPhotoFilter;
     private String currentPhotoFilterThumb;
     private Drawable foreverDrawable;
+    // exteradive: значок рядом с именем (DiveLite)
+    private Drawable dgNameBadgeDrawable;
+    private String dgNameBadgeDrawableId;
     private int foreverDrawableColor = 0xFFFFFFFF;
 
     private boolean timePressed;
@@ -2340,7 +2343,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             delegate.didPressViaBot(this, username != null ? username : currentMessageObject.messageOwner.via_bot_name);
                         }
                     } else if (currentUser != null) {
-                        delegate.didPressUserAvatar(this, currentUser, getEventX(event), getEventY(event), false);
+                        // exteradive: тап по значку показывает его описание
+                        if (org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+                            org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id);
+                        } else {
+                            delegate.didPressUserAvatar(this, currentUser, getEventX(event), getEventY(event), false);
+                        }
                     } else if (currentChat != null) {
                         int id;
                         TLRPC.Chat chat = currentChat;
@@ -19374,6 +19382,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (drawNameAvatar) {
                 nameWidth -= dp(32.33f);
             }
+            // exteradive: место под значок рядом с именем
+            if (currentUser != null && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+                nameWidth += dp(24);
+            }
             if (drawTopic && topicButton != null) {
                 nameWidth -= topicButton.width + dp(8);
             }
@@ -22908,10 +22920,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     //star has smaller size than other emoji
                     float starVerticalOffset = isStarDrawable ? 1.5f : 0f;
                     float starHorizontalOffset = isStarDrawable ? -5 : 0;
+                    // exteradive: значок занимает первые ~20dp после имени,
+                    // поэтому статус (звезда, премиум) сдвигаем за него.
+                    int dgStatusShift = currentUser != null
+                            && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id) ? dp(24) : 0;
                     nameStatusSelector.setBounds(
-                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth)),
+                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dgStatusShift),
                         (int) (ny - dp(1.33f + 2 - starVerticalOffset)),
-                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(4 + 12 + 4 + 4 + starHorizontalOffset)),
+                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dgStatusShift + dp(4 + 12 + 4 + 4 + starHorizontalOffset)),
                         (int) (ny + nameLayout.getHeight() + dp(1.33f + 2 - starVerticalOffset))
                     );
                     nameStatusSelector.setAlpha((int) (0xFF * nameAlpha));
@@ -22925,6 +22941,38 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             nameLayout.draw(canvas);
             Theme.chat_namePaint.setAlpha(oldAlpha);
             canvas.restore();
+
+            // exteradive: значок рядом с именем отправителя (функция DiveLite)
+            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = currentUser != null
+                    ? org.telegram.messenger.DiveGramBadge.getBadge(currentUser.id) : null;
+            if (dgBadgeObj != null && nameLayout != null) {
+                if (dgNameBadgeDrawable == null || !java.util.Objects.equals(dgNameBadgeDrawableId, dgBadgeObj.id)) {
+                    if (dgNameBadgeDrawable != null) {
+                        dgNameBadgeDrawable.setCallback(null);
+                    }
+                    dgNameBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                            dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlueText), dp(20), dp(36));
+                    dgNameBadgeDrawable.setCallback(this);
+                    dgNameBadgeDrawableId = dgBadgeObj.id;
+                }
+                int bs = dp(16);
+                int bcy = (int) (ny + nameLayout.getHeight() / 2);
+                float badgeOffsetX = dp(4);
+                dgNameBadgeDrawable.setBounds(
+                        (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX),
+                        bcy - bs / 2,
+                        (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX + bs),
+                        bcy + bs / 2
+                );
+                dgNameBadgeDrawable.setAlpha((int) (255 * nameAlpha));
+                dgNameBadgeDrawable.draw(canvas);
+                // invalidate() не нужен: AnimatedBadgeDrawable.draw() сам вызывает
+                // invalidateSelf(), а callback у него выставлен на этот cell.
+            } else if (dgNameBadgeDrawable != null) {
+                dgNameBadgeDrawable.setCallback(null);
+                dgNameBadgeDrawable = null;
+                dgNameBadgeDrawableId = null;
+            }
 
             float end;
             if (currentMessagesGroup != null && !currentMessagesGroup.isDocuments) {

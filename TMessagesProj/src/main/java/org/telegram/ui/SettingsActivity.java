@@ -3,7 +3,6 @@ package org.telegram.ui;
 import tw.nekomimi.nekogram.utils.ShareUtil;
 import app.exteraless.debug.EnergyProfiler;
 import app.exteraless.debug.JankProfiler;
-import app.exteraless.debug.PluginToggleTrace;
 import app.exteraless.settings.OpenExteraSettingsActivity;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
@@ -1701,12 +1700,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 });
             }
 
-            if (PluginToggleTrace.getLog() != null) {
-                builder.addItem(getString(R.string.OEPluginToggleLogShare), R.drawable.msg_share, (it) -> {
-                    shareProfilerReport(getParentActivity(), PluginToggleTrace.getLog());
-                    return Unit.INSTANCE;
-                });
-            }
         }
 
         {

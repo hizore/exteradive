@@ -3592,7 +3592,17 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (fragment == null || fragment.getParentActivity() == null) {
             return 0;
         }
-        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
+        // exteradive (dive://emoji): премиум-эмодзи в правке уходят ссылкой,
+        // поэтому текст тоже меняется, а не только сущности.
+        if (entities != null && !entities.isEmpty() && message != null) {
+            CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                    currentAccount, messageObject.getDialogId(), message, entities);
+            if (diveText != message) {
+                message = diveText.toString();
+            }
+        } else {
+            app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
+        }
 
         final TLRPC.TL_messages_editMessage req;
         if (messageObject.isEphemeral()) {
@@ -4472,19 +4482,22 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(SendMessageParams originalParams) {
-        app.exteraless.plugins.HookResult hookResult = app.exteraless.plugins.HookResult.DEFAULT;
         // exteraless plugins: исходящее сообщение через on_send_message_hook (CANCEL = не отправлять)
-        if (app.exteraless.plugins.PluginsController.getInstance().hasSendMessageHooks()) {
-            hookResult = app.exteraless.plugins.PluginsController.getInstance()
-                    .executeOnSendMessageHook(currentAccount, originalParams);
-            if (hookResult.isCancel()) {
-                return;
-            }
-        }
-        SendMessageParams replacement = hookResult.replacement(SendMessageParams.class);
-        final SendMessageParams sendMessageParams = replacement != null ? replacement : originalParams;
+        final SendMessageParams sendMessageParams = originalParams;
         app.exteraless.chats.DeletedReplyQuote.rewrite(currentAccount, sendMessageParams);
-        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        // exteradive (dive://emoji): если в тексте есть премиум-эмодзи, они
+        // заменяются ссылкой целиком, поэтому правим не только сущности,
+        // но и само тело сообщения.
+        if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty()
+                && sendMessageParams.message != null) {
+            CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                    currentAccount, sendMessageParams.peer, sendMessageParams.message, sendMessageParams.entities);
+            if (diveText != sendMessageParams.message) {
+                sendMessageParams.message = diveText.toString();
+            }
+        } else {
+            app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        }
         final SendMessageChatArguments sendMessageChatArguments = sendMessageParams.sendMessageChatArguments != null ?
                 sendMessageParams.sendMessageChatArguments : SendMessageChatArguments.EMPTY;
         String message = sendMessageParams.message;

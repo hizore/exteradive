@@ -28,7 +28,6 @@ import app.exteraless.drawer.MainMenuLayout;
 import app.exteraless.general.GeneralConfig;
 import app.exteraless.icons.BaseIconPacks;
 import app.exteraless.icons.IconPacksConfig;
-import app.exteraless.plugins.Plugin;
 import app.exteraless.utils.UtilsConfig;
 
 import tw.nekomimi.nekogram.NekoConfig;
@@ -98,10 +97,6 @@ public final class ExteraConfig {
 
     public static Gson getGSON() {
         return GSON;
-    }
-
-    private static app.exteraless.plugins.PluginsController plugins() {
-        return app.exteraless.plugins.PluginsController.getInstance();
     }
 
     private static void ensureLoaded() {
@@ -1296,36 +1291,6 @@ public final class ExteraConfig {
         ChatsConfig.flashIntensity.setConfigInt(Math.round(value * 100));
     }
 
-    public static boolean getPluginsDevMode() {
-        ensureLoaded();
-        return plugins().isDeveloperMode();
-    }
-
-    public static void setPluginsDevMode(boolean value) {
-        ensureLoaded();
-        plugins().setDeveloperMode(value);
-    }
-
-    public static boolean getPluginsSafeMode() {
-        ensureLoaded();
-        return plugins().isSafeMode();
-    }
-
-    public static void setPluginsSafeMode(boolean value) {
-        ensureLoaded();
-        plugins().setSafeMode(value);
-    }
-
-    public static boolean getPluginsCompactView() {
-        ensureLoaded();
-        return plugins().isCompactView();
-    }
-
-    public static void setPluginsCompactView(boolean value) {
-        ensureLoaded();
-        plugins().setCompactView(value);
-    }
-
     public static boolean getPluginsPySdkAutoUpdate() {
         return getPreferences().getBoolean("pluginsPySdkAutoUpdate", true);
     }
@@ -1340,26 +1305,6 @@ public final class ExteraConfig {
 
     public static void setPluginsPySdkBetaVersions(boolean value) {
         getPreferences().edit().putBoolean("pluginsPySdkBetaVersions", value).apply();
-    }
-
-    public static boolean getPluginsDisableArtOpts() {
-        ensureLoaded();
-        return plugins().isCompatibilityMode();
-    }
-
-    public static void setPluginsDisableArtOpts(boolean value) {
-        ensureLoaded();
-        plugins().setCompatibilityMode(value);
-    }
-
-    public static java.util.Set<String> getPinnedPlugins() {
-        ensureLoaded();
-        return readPinnedPlugins();
-    }
-
-    public static void setPinnedPlugins(java.util.Set<String> value) {
-        ensureLoaded();
-        writePinnedPlugins(value);
     }
 
     public static boolean getUseSystemIconShape() {
@@ -1605,18 +1550,6 @@ public final class ExteraConfig {
             case "useGoogleCrashlytics":
                 setUseGoogleCrashlytics(value);
                 return true;
-            case "pluginsDevMode":
-                setPluginsDevMode(value);
-                return true;
-            case "pluginsSafeMode":
-                setPluginsSafeMode(value);
-                return true;
-            case "pluginsCompactView":
-                setPluginsCompactView(value);
-                return true;
-            case "pluginsDisableArtOpts":
-                setPluginsDisableArtOpts(value);
-                return true;
             case "useSystemIconShape":
                 setUseSystemIconShape(value);
                 return true;
@@ -1733,10 +1666,6 @@ public final class ExteraConfig {
     }
 
 
-    public static boolean pluginsSafeMode() {
-        return plugins().isSafeMode();
-    }
-
     public static int iconPack() {
         return BaseIconPacks.getSelected();
     }
@@ -1752,39 +1681,6 @@ public final class ExteraConfig {
     private static void applyForceSnow(boolean enabled) {
         NekoConfig.actionBarDecoration.setConfigInt(enabled ? 1 : 0);
         NaConfig.INSTANCE.getChatDecoration().setConfigInt(enabled ? 1 : 0);
-    }
-
-    public static boolean getPluginsEngine() {
-        return plugins().isEngineEnabled();
-    }
-
-    public static void setPluginsEngine(boolean enabled) {
-        plugins().setEngineEnabled(enabled);
-    }
-
-    private static Set<String> readPinnedPlugins() {
-        LinkedHashSet<String> pinned = new LinkedHashSet<>();
-        try {
-            for (Map.Entry<String, Plugin> entry : plugins().getPlugins().entrySet()) {
-                if (plugins().isPluginPinned(entry.getKey())) {
-                    pinned.add(entry.getKey());
-                }
-            }
-        } catch (Throwable t) {
-            FileLog.e(t);
-        }
-        return pinned;
-    }
-
-    private static void writePinnedPlugins(Set<String> value) {
-        Set<String> wanted = value == null ? Collections.<String>emptySet() : value;
-        try {
-            for (String id : plugins().getPlugins().keySet()) {
-                plugins().setPluginPinned(id, wanted.contains(id));
-            }
-        } catch (Throwable t) {
-            FileLog.e(t);
-        }
     }
 
     /**
@@ -2164,13 +2060,6 @@ public final class ExteraConfig {
             new PreferencesUtils.BackupItem("targetLang", String.class),
             new PreferencesUtils.BackupItem("flashWarmth", Float.class),
             new PreferencesUtils.BackupItem("flashIntensity", Float.class),
-            new PreferencesUtils.BackupItem("pluginsDevMode", Boolean.class),
-            new PreferencesUtils.BackupItem("pluginsSafeMode", Boolean.class),
-            new PreferencesUtils.BackupItem("pluginsCompactView", Boolean.class),
-            new PreferencesUtils.BackupItem("pluginsPySdkAutoUpdate", Boolean.class),
-            new PreferencesUtils.BackupItem("pluginsPySdkBetaVersions", Boolean.class),
-            new PreferencesUtils.BackupItem("pluginsDisableArtOpts", Boolean.class),
-            new PreferencesUtils.BackupItem("pinnedPlugins", java.util.Set.class),
             new PreferencesUtils.BackupItem("useSystemIconShape", Boolean.class)
     };
 
@@ -2224,11 +2113,7 @@ public final class ExteraConfig {
 
         @Override
         public SharedPreferences.Editor putStringSet(String key, Set<String> values) {
-            if ("pinnedPlugins".equals(key)) {
-                setPinnedPlugins(values);
-            } else {
-                delegate.putStringSet(key, values);
-            }
+            delegate.putStringSet(key, values);
             return this;
         }
 

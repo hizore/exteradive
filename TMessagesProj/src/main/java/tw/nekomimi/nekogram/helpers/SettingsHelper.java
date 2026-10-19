@@ -23,7 +23,6 @@ import java.util.Set;
 
 import app.exteraless.ai.ui.AiSettingsActivity;
 import app.exteraless.pillstack.PillStackSettingsActivity;
-import app.exteraless.plugins.ui.PluginsActivity;
 import app.exteraless.settings.OpenExteraAppNavigationActivity;
 import app.exteraless.settings.OpenExteraAppearanceActivity;
 import app.exteraless.settings.OpenExteraAyuMomentsActivity;
@@ -263,9 +262,6 @@ public class SettingsHelper {
                     break;
                 case "pillstack":
                     fragment = neko_fragment = new PillStackSettingsActivity();
-                    break;
-                case "plugins":
-                    fragment = new PluginsActivity();
                     break;
                 case "navigation":
                     fragment = navigation_fragment = new OpenExteraAppNavigationActivity();

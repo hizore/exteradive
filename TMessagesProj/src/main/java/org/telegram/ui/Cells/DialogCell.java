@@ -658,6 +658,15 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     private boolean drawVerified;
     private boolean drawBotVerified;
     private boolean drawPremium;
+    // exteradive: бейдж и огонёк серии (DiveLite)
+    private Drawable dgBadgeDrawable;
+    private String dgBadgeDrawableId;
+    private final android.graphics.Rect dgBadgeBounds = new android.graphics.Rect();
+    private boolean dgBadgePressPending;
+    private float dgBadgePressX, dgBadgePressY;
+    private final org.telegram.messenger.DiveGramStreak.FireDrawable dgStreakFire = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+    private final android.graphics.Rect dgStreakBounds = new android.graphics.Rect();
+    private TextPaint dgStreakTextPaint;
     private final View emojiStatusView;
     private final View botVerificationView;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emojiStatus;
@@ -4723,6 +4732,57 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).draw(canvas);
             }
 
+            // exteradive (DiveLite): бейдж и огонёк серии справа от иконок статуса
+            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = currentDialogId > 0 && DialogObject.isUserDialog(currentDialogId)
+                    ? org.telegram.messenger.DiveGramBadge.getBadge(currentDialogId) : null;
+            org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(currentDialogId, currentAccount);
+            boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
+            if (dgBadgeObj != null || dgStreakVisible) {
+                int iconRight = nameMuteLeft;
+                // dgBadgeObj и dgStreakVisible уже проверены выше
+                if (dgBadgeObj != null) {
+                    if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
+                        if (dgBadgeDrawable != null) {
+                            dgBadgeDrawable.setCallback(null);
+                        }
+                        dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                                dgBadgeObj, Theme.getColor(Theme.key_chats_name, resourcesProvider), dp(18), dp(36));
+                        dgBadgeDrawable.setCallback(this);
+                        dgBadgeDrawableId = dgBadgeObj.id;
+                    }
+                    int bs = dp(18);
+                    dgBadgeBounds.set(iconRight + dp(4), dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1), iconRight + dp(4) + bs, dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1) + bs);
+                    dgBadgeDrawable.setBounds(dgBadgeBounds);
+                    dgBadgeDrawable.draw(canvas);
+                    invalidate();
+                    iconRight = dgBadgeBounds.right;
+                } else if (dgBadgeDrawable != null) {
+                    dgBadgeDrawable.setCallback(null);
+                    dgBadgeDrawable = null;
+                    dgBadgeDrawableId = null;
+                }
+
+                if (dgStreakVisible) {
+                    int flameSize = dp(16);
+                    int flameX = iconRight + dp(2);
+                    int flameY = dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(2);
+                    int streakColor = dgStreakInfo.pending ? org.telegram.messenger.DiveGramStreak.getGrayColor() : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
+                    dgStreakBounds.set(flameX, flameY, flameX + flameSize, flameY + flameSize);
+                    dgStreakFire.setColor(streakColor);
+                    dgStreakFire.setBounds(dgStreakBounds);
+                    dgStreakFire.draw(canvas);
+                    if (dgStreakTextPaint == null) {
+                        dgStreakTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                        dgStreakTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+                    }
+                    dgStreakTextPaint.setTextSize(dp(13));
+                    dgStreakTextPaint.setColor(streakColor);
+                    String dgStreakText = String.valueOf(dgStreakInfo.days);
+                    canvas.drawText(dgStreakText, dgStreakBounds.right + dp(2), flameY + flameSize - dp(3), dgStreakTextPaint);
+                    invalidate();
+                }
+            }
+
             if (drawReorder || reorderIconProgress != 0) {
                 if (!LocaleController.isRTL) {
                     final Paint reorderGradientPaint = getPaintReorderGradient();
@@ -6331,6 +6391,24 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     public boolean onTouchEvent(MotionEvent event) {
         if (rightFragmentOpenedProgress == 0 && !isTopic && !isShareToStoryCell && storyParams.checkOnTouchEvent(event, this)) {
             return true;
+        }
+        // exteradive (DiveLite): тап по бейджу в списке чатов
+        if (event.getAction() == MotionEvent.ACTION_DOWN && dgBadgeDrawable != null && dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
+            dgBadgePressPending = true;
+            dgBadgePressX = event.getX();
+            dgBadgePressY = event.getY();
+            return true;
+        }
+        if (dgBadgePressPending && event.getAction() == MotionEvent.ACTION_UP) {
+            if (dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
+                org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentDialogId);
+                dgBadgePressPending = false;
+                return true;
+            }
+            dgBadgePressPending = false;
+        }
+        if (dgBadgePressPending && event.getAction() == MotionEvent.ACTION_CANCEL) {
+            dgBadgePressPending = false;
         }
         if (delegate == null || delegate.canClickButtonInside()) {
             if (openBot) {

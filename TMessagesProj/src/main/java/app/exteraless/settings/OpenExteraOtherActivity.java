@@ -42,7 +42,6 @@ import java.util.UUID;
 import app.exteraless.backup.EtgBackup;
 import app.exteraless.backup.EtgBackupUi;
 import app.exteraless.general.GeneralConfig;
-import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import app.exteraless.general.GeneralHelper;
 import tw.nekomimi.nekogram.NekoConfig;
@@ -53,7 +52,6 @@ import tw.nekomimi.nekogram.settings.BaseNekoSettingsActivity;
 import xyz.nextalone.nagram.NaConfig;
 import tw.nekomimi.nekogram.ui.cells.HeaderCell;
 import tw.nekomimi.nekogram.utils.AlertUtil;
-import tw.nekomimi.nekogram.utils.AndroidUtil;
 
 /**
  * Экран «Other» раздела openExtera — повторяет Other из exteraGram
@@ -91,6 +89,7 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
     private int etgDividerRow;
     private int glyphRow;
     private int glyphDividerRow;
+    private int diveLiteRow;
     private int resetSettingsRow;
     private int deleteAccountRow;
     private int bottomDividerRow;
@@ -110,7 +109,13 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
     @Override
     public void onResume() {
         super.onResume();
-        checkSensitiveContent();
+        // Проверка sensitive-контента ходит в MessagesController и не должна ронять
+        // экран: исключение здесь уходило в обработчик, и «Ещё» просто не открывался.
+        try {
+            checkSensitiveContent();
+        } catch (Throwable t) {
+            FileLog.e(t);
+        }
     }
 
     @Override
@@ -136,6 +141,8 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
         nagramHeaderRow = addRow("nagramHeader");
         nagramSettingsRow = -1;
         ayuMomentsRow = addRow("ayuMoments");
+        // Функции DiveGram/DiveLite - в разделе «Дополнительно», рядом с AyuMoments.
+        diveLiteRow = addRow("diveLite");
         nagramDividerRow = addRow();
 
         experimentalHeaderRow = addRow("experimentalHeader");
@@ -196,8 +203,6 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
             if (view instanceof TextCheckCell) {
                 ((TextCheckCell) view).setChecked(enabled);
             }
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(
-                    AndroidUtil.shouldEnableCrashlytics());
         } else if (position == contentCaptureRow) {
             toggleCheck(view, GeneralConfig.contentCapture);
             GeneralHelper.applyContentCapture(getParentActivity());
@@ -233,6 +238,8 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
             openEtgFilePicker();
         } else if (position == glyphRow) {
             presentFragment(new OpenExteraGlyphActivity());
+        } else if (position == diveLiteRow) {
+            presentFragment(new OpenExteraDiveFeaturesActivity());
         } else if (position == resetSettingsRow) {
             showResetSettingsDialog();
         } else if (position == deleteAccountRow) {
@@ -565,6 +572,9 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
                     } else if (position == glyphRow) {
                         cell.setColors(Theme.key_windowBackgroundWhiteGrayIcon, Theme.key_windowBackgroundWhiteBlackText);
                         cell.setText(getString(R.string.OEGlyphTitle), false);
+                    } else if (position == diveLiteRow) {
+                        cell.setColors(Theme.key_windowBackgroundWhiteGrayIcon, Theme.key_windowBackgroundWhiteBlackText);
+                        cell.setTextAndIcon(getString(R.string.OEDiveTitle), R.drawable.baseline_stars_24, false);
                     } else if (position == resetSettingsRow) {
                         cell.setColors(Theme.key_windowBackgroundWhiteGrayIcon, Theme.key_windowBackgroundWhiteBlackText);
                         cell.setTextAndIcon(getString(R.string.OEGeneralResetSettings), R.drawable.msg_reset, true);
@@ -605,7 +615,8 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
                 return TYPE_INFO_PRIVACY;
             } else if (position == exportEtgRow || position == importEtgRow
                     || position == resetSettingsRow || position == deleteAccountRow
-                    || position == glyphRow || position == ayuMomentsRow) {
+                    || position == glyphRow || position == ayuMomentsRow
+                    || position == diveLiteRow) {
                 return TYPE_TEXT;
             }
             return TYPE_CHECK;
