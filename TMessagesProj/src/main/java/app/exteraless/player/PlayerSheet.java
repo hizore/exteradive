@@ -48,6 +48,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.audioinfo.AudioInfo;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BottomSheet;
+import android.graphics.Color;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.Bulletin;
@@ -1565,6 +1566,13 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         }
         titleView.setTextColor(c.onSurface);
         artistView.setTextColor(c.onSurfaceVariant);
+        // exteradive: битрейт аудиофайла. В тёмной теме текст тёмный на тёмном
+        // и не читается - делаем белым, в светлой оставляем как есть.
+        if (bitrateView != null) {
+            bitrateView.setTextColor(Theme.isCurrentThemeDark()
+                    ? Color.WHITE
+                    : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        }
         smallTitle.setTextColor(c.onSurface);
         smallArtist.setTextColor(c.onSurfaceVariant);
         likeButton.setColors(0, c.onSurfaceVariant, c.primaryContainer, c.onPrimaryContainer);

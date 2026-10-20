@@ -1232,6 +1232,28 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             titleTextView.setRightDrawable(null);
             rightDrawableContentDescription = null;
         }
+        // exteradive (DiveGram): значок в шапке чата. Если слот справа свободен -
+        // ставим туда, иначе в правый нижний слот ( рядом с верификацией).
+        TLRPC.User dgHeaderUser = parentFragment != null ? parentFragment.getCurrentUser() : null;
+        org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = dgHeaderUser != null
+                ? org.telegram.messenger.DiveGramBadge.getBadge(dgHeaderUser.id) : null;
+        if (dgBadgeObj != null) {
+            Drawable dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createDiveGramBadge(
+                    dgBadgeObj, getThemedColor(Theme.key_profile_verifiedBackground), dp(18));
+            titleTextView.setRightDrawableOnClick(null);
+            titleTextView.setRightDrawable2OnClick(null);
+            if (titleTextView.getRightDrawable() == null) {
+                titleTextView.setRightDrawable2(null);
+                titleTextView.setRightDrawable(dgBadgeDrawable);
+                titleTextView.setRightDrawableOnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
+            } else {
+                titleTextView.setRightDrawable2(dgBadgeDrawable);
+                titleTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
+            }
+        } else {
+            titleTextView.setRightDrawableOnClick(null);
+            titleTextView.setRightDrawable2OnClick(null);
+        }
         checkActionBar(animated);
     }
 

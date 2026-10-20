@@ -2977,6 +2977,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 observersGroup.add(NotificationCenter.filterSettingsUpdated);
                 observersGroup.add(NotificationCenter.dialogsUnreadCounterChanged);
             }
+            // exteradive (DiveGram): значки и серии шлются и в глобальный инстанс
+            observersGroup.addGlobal(NotificationCenter.DiveGramBadgesChanged);
+            observersGroup.addGlobal(NotificationCenter.DiveGramStreakChanged);
             observersGroup
                 .add(NotificationCenter.dialogsNeedReload)
                 .add(NotificationCenter.dialogFiltersUpdated)
@@ -2992,6 +2995,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 .add(NotificationCenter.needReloadRecentDialogsSearch)
                 .add(NotificationCenter.replyMessagesDidLoad)
                 .add(NotificationCenter.topicsDidLoaded)
+                // exteradive (DiveGram): значки и серии приезжают из сети уже после
+                // построения списка - без пересборки под них нет места, и значок
+                // наезжает на префиксы.
+                .add(NotificationCenter.DiveGramBadgesChanged)
+                .add(NotificationCenter.DiveGramStreakChanged)
                 .add(NotificationCenter.reloadHints)
                 .add(NotificationCenter.didUpdateConnectionState)
                 .add(NotificationCenter.onDownloadingFilesChanged)
@@ -10920,6 +10928,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         } else if (id == NotificationCenter.proxySettingsChanged) {
             updateProxyButton(false, false);
+        } else if (id == NotificationCenter.DiveGramBadgesChanged || id == NotificationCenter.DiveGramStreakChanged) {
+            // exteradive (DiveGram): пересобираем список, чтобы под значок и огонёк
+            // серии было забронировано место в строке имени.
+            if (viewPages != null) {
+                for (int a = 0; a < viewPages.length; a++) {
+                    viewPages[a].dialogsAdapter.notifyDataSetChanged();
+                }
+            }
         } else if (id == NotificationCenter.updateInterfaces) {
             Integer mask = (Integer) args[0];
             updateVisibleRows(mask);

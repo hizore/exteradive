@@ -410,6 +410,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private Drawable lockIconDrawable;
     private final Drawable[] verifiedDrawable = new Drawable[2];
     private final Drawable[] premiumStarDrawable = new Drawable[2];
+    // exteradive (DiveGram): кэш значка и огонька серии для профиля
+    private Drawable dgBadgeDrawable;
+    private String dgBadgeDrawableId;
+    private org.telegram.messenger.DiveGramStreak.FireDrawable dgStreakDrawable;
     private Long emojiStatusGiftId;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] emojiStatusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] botVerificationDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
@@ -2215,6 +2219,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.botInfoDidLoad);
             getNotificationCenter().addObserver(this, NotificationCenter.userInfoDidLoad);
             getNotificationCenter().addObserver(this, NotificationCenter.privacyRulesUpdated);
+            // exteradive (DiveGram): значки приезжают из сети - обновляем шапку
+            getNotificationCenter().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.reloadInterface);
 
             userBlocked = getMessagesController().blockePeers.indexOfKey(userId) >= 0;
@@ -9405,6 +9412,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public void didReceivedNotification(int id, int account, final Object... args) {
         if (id == NotificationCenter.uploadStoryEnd || id == NotificationCenter.chatWasBoostedByUser) {
             checkCanSendStoryForPosting();
+        } else if (id == NotificationCenter.DiveGramBadgesChanged) {
+            // exteradive (DiveGram): значок в шапке профиля - обновляем данные
+            if (!isPaused()) {
+                updateProfileData(false);
+            }
         } else if (id == NotificationCenter.updateInterfaces) {
             int mask = (Integer) args[0];
             if (isPaused()) {
@@ -11993,26 +12005,41 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(user.id, currentAccount);
                     boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
                     
-                    if (dgBadgeObj != null || dgStreakVisible) {
-                        // Combine badge and streak fire into one drawable if both present
-                        if (dgBadgeObj != null && dgStreakVisible) {
-                            // For now, show badge with streak indicator in content description
-                            nameTextView[a].setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(36)));
-                            nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
-                            nameTextViewRightDrawable2ContentDescription = dgBadgeObj.title + " | 🔥 " + dgStreakInfo.days + " дн.";
-                        } else if (dgBadgeObj != null) {
-                            nameTextView[a].setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(36)));
-                            nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
-                            nameTextViewRightDrawable2ContentDescription = dgBadgeObj.title;
-                        } else if (dgStreakVisible) {
-                            // Streak only - show as fire with days
-                            int streakColor = dgStreakInfo.pending ? org.telegram.messenger.DiveGramStreak.getGrayColor() : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
-                            org.telegram.messenger.DiveGramStreak.FireDrawable fireDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
-                            fireDrawable.setColor(streakColor);
-                            nameTextView[a].setRightDrawable2(fireDrawable);
-                            nameTextViewRightDrawable2ContentDescription = "🔥 " + dgStreakInfo.days + " дн.";
+                    if (dgBadgeObj != null) {
+                        if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
+                            if (dgBadgeDrawable != null) {
+                                dgBadgeDrawable.setCallback(null);
+                            }
+                            dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                                    dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(40));
+                            dgBadgeDrawableId = dgBadgeObj.id;
                         }
+                        nameTextView[a].setRightDrawable2(dgBadgeDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                        nameTextViewRightDrawable2ContentDescription = dgStreakVisible
+                                ? dgBadgeObj.title + " | " + dgStreakInfo.days + " дн."
+                                : dgBadgeObj.title;
+                    } else if (dgStreakVisible) {
+                        if (dgStreakDrawable == null) {
+                            dgStreakDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                        }
+                        dgStreakDrawable.setColor(dgStreakInfo.pending
+                                ? org.telegram.messenger.DiveGramStreak.getGrayColor()
+                                : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days));
+                        nameTextView[a].setRightDrawable2(dgStreakDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(null);
+                        nameTextViewRightDrawable2ContentDescription = dgStreakInfo.days + " дн. серии";
                     } else if (user.scam || user.fake) {
+                        nameTextView[a].setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
+                        nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.ScamMessage);
+                    } else if (user.verified) {
+                        nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
+                        nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.AccDescrVerified);
+                    } else if (userBadge != null) {
+                        nameTextView[a].setRightDrawable2(getBadgeDrawable(userBadge, false, a));
+                        nameTextView[a].setRightDrawable2OnClick(v -> BadgesController.INSTANCE.showBadgeBulletin(this, userBadge, user, resourcesProvider, currentAccount));
+                        nameTextViewRightDrawable2ContentDescription = userBadge.getText();
+                    } else if (getMessagesController().isDialogMuted(dialogId != 0 ? dialogId : userId, topicId)) {
                         nameTextView[a].setRightDrawable2(getThemedDrawable(Theme.key_drawable_muteIconDrawable));
                         nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.NotificationsMuted);
                     } else {
@@ -12043,27 +12070,35 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else if (a == 1) {
                     BadgeDTO userBadge = BadgesController.INSTANCE.getBadge(user);
                     nameTextView[a].setRightDrawable2OnClick(null);
-                    // exteradive (DiveLite): DiveGram badge and streak - show at top priority
+                    // exteradive (DiveGram): бейдж и огонёк серии в профиле
                     org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = org.telegram.messenger.DiveGramBadge.getBadge(user.id);
                     org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(user.id, currentAccount);
                     boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
 
-                    if (dgBadgeObj != null || dgStreakVisible) {
-                        if (dgBadgeObj != null && dgStreakVisible) {
-                            nameTextView[a].setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(36)));
-                            nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
-                            nameTextViewRightDrawable2ContentDescription = dgBadgeObj.title + " | 🔥 " + dgStreakInfo.days + " дн.";
-                        } else if (dgBadgeObj != null) {
-                            nameTextView[a].setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(36)));
-                            nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
-                            nameTextViewRightDrawable2ContentDescription = dgBadgeObj.title;
-                        } else if (dgStreakVisible) {
-                            int streakColor = dgStreakInfo.pending ? org.telegram.messenger.DiveGramStreak.getGrayColor() : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
-                            org.telegram.messenger.DiveGramStreak.FireDrawable fireDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
-                            fireDrawable.setColor(streakColor);
-                            nameTextView[a].setRightDrawable2(fireDrawable);
-                            nameTextViewRightDrawable2ContentDescription = "🔥 " + dgStreakInfo.days + " дн.";
+                    if (dgBadgeObj != null) {
+                        if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
+                            if (dgBadgeDrawable != null) {
+                                dgBadgeDrawable.setCallback(null);
+                            }
+                            dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                                    dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(40));
+                            dgBadgeDrawableId = dgBadgeObj.id;
                         }
+                        nameTextView[a].setRightDrawable2(dgBadgeDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                        nameTextViewRightDrawable2ContentDescription = dgStreakVisible
+                                ? dgBadgeObj.title + " | " + dgStreakInfo.days + " дн."
+                                : dgBadgeObj.title;
+                    } else if (dgStreakVisible) {
+                        if (dgStreakDrawable == null) {
+                            dgStreakDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                        }
+                        dgStreakDrawable.setColor(dgStreakInfo.pending
+                                ? org.telegram.messenger.DiveGramStreak.getGrayColor()
+                                : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days));
+                        nameTextView[a].setRightDrawable2(dgStreakDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(null);
+                        nameTextViewRightDrawable2ContentDescription = dgStreakInfo.days + " дн. серии";
                     } else if (user.scam || user.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
                     } else if (user.verified) {
