@@ -4,6 +4,9 @@
  * You should have received a copy of the license in this archive (see LICENSE).
  *
  * Copyright Nikolai Kudashov, 2013-2020.
+ *
+ * exteradive: перенесено из DiveGram (Snegovikio/DiveGram-Android) без изменений,
+ * кроме CONFIG_URL (указывает на репозиторий конфигов exteradive).
  */
 
 package org.telegram.messenger;
@@ -510,7 +513,7 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(8000);
         conn.setReadTimeout(8000);
-        conn.setRequestProperty("User-Agent", "Divegram/1.0");
+        conn.setRequestProperty("User-Agent", "DiveGram/1.0");
         int code = conn.getResponseCode();
         InputStream is = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
         StringBuilder sb = new StringBuilder();
@@ -528,7 +531,7 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
     }
 
     private static File cacheDir() {
-        return new File(ApplicationLoader.applicationContext.getFilesDir(), "divelite_streaks");
+        return new File(ApplicationLoader.applicationContext.getFilesDir(), "divegram_streaks");
     }
 
     private static void saveCache(String json) {

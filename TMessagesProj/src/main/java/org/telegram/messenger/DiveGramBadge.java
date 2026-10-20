@@ -4,6 +4,10 @@
  * You should have received a copy of the license in this archive (see LICENSE).
  *
  * Copyright Nikolai Kudashov, 2013-2020.
+ *
+ * exteradive: перенесено из DiveGram (Snegovikio/DiveGram-Android) без изменений,
+ * кроме CONFIG_URL (указывает на репозиторий конфигов exteradive) и проверки
+ * SharedConfig.badgesEnabled — она нужна нашему переключателю в настройках.
  */
 
 package org.telegram.messenger;
@@ -74,8 +78,8 @@ public class DiveGramBadge {
     }
 
     static {
-        final String beta = "Этот человек участвовал в бета-тестах DiveLite";
-        final String dev = "Этот человек является одним из разработчиков DiveLite";
+        final String beta = "Этот человек участвовал в бета-тестах DiveGram";
+        final String dev = "Этот человек является одним из разработчиков DiveGram";
         addDefault(1449798682L, "badge_1", beta, R.drawable.dg_badge_1, false);
         addDefault(5454995128L, "badge_1", beta, R.drawable.dg_badge_1, false);
         addDefault(1474610225L, "badge_1", beta, R.drawable.dg_badge_1, false);
@@ -89,8 +93,8 @@ public class DiveGramBadge {
     }
 
     public static Badge getBadge(long userId) {
-        // Значки выключены в настройках - не отдаём ничего, даже из встроенного
-        // списка, иначе переключатель влиял бы только на удалённые значки.
+        // exteradive: переключатель в настройках DiveLite. В DiveGram бейджи всегда
+        // включены, поэтому этой проверки там нет.
         if (!SharedConfig.badgesEnabled) {
             return null;
         }
@@ -528,7 +532,7 @@ public class DiveGramBadge {
     }
 
     private static File cacheDir() {
-        return new File(ApplicationLoader.applicationContext.getFilesDir(), "divelite_badges");
+        return new File(ApplicationLoader.applicationContext.getFilesDir(), "divegram_badges");
     }
 
     private static String sanitize(String name) {
@@ -729,7 +733,7 @@ public class DiveGramBadge {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(8000);
         conn.setReadTimeout(8000);
-        conn.setRequestProperty("User-Agent", "Divegram/1.0");
+        conn.setRequestProperty("User-Agent", "DiveGram/1.0");
         int code = conn.getResponseCode();
         InputStream is = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
         StringBuilder sb = new StringBuilder();
@@ -750,7 +754,7 @@ public class DiveGramBadge {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(8000);
         conn.setReadTimeout(8000);
-        conn.setRequestProperty("User-Agent", "Divegram/1.0");
+        conn.setRequestProperty("User-Agent", "DiveGram/1.0");
         int code = conn.getResponseCode();
         if (code >= 400) {
             return;

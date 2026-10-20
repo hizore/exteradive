@@ -88,6 +88,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
     private final LinearLayout titleRow;
     private final TextView titleView;
     private final TextView artistView;
+    private final TextView bitrateView;
     private final MorphButton likeButton;
     private final PlayerIcon heartIcon = PlayerIcon.stroke(PlayerIcon.HEART, 24);
     private final LinearLayout lyricsPanel;
@@ -315,6 +316,12 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         artistView.setSingleLine(true);
         artistView.setEllipsize(TextUtils.TruncateAt.END);
         titles.addView(artistView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+        // exteradive (DiveGram): битрейт аудиофайла под исполнителем
+        bitrateView = new TextView(context);
+        bitrateView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        bitrateView.setSingleLine(true);
+        bitrateView.setVisibility(View.GONE);
+        titles.addView(bitrateView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         titleRow.addView(titles, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
         likeButton = new MorphButton(context, heartIcon);
         likeButton.setRadius(dp(24), false);
@@ -985,6 +992,15 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         currentKey = key;
         titleView.setText(mo.getMusicTitle());
         artistView.setText(mo.getMusicAuthor());
+        // exteradive (DiveGram): показ битрейта аудиофайла
+        String bitrateLabel = org.telegram.messenger.AudioCodecs.getBitrateLabel(
+                mo.getDocument(), (int) mo.getDuration());
+        if (SharedConfig.playerBitrate && bitrateLabel != null) {
+            bitrateView.setText(bitrateLabel);
+            bitrateView.setVisibility(View.VISIBLE);
+        } else {
+            bitrateView.setVisibility(View.GONE);
+        }
         smallTitle.setText(mo.getMusicTitle());
         smallArtist.setText(mo.getMusicAuthor());
         cover.setMessage(mo);

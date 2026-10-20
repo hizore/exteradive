@@ -2936,6 +2936,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 } else {
                     nameMuteLeft = (int) (nameLeft + (nameWidth - widthpx) - dp(6) - Theme.dialogs_muteDrawable.getIntrinsicWidth());
                 }
+
                 if (left == 0) {
                     if (widthpx < nameWidth) {
                         nameLeft += (nameWidth - widthpx);
@@ -4732,26 +4733,43 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).draw(canvas);
             }
 
-            // exteradive (DiveLite): бейдж и огонёк серии справа от иконок статуса
+            // exteradive (DiveGram): бейдж и огонёк серии рисуются ПОСЛЕ всех иконок статуса.
+            // iconRight — самая правая граница среди всех уже нарисованных иконок,
+            // поэтому бейдж никогда не перекрывает префиксы.
             org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = currentDialogId > 0 && DialogObject.isUserDialog(currentDialogId)
                     ? org.telegram.messenger.DiveGramBadge.getBadge(currentDialogId) : null;
             org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(currentDialogId, currentAccount);
             boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
             if (dgBadgeObj != null || dgStreakVisible) {
                 int iconRight = nameMuteLeft;
-                // dgBadgeObj и dgStreakVisible уже проверены выше
+                if (drawVerified) {
+                    iconRight = Math.max(iconRight, Theme.dialogs_verifiedDrawable.getBounds().right);
+                }
+                if (drawPremium) {
+                    if (emojiStatus != null) {
+                        iconRight = Math.max(iconRight, nameMuteLeft + dp(20));
+                    } else {
+                        iconRight = Math.max(iconRight, PremiumGradient.getInstance().premiumStarDrawableMini.getBounds().right);
+                    }
+                }
+                if (drawScam != 0) {
+                    iconRight = Math.max(iconRight, (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).getBounds().right);
+                }
+                if (dialogsType != 2 && (drawUnmute || dialogMuted || isHiddenInCommunity || dialogMutedProgress > 0) && !drawVerified && drawScam == 0) {
+                    iconRight = Math.max(iconRight, Theme.dialogs_muteDrawable.getBounds().right);
+                }
                 if (dgBadgeObj != null) {
                     if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
                         if (dgBadgeDrawable != null) {
                             dgBadgeDrawable.setCallback(null);
                         }
                         dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
-                                dgBadgeObj, Theme.getColor(Theme.key_chats_name, resourcesProvider), dp(18), dp(36));
+                                dgBadgeObj, Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider), dp(18), dp(40));
                         dgBadgeDrawable.setCallback(this);
                         dgBadgeDrawableId = dgBadgeObj.id;
                     }
                     int bs = dp(18);
-                    dgBadgeBounds.set(iconRight + dp(4), dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1), iconRight + dp(4) + bs, dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1) + bs);
+                    dgBadgeBounds.set(iconRight + dp(4) - dp(5), dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1), iconRight + dp(4) - dp(5) + bs, dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15) - dp(1) + bs);
                     dgBadgeDrawable.setBounds(dgBadgeBounds);
                     dgBadgeDrawable.draw(canvas);
                     invalidate();
@@ -6392,18 +6410,16 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         if (rightFragmentOpenedProgress == 0 && !isTopic && !isShareToStoryCell && storyParams.checkOnTouchEvent(event, this)) {
             return true;
         }
-        // exteradive (DiveLite): тап по бейджу в списке чатов
-        if (event.getAction() == MotionEvent.ACTION_DOWN && dgBadgeDrawable != null && dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
+        // exteradive (DiveGram): тап по бейджу в списке чатов
+        if (event.getAction() == MotionEvent.ACTION_DOWN && dgBadgeDrawable != null && !dgBadgeBounds.isEmpty() && dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
             dgBadgePressPending = true;
             dgBadgePressX = event.getX();
             dgBadgePressY = event.getY();
             return true;
         }
         if (dgBadgePressPending && event.getAction() == MotionEvent.ACTION_UP) {
-            if (dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
+            if (Math.abs(event.getX() - dgBadgePressX) < AndroidUtilities.touchSlop && Math.abs(event.getY() - dgBadgePressY) < AndroidUtilities.touchSlop) {
                 org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentDialogId);
-                dgBadgePressPending = false;
-                return true;
             }
             dgBadgePressPending = false;
         }

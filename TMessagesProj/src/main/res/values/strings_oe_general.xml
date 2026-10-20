@@ -221,4 +221,22 @@
     <string name="OEDiveTypingInfo">Works only with people who share a chat with you: Telegram sends typing status for chats you are in.</string>
     <string name="OEDiveTypingHeader">Typing</string>
     <string name="OEDiveShowTypingLocation">Show where the person is typing</string>
+    <string name="OEDiveMediaInfo">Bluetooth codec and voice recording quality.</string>
+    <string name="OEDiveMediaHeader">Media</string>
+    <string name="OEDivePrivacyHeader">Privacy</string>
+    <string name="OEDivePlayerBitrate">Show audio bitrate</string>
+    <string name="OEDiveMentionAll">Mention all (@all)</string>
+    <string name="OEAutoReplyInfo">Anti-spam: at most one auto-reply per cooldown per person, no more than 20 per hour.</string>
+    <string name="OEDiveOff">Off</string>
+    <string name="OEDiveOn">On</string>
+    <string name="OEDiveVoiceBitrateTitle">Voice message quality</string>
+    <string name="OEDiveAutoReplyTitle">Auto-reply</string>
+    <string name="OEAutoReplyCooldownTitle">Cooldown between replies</string>
+    <string name="OEAutoReplyTitle">Auto-reply</string>
+    <string name="OEDiveAudioCodecTitle">Audio codec</string>
+    <string name="OEAutoReplyEnable">Enable auto-reply</string>
+    <string name="OEAutoReplyTextTitle">Reply text</string>
+    <string name="OEAutoReplyTextHint">Enter reply text…</string>
+    <string name="OEDivePrivacyInfo">Your phone number is shown as +79*******11 in Settings &gt; Account.</string>
+    <string name="OEDiveMentionAllSplit">Send mentions in parts</string>
 </resources>

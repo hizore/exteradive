@@ -159,4 +159,22 @@
     <string name="OEDiveTypingInfo">Solo funciona con personas que compartan un chat contigo: Telegram envía el estado de escritura de los chats en los que participas.</string>
     <string name="OEDiveTypingHeader">Escribiendo</string>
     <string name="OEDiveShowTypingLocation">Mostrar en qué chat escribe</string>
+    <string name="OEDiveMediaInfo">Códec de Bluetooth y calidad de grabación de voz.</string>
+    <string name="OEDiveMediaHeader">Multimedia</string>
+    <string name="OEDivePrivacyHeader">Privacidad</string>
+    <string name="OEDivePlayerBitrate">Mostrar tasa de bits de audio</string>
+    <string name="OEDiveMentionAll">Mencionar a todos (@all)</string>
+    <string name="OEAutoReplyInfo">Anti-spam: un máximo de una respuesta automática por pausa por persona, no más de 20 por hora.</string>
+    <string name="OEDiveOff">Desactivado</string>
+    <string name="OEDiveOn">Activado</string>
+    <string name="OEDiveVoiceBitrateTitle">Calidad de grabación de voz</string>
+    <string name="OEDiveAutoReplyTitle">Respuesta automática</string>
+    <string name="OEAutoReplyCooldownTitle">Pausa entre respuestas</string>
+    <string name="OEAutoReplyTitle">Respuesta automática</string>
+    <string name="OEDiveAudioCodecTitle">Códec de audio</string>
+    <string name="OEAutoReplyEnable">Activar respuesta automática</string>
+    <string name="OEAutoReplyTextTitle">Texto de respuesta</string>
+    <string name="OEAutoReplyTextHint">Introduce el texto de respuesta…</string>
+    <string name="OEDivePrivacyInfo">Tu número se muestra como +79*******11 en Ajustes &gt; Cuenta.</string>
+    <string name="OEDiveMentionAllSplit">Enviar menciones en partes</string>
 </resources>

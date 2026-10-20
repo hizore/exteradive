@@ -159,4 +159,22 @@
     <string name="OEDiveTypingInfo">Działa tylko z osobami, z którymi masz wspólny czat: Telegram wysyła status pisania dla czatów, których jesteś uczestnikiem.</string>
     <string name="OEDiveTypingHeader">Pisanie</string>
     <string name="OEDiveShowTypingLocation">Pokaż, w którym czacie pisze</string>
+    <string name="OEDiveMediaInfo">Kodek Bluetooth i jakość nagrywania głosu.</string>
+    <string name="OEDiveMediaHeader">Multimedia</string>
+    <string name="OEDivePrivacyHeader">Prywatność</string>
+    <string name="OEDivePlayerBitrate">Pokazuj bitrate audio</string>
+    <string name="OEDiveMentionAll">Wspomnij o wszystkich (@all)</string>
+    <string name="OEAutoReplyInfo">Anty-spam: co najwyżej jedna autoodpowiedź na przerwę na osobę, nie więcej niż 20 na godzinę.</string>
+    <string name="OEDiveOff">Wyłączone</string>
+    <string name="OEDiveOn">Włączone</string>
+    <string name="OEDiveVoiceBitrateTitle">Jakość nagrywania głosu</string>
+    <string name="OEDiveAutoReplyTitle">Autoodpowiedź</string>
+    <string name="OEAutoReplyCooldownTitle">Przerwa między odpowiedziami</string>
+    <string name="OEAutoReplyTitle">Autoodpowiedź</string>
+    <string name="OEDiveAudioCodecTitle">Kodek audio</string>
+    <string name="OEAutoReplyEnable">Włącz autoodpowiedź</string>
+    <string name="OEAutoReplyTextTitle">Tekst odpowiedzi</string>
+    <string name="OEAutoReplyTextHint">Wpisz tekst odpowiedzi…</string>
+    <string name="OEDivePrivacyInfo">Twój numer jest pokazywany jako +79*******11 w Ustawienia &gt; Konto.</string>
+    <string name="OEDiveMentionAllSplit">Wysyłaj wspomnienia częściami</string>
 </resources>

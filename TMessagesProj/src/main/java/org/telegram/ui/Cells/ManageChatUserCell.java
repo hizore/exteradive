@@ -170,11 +170,42 @@ public class ManageChatUserCell extends FrameLayout {
             nameTextView.setText("");
             statusTextView.setText("");
             avatarImageView.setImageDrawable(null);
+            nameTextView.setRightDrawable2(null);
+            nameTextView.setRightDrawable2OnClick(null);
             return;
         }
         currentStatus = status;
         currentName = name;
         currentObject = object;
+        // exteradive (DiveLite): бейдж и огонёк серии в списке участников.
+        // Здесь, а не в update(): update(0) срабатывает только при смене темы,
+        // из-за чего при первом рендеринге бейдж не появлялся.
+        if (object instanceof TLRPC.User) {
+            TLRPC.User user = (TLRPC.User) object;
+            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = org.telegram.messenger.DiveGramBadge.getBadge(user.id);
+            org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(user.id, currentAccount);
+            boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
+            if (dgBadgeObj != null || dgStreakVisible) {
+                if (dgBadgeObj != null && dgStreakVisible) {
+                    nameTextView.setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), AndroidUtilities.dp(16), AndroidUtilities.dp(32)));
+                    nameTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                } else if (dgBadgeObj != null) {
+                    nameTextView.setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), AndroidUtilities.dp(16), AndroidUtilities.dp(32)));
+                    nameTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                } else {
+                    int streakColor = dgStreakInfo.pending ? org.telegram.messenger.DiveGramStreak.getGrayColor() : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
+                    org.telegram.messenger.DiveGramStreak.FireDrawable fireDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                    fireDrawable.setColor(streakColor);
+                    nameTextView.setRightDrawable2(fireDrawable);
+                }
+            } else {
+                nameTextView.setRightDrawable2(null);
+                nameTextView.setRightDrawable2OnClick(null);
+            }
+        } else {
+            nameTextView.setRightDrawable2(null);
+            nameTextView.setRightDrawable2OnClick(null);
+        }
         if (optionsButton != null) {
             boolean visible = delegate.onOptionsButtonCheck(ManageChatUserCell.this, false);
             optionsButton.setVisibility(visible ? VISIBLE : INVISIBLE);
@@ -280,6 +311,35 @@ public class ManageChatUserCell extends FrameLayout {
             } else {
                 lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
                 nameTextView.setText(Emoji.replaceEmoji(lastName, nameTextView.getPaint().getFontMetricsInt(), false));
+            }
+            // exteradive (DiveLite): DiveGram badge and streak in participant list
+            if (currentUser != null) {
+                org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = org.telegram.messenger.DiveGramBadge.getBadge(currentUser.id);
+                org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(currentUser.id, currentAccount);
+                boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
+
+                if (dgBadgeObj != null || dgStreakVisible) {
+                    if (dgBadgeObj != null && dgStreakVisible) {
+                        nameTextView.setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), AndroidUtilities.dp(16), AndroidUtilities.dp(32)));
+                        nameTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id));
+                        nameTextView.setContentDescription(dgBadgeObj.title + " | 🔥 " + dgStreakInfo.days + " дн.");
+                    } else if (dgBadgeObj != null) {
+                        nameTextView.setRightDrawable2(org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), AndroidUtilities.dp(16), AndroidUtilities.dp(32)));
+                        nameTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id));
+                    } else if (dgStreakVisible) {
+                        int streakColor = dgStreakInfo.pending ? org.telegram.messenger.DiveGramStreak.getGrayColor() : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
+                        org.telegram.messenger.DiveGramStreak.FireDrawable fireDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                        fireDrawable.setColor(streakColor);
+                        nameTextView.setRightDrawable2(fireDrawable);
+                        nameTextView.setContentDescription("🔥 " + dgStreakInfo.days + " дн.");
+                    }
+                } else {
+                    nameTextView.setRightDrawable2(null);
+                    nameTextView.setRightDrawable2OnClick(null);
+                }
+            } else {
+                nameTextView.setRightDrawable2(null);
+                nameTextView.setRightDrawable2OnClick(null);
             }
             if (currentStatus != null) {
                 statusTextView.setTextColor(statusColor);

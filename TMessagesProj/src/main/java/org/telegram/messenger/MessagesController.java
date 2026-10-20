@@ -166,6 +166,12 @@ public class MessagesController extends BaseController implements NotificationCe
     private final ConcurrentHashMap<Long, TLRPC.User> users = new ConcurrentHashMap<>(100, 1.0f, 3);
     private final ConcurrentHashMap<String, TLObject> objectsByUsernames = new ConcurrentHashMap<>(100, 1.0f, 2);
     private final ConcurrentHashMap<Long, Long> monoForumLinkedChannels = new ConcurrentHashMap<>(3, 1.0f, 2);
+
+    // exteradive (DiveGram): автоответчик — кулдаун на человека и лимит 20/час
+    private static final ConcurrentHashMap<Long, Long> AUTO_REPLY_LAST_PER_USER = new ConcurrentHashMap<>();
+    private static final long[] AUTO_REPLY_HOURLY_TIMESTAMPS = new long[20];
+    private static int AUTO_REPLY_HOURLY_INDEX = 0;
+
     public static int stableIdPointer = 100;
 
     private final HashMap<Long, TLRPC.Chat> activeVoiceChatsMap = new HashMap<>();
@@ -18328,6 +18334,51 @@ public class MessagesController extends BaseController implements NotificationCe
         });
     }
 
+    /**
+     * Автоответчик (DiveGram): отправляет автоответ на входящее личное сообщение.
+     *
+     * Анти-спам как в DiveGram:
+     *  - пауза между ответами одному человеку — autoReplyCooldownSec;
+     *  - не более 20 автоответов в час на все чаты суммарно;
+     *  - только личные чаты, только текстовые сообщения (не стикеры, не медиа).
+     */
+    private void tryAutoReply(long userId, TLRPC.Message message) {
+        if (!SharedConfig.autoReplyEnabled || TextUtils.isEmpty(SharedConfig.autoReplyText)) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        synchronized (AUTO_REPLY_LAST_PER_USER) {
+            Long last = AUTO_REPLY_LAST_PER_USER.get(userId);
+            if (last != null && now - last < SharedConfig.autoReplyCooldownSec * 1000L) {
+                return;
+            }
+        }
+        synchronized (AUTO_REPLY_HOURLY_TIMESTAMPS) {
+            int count = 0;
+            for (long ts : AUTO_REPLY_HOURLY_TIMESTAMPS) {
+                if (now - ts < 3600_000L) {
+                    count++;
+                }
+            }
+            if (count >= AUTO_REPLY_HOURLY_TIMESTAMPS.length) {
+                return;
+            }
+            AUTO_REPLY_HOURLY_TIMESTAMPS[AUTO_REPLY_HOURLY_INDEX] = now;
+            AUTO_REPLY_HOURLY_INDEX = (AUTO_REPLY_HOURLY_INDEX + 1) % AUTO_REPLY_HOURLY_TIMESTAMPS.length;
+        }
+        final String replyText = SharedConfig.autoReplyText;
+        final long peer = userId;
+        AndroidUtilities.runOnUIThread(() -> {
+            SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                    replyText, peer);
+            params.notify = true;
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(params);
+        });
+        synchronized (AUTO_REPLY_LAST_PER_USER) {
+            AUTO_REPLY_LAST_PER_USER.put(userId, now);
+        }
+    }
+
     // must be run from Utilities.stageQueue
     public void processUpdates(final TLRPC.Updates originalUpdates, boolean fromQueue) {
         processUpdatesInternal(originalUpdates, fromQueue);
@@ -19088,6 +19139,14 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
 
                 ImageLoader.saveMessageThumbs(message);
+
+                // exteradive (DiveGram): автоответчик на входящие личные сообщения.
+                if (!fromGetDifference && userId > 0 && !message.out
+                        && userId != getUserConfig().getClientUserId()
+                        && message.action == null
+                        && !TextUtils.isEmpty(message.message)) {
+                    tryAutoReply(userId, message);
+                }
 
                 MessageObject.getDialogId(message);
                 if (baseUpdate instanceof TL_update.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {

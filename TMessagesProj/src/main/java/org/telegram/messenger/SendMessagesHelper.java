@@ -4487,13 +4487,21 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         app.exteraless.chats.DeletedReplyQuote.rewrite(currentAccount, sendMessageParams);
         // exteradive (dive://emoji): если в тексте есть премиум-эмодзи, они
         // заменяются ссылкой целиком, поэтому правим не только сущности,
-        // но и само тело сообщения.
-        if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty()
-                && sendMessageParams.message != null) {
-            CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
-                    currentAccount, sendMessageParams.peer, sendMessageParams.message, sendMessageParams.entities);
-            if (diveText != sendMessageParams.message) {
-                sendMessageParams.message = diveText.toString();
+        // но и само тело сообщения. Обрабатываем message, caption и richMessage.
+        if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty()) {
+            if (sendMessageParams.message != null) {
+                CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                        currentAccount, sendMessageParams.peer, sendMessageParams.message, sendMessageParams.entities);
+                if (diveText != sendMessageParams.message) {
+                    sendMessageParams.message = diveText.toString();
+                }
+            }
+            if (sendMessageParams.caption != null) {
+                CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                        currentAccount, sendMessageParams.peer, sendMessageParams.caption, sendMessageParams.entities);
+                if (diveText != sendMessageParams.caption) {
+                    sendMessageParams.caption = diveText.toString();
+                }
             }
         } else {
             app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);

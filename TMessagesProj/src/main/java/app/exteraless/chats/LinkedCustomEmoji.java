@@ -190,6 +190,48 @@ public final class LinkedCustomEmoji {
             message.entities = entities;
             message.flags |= 8;
         }
+        // exteradive (DiveGram): отправитель вставляет литерал "dive://emoji/<id>"
+        // прямо в текст сообщения. Сканируем текст и превращаем эти литералы
+        // в custom emoji entity, иначе получатель видит голый текст ссылки.
+        parseTextLiterals(message.message, entities);
+    }
+
+    /**
+     * Сканирует текст на литералы {@code dive://emoji/<id>} и заменяет их custom emoji entity.
+     * Так делает DiveGram/DiveLite: текст содержит ссылку, entity покрывает её целиком.
+     */
+    public static void parseTextLiterals(CharSequence text, List<TLRPC.MessageEntity> entities) {
+        if (text == null || entities == null || text.length() == 0) {
+            return;
+        }
+        String txt = text.toString();
+        String prefix = PREFIX;
+        int from = 0;
+        int idx;
+        while ((idx = txt.indexOf(prefix, from)) >= 0) {
+            int end = idx + prefix.length();
+            while (end < txt.length() && Character.isDigit(txt.charAt(end))) {
+                end++;
+            }
+            if (end <= idx + prefix.length()) {
+                from = idx + prefix.length();
+                continue;
+            }
+            if (!isCoveredByCustomEmoji(entities, idx, end)) {
+                try {
+                    long docId = Long.parseLong(txt.substring(idx + prefix.length(), end));
+                    if (docId > 0) {
+                        TLRPC.TL_messageEntityCustomEmoji emoji = new TLRPC.TL_messageEntityCustomEmoji();
+                        emoji.offset = idx;
+                        emoji.length = end - idx;
+                        emoji.document_id = docId;
+                        entities.add(emoji);
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+            }
+            from = end;
+        }
     }
 
     /**

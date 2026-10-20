@@ -218,4 +218,22 @@
     <string name="OEDiveTypingInfo">Работает только с теми, у кого есть общий с вами чат: Telegram присылает статус набора для чатов, участником которых вы являетесь.</string>
     <string name="OEDiveTypingHeader">Набор текста</string>
     <string name="OEDiveShowTypingLocation">Показывать, в каком чате печатает</string>
+    <string name="OEDiveMediaInfo">Кодек Bluetooth и качество записи голосовых сообщений.</string>
+    <string name="OEDiveMediaHeader">Медиа</string>
+    <string name="OEDivePrivacyHeader">Приватность</string>
+    <string name="OEDivePlayerBitrate">Показывать битрейт аудио</string>
+    <string name="OEDiveMentionAll">Упомянуть всех (@all)</string>
+    <string name="OEAutoReplyInfo">Анти-спам: одному человеку автоответ отправляется не чаще выбранной паузы, а всего — не более 20 автоответов в час.</string>
+    <string name="OEDiveOff">Выкл</string>
+    <string name="OEDiveOn">Вкл</string>
+    <string name="OEDiveVoiceBitrateTitle">Качество записи голосовых</string>
+    <string name="OEDiveAutoReplyTitle">Автоответчик</string>
+    <string name="OEAutoReplyCooldownTitle">Пауза между ответами</string>
+    <string name="OEAutoReplyTitle">Автоответчик</string>
+    <string name="OEDiveAudioCodecTitle">Звуковой кодек</string>
+    <string name="OEAutoReplyEnable">Включить автоответчик</string>
+    <string name="OEAutoReplyTextTitle">Текст автоответа</string>
+    <string name="OEAutoReplyTextHint">Введите текст автоответа…</string>
+    <string name="OEDivePrivacyInfo">Ваш номер показывается как +79*******11 в Настройки &gt; Аккаунт.</string>
+    <string name="OEDiveMentionAllSplit">Отправлять отметки частями</string>
 </resources>

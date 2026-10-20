@@ -9016,6 +9016,14 @@ public class ChatActivityEnterView extends FrameLayout implements
                     sendMessageParams.document = (TLRPC.TL_document) editingMessageObject.getDocument();
                     sendMessageParams.caption = sendMessageParams.message;
                     sendMessageParams.message = null;
+                    // exteradive: конвертируем премиум-эмодзи в dive://emoji/ для caption
+                    if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty() && sendMessageParams.caption != null) {
+                        CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                                currentAccount, sendMessageParams.peer, sendMessageParams.caption, sendMessageParams.entities);
+                        if (diveText != sendMessageParams.caption) {
+                            sendMessageParams.caption = diveText.toString();
+                        }
+                    }
                 } else if (editingMessageObject.messageOwner.media != null && !(editingMessageObject.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty)) {
                     if (editingMessageObject.messageOwner.media.photo instanceof TLRPC.TL_photo) {
                         sendMessageParams.photo = (TLRPC.TL_photo) editingMessageObject.messageOwner.media.photo;
@@ -9025,6 +9033,14 @@ public class ChatActivityEnterView extends FrameLayout implements
 
                     sendMessageParams.caption = sendMessageParams.message;
                     sendMessageParams.message = null;
+                    // exteradive: конвертируем премиум-эмодзи в dive://emoji/ для caption
+                    if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty() && sendMessageParams.caption != null) {
+                        CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                                currentAccount, sendMessageParams.peer, sendMessageParams.caption, sendMessageParams.entities);
+                        if (diveText != sendMessageParams.caption) {
+                            sendMessageParams.caption = diveText.toString();
+                        }
+                    }
                 }
 
                 SendMessagesHelper.getInstance(currentAccount).sendMessage(sendMessageParams);
@@ -9097,8 +9113,23 @@ public class ChatActivityEnterView extends FrameLayout implements
                 if (!hasOnlyEmoji) {
                     part = AndroidUtilities.getTrimmedString(part);
                 }
+                // exteradive (DiveGram): @all → упоминания всех участников группы.
+                // MentionAllHelper возвращает готовый текст и entities с верными
+                // смещениями, поэтому обычный getEntities в этом случае не вызываем.
                 CharSequence[] message = new CharSequence[]{ part };
-                ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(currentAccount).getEntities(message, supportsNewEntities);
+                ArrayList<TLRPC.MessageEntity> entities;
+                if (SharedConfig.mentionAllEnabled) {
+                    app.exteraless.chats.MentionAllHelper.Result mentionResult =
+                            app.exteraless.chats.MentionAllHelper.apply(dialog_id, part, currentAccount);
+                    if (mentionResult != null) {
+                        message[0] = mentionResult.text;
+                        entities = mentionResult.entities;
+                    } else {
+                        entities = MediaDataController.getInstance(currentAccount).getEntities(message, supportsNewEntities);
+                    }
+                } else {
+                    entities = MediaDataController.getInstance(currentAccount).getEntities(message, supportsNewEntities);
+                }
                 MessageObject.SendAnimationData sendAnimationData = null;
 
                 if (!delegate.hasForwardingMessages()) {

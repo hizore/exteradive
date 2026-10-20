@@ -222,6 +222,7 @@ static int writeOggPage(ogg_page *page, FILE *os) {
 }
 
 const opus_int32 bitrate = OPUS_BITRATE_MAX;
+opus_int32 recorder_bitrate = OPUS_BITRATE_MAX;
 const opus_int32 frame_size = 960;
 const int with_cvbr = 1;
 const int max_ogg_delay = 0;
@@ -297,11 +298,12 @@ void cleanupRecorder() {
     memset(&og, 0, sizeof(ogg_page));
 }
 
-int initRecorder(const char *path, opus_int32 sampleRate) {
+int initRecorder(const char *path, opus_int32 sampleRate, opus_int32 recordBitrate) {
     cleanupRecorder();
 
     coding_rate = sampleRate;
     rate = sampleRate;
+    recorder_bitrate = recordBitrate > 0 ? recordBitrate : bitrate;
 
     if (!path) {
         LOGE("path is null");
@@ -351,7 +353,7 @@ int initRecorder(const char *path, opus_int32 sampleRate) {
     min_bytes = max_frame_bytes = (1275 * 3 + 7) * header.nb_streams;
     _packet = malloc(max_frame_bytes);
     
-    result = opus_encoder_ctl(_encoder, OPUS_SET_BITRATE(bitrate));
+    result = opus_encoder_ctl(_encoder, OPUS_SET_BITRATE(recorder_bitrate));
     //result = opus_encoder_ctl(_encoder, OPUS_SET_COMPLEXITY(10));
     if (result != OPUS_OK) {
         LOGE("Error OPUS_SET_BITRATE returned: %s", opus_strerror(result));
@@ -513,10 +515,10 @@ int writeFrame(uint8_t *framePcmBytes, uint32_t frameByteCount, int end) {
     return 1;
 }
 
-JNIEXPORT jint Java_org_telegram_messenger_MediaController_startRecord(JNIEnv *env, jclass class, jstring path, jint sampleRate) {
+JNIEXPORT jint Java_org_telegram_messenger_MediaController_startRecord(JNIEnv *env, jclass class, jstring path, jint sampleRate, jint recordBitrate) {
     const char *pathStr = (*env)->GetStringUTFChars(env, path, 0);
 
-    int32_t result = initRecorder(pathStr, sampleRate);
+    int32_t result = initRecorder(pathStr, sampleRate, recordBitrate);
 
     if (pathStr != 0) {
         (*env)->ReleaseStringUTFChars(env, path, pathStr);
@@ -911,7 +913,7 @@ int cropOpusAudio(const char *inputPath, const char *outputPath, float startTime
         return 0;
     }
 
-    if (!initRecorder(outputPath, rate)) {
+    if (!initRecorder(outputPath, rate, bitrate)) {
         LOGE("Failed to init recorder");
         op_free(opusFile);
         return 0;
@@ -1004,7 +1006,7 @@ int joinOpusAudios(const char* file1, const char* file2, const char* dest) {
     int channels = MIN(head1->channel_count, head2->channel_count);
     opus_int32 rate = 48000;
 
-    if (!initRecorder(dest, rate)) {
+    if (!initRecorder(dest, rate, bitrate)) {
         LOGE("Failed to init recorder");
         op_free(opusFile1);
         op_free(opusFile2);

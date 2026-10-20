@@ -159,4 +159,22 @@
     <string name="OEDiveTypingInfo">仅对与你共同参与某个聊天的人有效：Telegram 会发送你参与的聊天的输入状态。</string>
     <string name="OEDiveTypingHeader">正在输入</string>
     <string name="OEDiveShowTypingLocation">显示对方在哪个聊天中输入</string>
+    <string name="OEDiveMediaInfo">蓝牙编解码器和语音录制质量。</string>
+    <string name="OEDiveMediaHeader">媒体</string>
+    <string name="OEDivePrivacyHeader">隐私</string>
+    <string name="OEDivePlayerBitrate">显示音频比特率</string>
+    <string name="OEDiveMentionAll">提及所有人 (@all)</string>
+    <string name="OEAutoReplyInfo">反垃圾邮件：同一人每个间隔最多一条自动回复，每小时总共不超过20条。</string>
+    <string name="OEDiveOff">关</string>
+    <string name="OEDiveOn">开</string>
+    <string name="OEDiveVoiceBitrateTitle">语音录制质量</string>
+    <string name="OEDiveAutoReplyTitle">自动回复</string>
+    <string name="OEAutoReplyCooldownTitle">回复间隔</string>
+    <string name="OEAutoReplyTitle">自动回复</string>
+    <string name="OEDiveAudioCodecTitle">音频编解码器</string>
+    <string name="OEAutoReplyEnable">启用自动回复</string>
+    <string name="OEAutoReplyTextTitle">回复文本</string>
+    <string name="OEAutoReplyTextHint">输入回复文本…</string>
+    <string name="OEDivePrivacyInfo">您的号码在 设置 &gt; 账户 中显示为 +79*******11。</string>
+    <string name="OEDiveMentionAllSplit">分段发送提及</string>
 </resources>

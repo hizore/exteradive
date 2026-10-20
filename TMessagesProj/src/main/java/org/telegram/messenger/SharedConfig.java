@@ -263,6 +263,23 @@ public class SharedConfig {
     // Показывать, в каком чате собеседник печатает (DiveGram)
     public static boolean showTypingLocation = false;
 
+    // @all и отправка отметок частями (DiveGram)
+    public static boolean mentionAllEnabled = false;
+    public static boolean mentionAllSplitEnabled = false;
+
+    // Звуковой кодек и битрейт (DiveGram)
+    public static final int AUDIO_CODEC_AUTO = 0;
+    public static final int AUDIO_CODEC_AAC = 1;
+    public static final int AUDIO_CODEC_LDAC = 2;
+    public static int audioCodec = 0;
+    public static int voiceRecordBitrate = 0; // 0 = максимум
+    public static boolean playerBitrate = false;
+
+    // Автоответчик (DiveGram)
+    public static boolean autoReplyEnabled = false;
+    public static String autoReplyText = "";
+    public static int autoReplyCooldownSec = 300;
+
     // Погода
     public static boolean weatherEnabled;
     public static String weatherCity = "";
@@ -270,11 +287,6 @@ public class SharedConfig {
     public static long weatherTime;
     public static double weatherLat;
     public static double weatherLon;
-
-    // Аудиокодек
-    public static final int AUDIO_CODEC_AUTO = 0;
-    public static final int AUDIO_CODEC_AAC = 1;
-    public static final int AUDIO_CODEC_LDAC = 2;
 
     // Флаги, которые крутит экран функций DiveGram
     public static boolean playerLyricsEnabled = true;
@@ -702,6 +714,14 @@ public class SharedConfig {
             nftsEnabled = preferences.getBoolean("dgNftsEnabled", true);
             nftsFetchTime = preferences.getLong("dgNftsFetchTime", 0);
             showTypingLocation = preferences.getBoolean("dgShowTypingLocation", false);
+            mentionAllEnabled = preferences.getBoolean("dgMentionAllEnabled", false);
+            mentionAllSplitEnabled = preferences.getBoolean("dgMentionAllSplitEnabled", false);
+            audioCodec = preferences.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
+            voiceRecordBitrate = preferences.getInt("dgVoiceRecordBitrate", 0);
+            playerBitrate = preferences.getBoolean("dgPlayerBitrate", false);
+            autoReplyEnabled = preferences.getBoolean("dgAutoReplyEnabled", false);
+            autoReplyText = preferences.getString("dgAutoReplyText", "");
+            autoReplyCooldownSec = preferences.getInt("dgAutoReplyCooldownSec", 300);
             // Погода
             weatherEnabled = preferences.getBoolean("dgWeatherEnabled", false);
             weatherCity = preferences.getString("dgWeatherCity", "");
@@ -1624,6 +1644,62 @@ public class SharedConfig {
         MessagesController.getGlobalMainSettings().edit()
                 .putLong("dgStreaksFetchTime", streakFetchTime)
                 .putBoolean("dgStreaksEnabled", streaksEnabled)
+                .apply();
+    }
+
+    public static void setMentionAllEnabled(boolean value) {
+        mentionAllEnabled = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgMentionAllEnabled", value)
+                .apply();
+    }
+
+    public static void setMentionAllSplitEnabled(boolean value) {
+        mentionAllSplitEnabled = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgMentionAllSplitEnabled", value)
+                .apply();
+    }
+
+    public static void setAudioCodec(int value) {
+        audioCodec = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgAudioCodec", value)
+                .apply();
+    }
+
+    public static void setVoiceRecordBitrate(int value) {
+        voiceRecordBitrate = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgVoiceRecordBitrate", value)
+                .apply();
+    }
+
+    public static void setPlayerBitrate(boolean value) {
+        playerBitrate = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgPlayerBitrate", value)
+                .apply();
+    }
+
+    public static void setAutoReplyEnabled(boolean value) {
+        autoReplyEnabled = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgAutoReplyEnabled", value)
+                .apply();
+    }
+
+    public static void setAutoReplyText(String value) {
+        autoReplyText = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putString("dgAutoReplyText", value)
+                .apply();
+    }
+
+    public static void setAutoReplyCooldownSec(int value) {
+        autoReplyCooldownSec = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgAutoReplyCooldownSec", value)
                 .apply();
     }
 
