@@ -2138,6 +2138,11 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 return false;
             }
+            // exteradive: сохранённое удалённое сообщение. Двойной тап по нему
+            // открывает окно удаления, а не реакцию.
+            if (message != null && message.deleted && SharedConfig.saveDeletedMessages && SharedConfig.isDeletedMessage(message.getDialogId(), message.getId())) {
+                return true;
+            }
             var doubleTapAction = message.isOutOwner() ? NaConfig.INSTANCE.getDoubleTapActionOut().Int() : NaConfig.INSTANCE.getDoubleTapAction().Int();
             if (doubleTapAction == DoubleTap.DOUBLE_TAP_ACTION_NONE) {
                 return false;
@@ -2239,6 +2244,12 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 return;
             }
+            // exteradive: сохранённое удалённое сообщение. Двойной тап предлагает
+            // убрать его из чата по-настоящему.
+            if (messageObject != null && messageObject.deleted && SharedConfig.saveDeletedMessages && SharedConfig.isDeletedMessage(messageObject.getDialogId(), messageObject.getId())) {
+                showRemoveSavedDeletedDialog(messageObject);
+                return;
+            }
             var doubleTapAction = messageObject.isOutOwner() ? NaConfig.INSTANCE.getDoubleTapActionOut().Int() : NaConfig.INSTANCE.getDoubleTapAction().Int();
             if (doubleTapAction == DoubleTap.DOUBLE_TAP_ACTION_NONE) {
                 return;
@@ -2312,6 +2323,23 @@ public class ChatActivity extends BaseFragment implements
             }
         }
     };
+
+    /** exteradive: окно удаления сохранённого удалённого сообщения (двойной тап). */
+    private void showRemoveSavedDeletedDialog(MessageObject messageObject) {
+        if (getParentActivity() == null) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
+        builder.setTitle(getString(R.string.OEDiveRemoveSavedDeletedTitle));
+        builder.setMessage(getString(R.string.OEDiveRemoveSavedDeletedText));
+        builder.setPositiveButton(getString(R.string.OEDiveDelete), (dialog, which) -> {
+            ArrayList<Integer> ids = new ArrayList<>();
+            ids.add(messageObject.getId());
+            getMessagesController().deleteMessages(ids, null, null, messageObject.getDialogId(), 0, true, chatMode);
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
 
     private class ChatActivityEnterViewDelegate implements ChatActivityEnterView.ChatActivityEnterViewDelegate {
 
@@ -23958,6 +23986,9 @@ public class ChatActivity extends BaseFragment implements
             ArrayList<Integer> sentMessages = null;
             if (args.length > 6) sentMessages = (ArrayList<Integer>) args[6];
             boolean movedToScheduled = args.length > 4 && (boolean) args[4] || sentMessages != null && !sentMessages.isEmpty();
+            // exteradive: удалённое сообщение, которое пользователь просит убрать
+            // по-настоящему, а не просто пометить.
+            boolean removeCompletely = args.length > 7 && (boolean) args[7];
             final ArrayList<MessageObject> messages = new ArrayList<>();
             MessageObject conversionMessage = null;
             boolean conversion = false;
@@ -23982,7 +24013,7 @@ public class ChatActivity extends BaseFragment implements
             if (isFeedSearch()) {
                 processFeedDeletedMessages(markAsDeletedMessages, channelId, sent, !movedToScheduled);
             } else {
-                processDeletedMessages(markAsDeletedMessages, channelId, sent, !movedToScheduled);
+                processDeletedMessages(markAsDeletedMessages, channelId, sent, !movedToScheduled, removeCompletely);
             }
             if (movedToScheduled && chatMode != ChatActivity.MODE_SCHEDULED) {
                 getMessagesController().forceNoReload(dialog_id, ChatActivity.MODE_SCHEDULED);
@@ -28050,6 +28081,41 @@ public class ChatActivity extends BaseFragment implements
         processDeletedMessages(markAsDeletedMessages, channelId, sent, true);
     }
     private void processDeletedMessages(ArrayList<Integer> markAsDeletedMessages, long channelId, boolean sent, boolean thanos) {
+        processDeletedMessages(markAsDeletedMessages, channelId, sent, thanos, false);
+    }
+    private void processDeletedMessages(ArrayList<Integer> markAsDeletedMessages, long channelId, boolean sent, boolean thanos, boolean removeCompletely) {
+        // exteradive: "Сохранять удалённые сообщения". Пока включено, удалённое
+        // сообщение не исчезает из чата - оно остаётся с пометкой-корзинкой.
+        // Убрать его совсем можно только явно (двойной тап -> "Удалить у себя"
+        // или кнопка "Удалить сохранённые удалённые" в настройках).
+        if (SharedConfig.saveDeletedMessages && !removeCompletely && chatMode != MODE_SCHEDULED && chatMode != MODE_QUICK_REPLIES) {
+            int saveLoadIndex = 0;
+            if (ChatObject.isChannel(currentChat)) {
+                if (channelId == 0 && mergeDialogId != 0) {
+                    saveLoadIndex = 1;
+                } else if (channelId == -dialog_id) {
+                    saveLoadIndex = 0;
+                } else {
+                    return;
+                }
+            } else if (channelId != 0) {
+                return;
+            }
+            boolean updated = false;
+            for (int a = 0, size = markAsDeletedMessages.size(); a < size; a++) {
+                Integer mid = markAsDeletedMessages.get(a);
+                MessageObject obj = chatAdapter != null && chatAdapter.isFiltered && filteredMessagesDict != null ? filteredMessagesDict.get(mid) : messagesDict[saveLoadIndex].get(mid);
+                if (obj != null) {
+                    obj.deleted = true;
+                    SharedConfig.addDeletedMessage(obj.getDialogId(), mid);
+                    updated = true;
+                }
+            }
+            if (updated) {
+                updateVisibleRows();
+            }
+            return;
+        }
         ArrayList<Integer> removedIndexes = new ArrayList<>();
         ArrayList<Integer> thanosMessagesIndexes = new ArrayList<>();
         final int currentTime = getConnectionsManager().getCurrentTime();

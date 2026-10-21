@@ -275,6 +275,11 @@ public class SharedConfig {
     public static int voiceRecordBitrate = 0; // 0 = максимум
     public static boolean playerBitrate = false;
 
+    // Сохранение удалённых сообщений (DiveGram)
+    public static boolean saveDeletedMessages = false;
+    public static int deletedMessagesOpacity = 100;
+    public static final HashSet<String> deletedMessagesIds = new HashSet<>();
+
     // Автоответчик (DiveGram)
     public static boolean autoReplyEnabled = false;
     public static String autoReplyText = "";
@@ -719,6 +724,11 @@ public class SharedConfig {
             audioCodec = preferences.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
             voiceRecordBitrate = preferences.getInt("dgVoiceRecordBitrate", 0);
             playerBitrate = preferences.getBoolean("dgPlayerBitrate", false);
+            // Сохранённые удалённые сообщения
+            saveDeletedMessages = preferences.getBoolean("dgSaveDeletedMessages", false);
+            deletedMessagesOpacity = preferences.getInt("dgDeletedMessagesOpacity", 100);
+            deletedMessagesIds.clear();
+            deletedMessagesIds.addAll(preferences.getStringSet("dgDeletedMessagesIds", new HashSet<>()));
             autoReplyEnabled = preferences.getBoolean("dgAutoReplyEnabled", false);
             autoReplyText = preferences.getString("dgAutoReplyText", "");
             autoReplyCooldownSec = preferences.getInt("dgAutoReplyCooldownSec", 300);
@@ -1680,6 +1690,71 @@ public class SharedConfig {
         MessagesController.getGlobalMainSettings().edit()
                 .putBoolean("dgPlayerBitrate", value)
                 .apply();
+    }
+
+    // ---- Сохранённые удалённые сообщения (DiveGram) ----
+
+    public static void setSaveDeletedMessages(boolean value) {
+        saveDeletedMessages = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgSaveDeletedMessages", value)
+                .apply();
+    }
+
+    public static void setDeletedMessagesOpacity(int value) {
+        deletedMessagesOpacity = Math.max(10, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgDeletedMessagesOpacity", deletedMessagesOpacity)
+                .apply();
+    }
+
+    public static boolean isDeletedMessage(long dialogId, int messageId) {
+        if (messageId <= 0) {
+            return false;
+        }
+        synchronized (deletedMessagesIds) {
+            return deletedMessagesIds.contains(dialogId + "_" + messageId);
+        }
+    }
+
+    public static void addDeletedMessage(long dialogId, int messageId) {
+        if (messageId <= 0) {
+            return;
+        }
+        synchronized (deletedMessagesIds) {
+            deletedMessagesIds.add(dialogId + "_" + messageId);
+            MessagesController.getGlobalMainSettings().edit()
+                    .putStringSet("dgDeletedMessagesIds", new HashSet<>(deletedMessagesIds))
+                    .apply();
+        }
+    }
+
+    public static void removeDeletedMessage(long dialogId, int messageId) {
+        if (messageId <= 0) {
+            return;
+        }
+        synchronized (deletedMessagesIds) {
+            if (deletedMessagesIds.remove(dialogId + "_" + messageId)) {
+                MessagesController.getGlobalMainSettings().edit()
+                        .putStringSet("dgDeletedMessagesIds", new HashSet<>(deletedMessagesIds))
+                        .apply();
+            }
+        }
+    }
+
+    public static HashSet<String> getDeletedMessageKeysCopy() {
+        synchronized (deletedMessagesIds) {
+            return new HashSet<>(deletedMessagesIds);
+        }
+    }
+
+    public static void clearDeletedMessages() {
+        synchronized (deletedMessagesIds) {
+            deletedMessagesIds.clear();
+            MessagesController.getGlobalMainSettings().edit()
+                    .putStringSet("dgDeletedMessagesIds", new HashSet<>())
+                    .apply();
+        }
     }
 
     public static void setAutoReplyEnabled(boolean value) {

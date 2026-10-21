@@ -4,9 +4,11 @@ import static org.telegram.messenger.LocaleController.getString;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AudioCodecs;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
@@ -16,6 +18,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCheckCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
+import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import tw.nekomimi.nekogram.settings.BaseNekoSettingsActivity;
@@ -49,6 +52,11 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
     private int animationsHeaderRow;
     private int disableAnimationsRow;
     private int animationsInfoRow;
+    private int deletedHeaderRow;
+    private int saveDeletedRow;
+    private int deletedOpacityRow;
+    private int purgeDeletedRow;
+    private int deletedInfoRow;
     private int autoReplyRow;
     private int infoRow;
 
@@ -79,6 +87,12 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         animationsHeaderRow = addRow("diveAnimationsHeader");
         disableAnimationsRow = addRow("diveDisableAnimations");
         animationsInfoRow = addRow();
+
+        deletedHeaderRow = addRow("diveDeletedHeader");
+        saveDeletedRow = addRow("diveSaveDeleted");
+        deletedOpacityRow = addRow("diveDeletedOpacity");
+        purgeDeletedRow = addRow("divePurgeDeleted");
+        deletedInfoRow = addRow();
 
         autoReplyRow = addRow("diveAutoReply");
         infoRow = addRow();
@@ -170,6 +184,20 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         } else if (position == voiceBitrateRow) {
             showVoiceBitrateDialog();
             return;
+        } else if (position == saveDeletedRow) {
+            SharedConfig.setSaveDeletedMessages(!SharedConfig.saveDeletedMessages);
+            enabled = SharedConfig.saveDeletedMessages;
+            if (!enabled) {
+                // выключили - сохранённые удалённые сообщения убираем из чатов
+                MessagesController.getInstance(UserConfig.selectedAccount).purgeSavedDeletedMessages();
+                Toast.makeText(getParentActivity() != null ? getParentActivity() : getContext(),
+                        getString(R.string.OEDiveSavedDeletedCleared), Toast.LENGTH_SHORT).show();
+            }
+            listView.getAdapter().notifyItemChanged(deletedOpacityRow);
+            listView.getAdapter().notifyItemChanged(purgeDeletedRow);
+        } else if (position == purgeDeletedRow) {
+            showPurgeDeletedDialog();
+            return;
         } else if (position == autoReplyRow) {
             presentFragment(new AutoReplyActivity());
             return;
@@ -211,7 +239,38 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         showDialog(builder.create());
     }
 
+    /** exteradive: удаление всех сохранённых удалённых сообщений. */
+    private void showPurgeDeletedDialog() {
+        final int count = SharedConfig.getDeletedMessageKeysCopy().size();
+        if (getParentActivity() == null) {
+            return;
+        }
+        if (count == 0) {
+            Toast.makeText(getParentActivity(), getString(R.string.OEDiveNoSavedDeleted),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        org.telegram.ui.ActionBar.AlertDialog.Builder builder =
+                new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity(), getResourceProvider());
+        builder.setTitle(getString(R.string.OEDivePurgeDeletedTitle));
+        builder.setMessage(String.format(getString(R.string.OEDivePurgeDeletedText), count));
+        builder.setPositiveButton(getString(R.string.OEDiveDelete), (dialog, which) -> {
+            MessagesController.getInstance(UserConfig.selectedAccount).purgeSavedDeletedMessages();
+            NotificationCenter.getInstance(UserConfig.selectedAccount)
+                    .postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_ALL);
+            listView.getAdapter().notifyItemChanged(deletedOpacityRow);
+            listView.getAdapter().notifyItemChanged(purgeDeletedRow);
+            Toast.makeText(getParentActivity(), getString(R.string.OEDiveSavedDeletedCleared),
+                    Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+
     private class ListAdapter extends BaseListAdapter {
+
+        /** exteradive: тип ячейки со слайдером (прозрачность удалённых сообщений). */
+        private static final int TYPE_SLIDER = 100;
 
         public ListAdapter(Context context) {
             super(context);
@@ -226,18 +285,69 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         public int getItemViewType(int position) {
             if (position == headerRow || position == typingHeaderRow
                     || position == privacyHeaderRow || position == mediaHeaderRow
-                    || position == animationsHeaderRow) {
+                    || position == animationsHeaderRow || position == deletedHeaderRow) {
                 return TYPE_HEADER;
             } else if (position == infoRow || position == typingInfoRow
                     || position == privacyInfoRow || position == mediaInfoRow
-                    || position == animationsInfoRow) {
+                    || position == animationsInfoRow || position == deletedInfoRow) {
                 return TYPE_INFO_PRIVACY;
+            } else if (position == deletedOpacityRow) {
+                return TYPE_SLIDER;
             }
             return TYPE_CHECK;
         }
 
         @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(android.view.ViewGroup parent, int viewType) {
+            if (viewType == TYPE_SLIDER) {
+                RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(
+                        RecyclerView.LayoutParams.MATCH_PARENT,
+                        RecyclerView.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(AndroidUtilities.dp(12), AndroidUtilities.dp(4),
+                        AndroidUtilities.dp(12), AndroidUtilities.dp(4));
+                android.widget.LinearLayout container = new android.widget.LinearLayout(mContext);
+                container.setOrientation(android.widget.LinearLayout.VERTICAL);
+                container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10),
+                        AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+                container.setLayoutParams(lp);
+                container.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+
+                android.widget.TextView title = new android.widget.TextView(mContext);
+                title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+                title.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 15);
+                container.addView(title, new android.widget.LinearLayout.LayoutParams(
+                        LayoutHelper.MATCH_PARENT,
+                        LayoutHelper.WRAP_CONTENT));
+
+                org.telegram.ui.Components.SeekBarView seekBar =
+                        new org.telegram.ui.Components.SeekBarView(mContext);
+                seekBar.setReportChanges(true);
+                android.widget.LinearLayout.LayoutParams seekLp = new android.widget.LinearLayout.LayoutParams(
+                        LayoutHelper.MATCH_PARENT,
+                        LayoutHelper.WRAP_CONTENT);
+                seekLp.topMargin = AndroidUtilities.dp(8);
+                container.addView(seekBar, seekLp);
+
+                android.widget.TextView value = new android.widget.TextView(mContext);
+                value.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
+                value.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12);
+                value.setGravity(android.view.Gravity.RIGHT);
+                container.addView(value, new android.widget.LinearLayout.LayoutParams(
+                        LayoutHelper.MATCH_PARENT,
+                        LayoutHelper.WRAP_CONTENT));
+
+                container.setTag(new Object[]{seekBar, value, title});
+                return new RecyclerListView.Holder(container);
+            }
+            return super.onCreateViewHolder(parent, viewType);
+        }
+
+        @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position, boolean partial) {
+            if (holder.getItemViewType() == TYPE_SLIDER) {
+                bindOpacitySlider(holder.itemView);
+                return;
+            }
             switch (holder.getItemViewType()) {
                 case TYPE_HEADER: {
                     HeaderCell cell = (HeaderCell) holder.itemView;
@@ -249,6 +359,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDivePrivacyHeader));
                     } else if (position == animationsHeaderRow) {
                         cell.setText(getString(R.string.OEDiveAnimationsHeader));
+                    } else if (position == deletedHeaderRow) {
+                        cell.setText(getString(R.string.OEDiveDeletedHeader));
                     } else {
                         cell.setText(getString(R.string.OEDiveMediaHeader));
                     }
@@ -262,6 +374,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDivePrivacyInfo));
                     } else if (position == animationsInfoRow) {
                         cell.setText(getString(R.string.OEDiveAnimationsInfo));
+                    } else if (position == deletedInfoRow) {
+                        cell.setText(getString(R.string.OEDiveDeletedInfo));
                     } else if (position == mediaInfoRow) {
                         cell.setText(getString(R.string.OEDiveMediaInfo));
                     } else {
@@ -306,6 +420,14 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                     } else if (position == disableAnimationsRow) {
                         cell.setTextAndCheck(getString(R.string.OEDiveDisableAnimations),
                                 !SharedConfig.animationsEnabled(), true);
+                    } else if (position == saveDeletedRow) {
+                        cell.setTextAndCheck(getString(R.string.OEDiveSaveDeleted),
+                                SharedConfig.saveDeletedMessages, true);
+                    } else if (position == purgeDeletedRow) {
+                        int count = SharedConfig.getDeletedMessageKeysCopy().size();
+                        cell.setTextAndValue(getString(R.string.OEDivePurgeDeletedTitle),
+                                count == 0 ? getString(R.string.OEDiveNoSavedDeleted)
+                                        : String.valueOf(count), true, true);
                     } else if (position == autoReplyRow) {
                         cell.setTextAndValue(getString(R.string.OEDiveAutoReplyTitle),
                                 SharedConfig.autoReplyEnabled
@@ -314,6 +436,36 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                     break;
                 }
             }
+        }
+
+        /** exteradive: слайдер прозрачности сохранённых удалённых сообщений. */
+        private void bindOpacitySlider(android.view.View view) {
+            Object[] tag = (Object[]) view.getTag();
+            if (tag == null) {
+                return;
+            }
+            org.telegram.ui.Components.SeekBarView seekBar =
+                    (org.telegram.ui.Components.SeekBarView) tag[0];
+            android.widget.TextView value = (android.widget.TextView) tag[1];
+            android.widget.TextView title = (android.widget.TextView) tag[2];
+            title.setText(getString(R.string.OEDiveDeletedOpacity));
+            value.setText(SharedConfig.deletedMessagesOpacity + "%");
+            seekBar.setProgress(SharedConfig.deletedMessagesOpacity / 100f);
+            seekBar.setDelegate(new org.telegram.ui.Components.SeekBarView.SeekBarViewDelegate() {
+                @Override
+                public void onSeekBarDrag(boolean stop, float progress) {
+                    SharedConfig.setDeletedMessagesOpacity(Math.round(progress * 100));
+                    value.setText(SharedConfig.deletedMessagesOpacity + "%");
+                    if (stop) {
+                        NotificationCenter.getInstance(UserConfig.selectedAccount)
+                                .postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_ALL);
+                    }
+                }
+
+                @Override
+                public void onSeekBarPressed(boolean pressed) {
+                }
+            });
         }
     }
 }

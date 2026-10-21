@@ -9490,6 +9490,57 @@ public class MessagesController extends BaseController implements NotificationCe
         }
     }
 
+    /** exteradive: убирает из чатов все сохранённые удалённые сообщения. */
+    public void purgeSavedDeletedMessages() {
+        HashSet<String> keys = SharedConfig.getDeletedMessageKeysCopy();
+        if (keys.isEmpty()) {
+            return;
+        }
+        HashMap<Long, ArrayList<Integer>> byDialog = new HashMap<>();
+        for (String key : keys) {
+            int idx = key.lastIndexOf('_');
+            if (idx <= 0) {
+                continue;
+            }
+            try {
+                long did = Long.parseLong(key.substring(0, idx));
+                int mid = Integer.parseInt(key.substring(idx + 1));
+                if (mid <= 0) {
+                    continue;
+                }
+                ArrayList<Integer> list = byDialog.get(did);
+                if (list == null) {
+                    list = new ArrayList<>();
+                    byDialog.put(did, list);
+                }
+                list.add(mid);
+            } catch (Exception ignore) {
+            }
+        }
+        SharedConfig.clearDeletedMessages();
+        for (HashMap.Entry<Long, ArrayList<Integer>> entry : byDialog.entrySet()) {
+            long dialogId = entry.getKey();
+            ArrayList<Integer> messages = entry.getValue();
+            if (messages.isEmpty()) {
+                continue;
+            }
+            long channelId = 0;
+            if (DialogObject.isChatDialog(dialogId)) {
+                TLRPC.Chat chat = getChat(-dialogId);
+                channelId = ChatObject.isChannel(chat) ? chat.id : 0;
+            }
+            for (int a = 0, N = messages.size(); a < N; a++) {
+                MessageObject obj = dialogMessagesByIds.get(messages.get(a));
+                if (obj != null) {
+                    obj.deleted = true;
+                }
+            }
+            getMessagesStorage().markMessagesAsDeleted(dialogId, messages, true, true, 0, 0);
+            getMessagesStorage().updateDialogsWithDeletedMessages(dialogId, channelId, messages, null);
+            getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, messages, channelId, false, false, false, 0, null, true);
+        }
+    }
+
     public void deleteMessages(ArrayList<Integer> messages, ArrayList<Long> randoms, TLRPC.EncryptedChat encryptedChat, long dialogId, int topicId, boolean forAll, int mode) {
         deleteMessages(messages, randoms, encryptedChat, dialogId, forAll, mode, false, 0, null, topicId);
     }
@@ -9519,6 +9570,44 @@ public class MessagesController extends BaseController implements NotificationCe
                         cacheOnly, 0, null, topicId, movedToScheduled, movedToScheduledMessageId);
             }
             return;
+        }
+
+        // exteradive: сохранённые удалённые сообщения. Если пользователь удаляет
+        // сообщение, которое уже помечено как удалённое собеседником, удаляем его
+        // по-настоящему, а не помечаем заново.
+        if (taskId == 0 && SharedConfig.saveDeletedMessages && !scheduled && !quickReplies && !welcomeMessages
+                && messages != null && !messages.isEmpty()) {
+            boolean allMarked = true;
+            for (int a = 0, N = messages.size(); a < N; a++) {
+                Integer mid = messages.get(a);
+                if (mid <= 0) {
+                    allMarked = false;
+                    break;
+                }
+                MessageObject obj = dialogMessagesByIds.get(mid);
+                long did = obj != null ? obj.getDialogId() : dialogId;
+                if (!SharedConfig.isDeletedMessage(did, mid)) {
+                    allMarked = false;
+                    break;
+                }
+            }
+            if (allMarked) {
+                long savedChannelId = 0;
+                if (dialogId != 0 && DialogObject.isChatDialog(dialogId)) {
+                    TLRPC.Chat chat = getChat(-dialogId);
+                    savedChannelId = ChatObject.isChannel(chat) ? chat.id : 0;
+                }
+                for (int a = 0, N = messages.size(); a < N; a++) {
+                    Integer mid = messages.get(a);
+                    MessageObject obj = dialogMessagesByIds.get(mid);
+                    long did = obj != null ? obj.getDialogId() : dialogId;
+                    SharedConfig.removeDeletedMessage(did, mid);
+                }
+                getMessagesStorage().markMessagesAsDeleted(dialogId, messages, true, true, 0, topicId);
+                getMessagesStorage().updateDialogsWithDeletedMessages(dialogId, savedChannelId, messages, null);
+                getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, messages, savedChannelId, false, false, false, 0, null, true);
+                return;
+            }
         }
 
         // --- AyuGram hook
@@ -16626,7 +16715,13 @@ public class MessagesController extends BaseController implements NotificationCe
             return;
         }
         if (registeringForPush) {
-            return;
+            // exteradive: если ответ на прошлую регистрацию не пришёл, флаг
+            // оставался true навсегда и все следующие попытки молча
+            // отбрасывались - аккаунт так и оставался "не зарегистрирован".
+            if (SystemClock.elapsedRealtime() - lastPushRegisterSendTime < 30000) {
+                return;
+            }
+            registeringForPush = false;
         }
         boolean registeredForCurrentPush = getUserConfig().registeredForPush && pushType == SharedConfig.pushType && regid.equals(SharedConfig.pushString);
         if (pushType == PushListenerController.PUSH_TYPE_WEB) {
@@ -16663,6 +16758,13 @@ public class MessagesController extends BaseController implements NotificationCe
         }
         getConnectionsManager().sendRequest(req, (response, error) -> {
             AndroidUtilities.runOnUIThread(() -> {
+                // exteradive: в релизной сборке FileLog молчит, а без ответа
+                // сервера понять, что не так с регистрацией, невозможно.
+                android.util.Log.d("PushReg", "registerDevice account=" + currentAccount
+                        + " type=" + pushType + " tokenLen=" + (regid == null ? 0 : regid.length())
+                        + " response=" + response + " error=" + error
+                        + " currentToken=" + (pushType == SharedConfig.pushType && regid != null && regid.equals(SharedConfig.pushString))
+                        + " idMatch=" + (registrationId == pushRegistrationId));
                 if (registrationId != pushRegistrationId) {
                     return;
                 }
@@ -16675,6 +16777,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 registeringForPush = false;
                 if (!currentToken && !TextUtils.isEmpty(SharedConfig.pushString)) {
                     registerForPush(SharedConfig.pushType, SharedConfig.pushString);
+                } else if (!(response instanceof TLRPC.TL_boolTrue) && currentToken) {
+                    // сервер не принял токен - пробуем ещё раз
+                    AndroidUtilities.runOnUIThread(() -> registerForPush(SharedConfig.pushType, SharedConfig.pushString), 30000);
                 }
             });
         });
@@ -21761,6 +21866,21 @@ public class MessagesController extends BaseController implements NotificationCe
                     if (arrayList == null) {
                         continue;
                     }
+                    // exteradive: запоминаем удалённые собеседником сообщения, чтобы
+                    // оставить их в чате с пометкой-корзинкой, а не убрать совсем.
+                    if (SharedConfig.saveDeletedMessages) {
+                        for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
+                            Integer id = arrayList.get(b);
+                            long did = dialogId;
+                            MessageObject mo = dialogMessagesByIds.get(id);
+                            if (mo != null) {
+                                did = mo.getDialogId();
+                            }
+                            if (did != 0) {
+                                SharedConfig.addDeletedMessage(did, id);
+                            }
+                        }
+                    }
                     getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, arrayList, -dialogId, false);
                     if (dialogId == 0) {
                         for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
@@ -21790,7 +21910,9 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                     }
                 }
-                getNotificationsController().removeDeletedMessagesFromNotifications(deletedMessagesFinal, false);
+                if (!SharedConfig.saveDeletedMessages) {
+                    getNotificationsController().removeDeletedMessagesFromNotifications(deletedMessagesFinal, false);
+                }
             }
             if (deletedQuickRepliesMessagesFinal != null) {
                 for (int a = 0, size = deletedQuickRepliesMessagesFinal.size(); a < size; a++) {
@@ -21875,7 +21997,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 getMessagesStorage().markMessagesContentAsRead(key, arrayList, currentTime2, markContentAsReadMessagesDate);
             }
         }
-        if (deletedMessages != null) {
+        if (deletedMessages != null && !SharedConfig.saveDeletedMessages) {
             for (int a = 0, size = deletedMessages.size(); a < size; a++) {
                 long key = deletedMessages.keyAt(a);
                 ArrayList<Integer> arrayList = deletedMessages.valueAt(a);

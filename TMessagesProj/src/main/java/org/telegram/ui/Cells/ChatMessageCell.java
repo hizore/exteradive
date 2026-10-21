@@ -1616,6 +1616,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private int substractBackgroundHeight;
     private boolean allowAssistant;
     public MessageDrawable currentBackgroundDrawable;
+    // exteradive: значок корзинки у сохранённых удалённых сообщений.
+    private android.graphics.drawable.Drawable deletedTrashDrawable;
     private MessageDrawable currentBackgroundSelectedDrawable;
     private int backgroundDrawableLeft;
     private int backgroundDrawableRight;
@@ -7026,6 +7028,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentMessageObject.richLayout.detach(this);
             }
             currentMessageObject = messageObject;
+            // exteradive: сохранённые удалённые сообщения. Помечаем объект как
+            // удалённый, но оставляем в чате - с корзинкой вместо исчезновения.
+            if (SharedConfig.saveDeletedMessages && currentMessageObject.messageOwner != null && !currentMessageObject.deleted) {
+                currentMessageObject.deleted = SharedConfig.isDeletedMessage(currentMessageObject.getDialogId(), currentMessageObject.getId());
+            }
             currentMessagesGroup = groupedMessages;
             wasAllChats = isAllChats;
             lastTime = -2;
@@ -20696,6 +20703,21 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     protected void onDraw(Canvas canvas) {
         drawInternal(canvas);
     }
+
+    @SuppressLint("WrongCall")
+    @Override
+    public void draw(Canvas canvas) {
+        // exteradive: сохранённые удалённые сообщения можно показывать бледными.
+        if (currentMessageObject != null && currentMessageObject.deleted && SharedConfig.saveDeletedMessages && SharedConfig.deletedMessagesOpacity < 100) {
+            int alpha = (int) (255 * SharedConfig.deletedMessagesOpacity / 100f);
+            canvas.saveLayerAlpha(0, 0, getMeasuredWidth(), getMeasuredHeight(), alpha, Canvas.ALL_SAVE_FLAG);
+            super.draw(canvas);
+            canvas.restore();
+        } else {
+            super.draw(canvas);
+        }
+    }
+
     @SuppressLint("WrongCall")
     public void drawInternal(Canvas canvas) {
         if (currentMessageObject == null) {
@@ -20889,7 +20911,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             drawOverlays(canvas);
         }
         if ((drawTime || !mediaBackground) && !forceNotDrawTime && !transitionParams.animateBackgroundBoundsInner && !(enterTransitionInProgress && !currentMessageObject.isVoice()) && (!currentMessageObject.isQuickReply() || currentMessageObject.isSendError())) {
-            drawTime(canvas, 1f, false);
+            // exteradive: у сохранённого удалённого сообщения время не рисуется,
+            // вместо него показывается корзинка.
+            if (!(currentMessageObject.deleted && SharedConfig.saveDeletedMessages)) {
+                drawTime(canvas, 1f, false);
+            }
+        }
+        if (currentMessageObject.deleted && SharedConfig.saveDeletedMessages) {
+            drawDeletedTrashIcon(canvas);
         }
 
         if ((controlsAlpha != 1.0f || timeAlpha != 1.0f) && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO) {
@@ -20947,6 +20976,25 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (shouldTranslucentDeleted() && ayuDeleted) {
             canvas.restore();
         }
+    }
+
+    /** exteradive: значок корзинки у сохранённого удалённого сообщения. */
+    private void drawDeletedTrashIcon(Canvas canvas) {
+        if (currentMessageObject == null || currentBackgroundDrawable == null) {
+            return;
+        }
+        if (deletedTrashDrawable == null) {
+            deletedTrashDrawable = getResources().getDrawable(R.drawable.msg_delete_filled).mutate();
+        }
+        int size = dp(16);
+        android.graphics.Rect bounds = currentBackgroundDrawable.getBounds();
+        int x = bounds.right - dp(8) - size;
+        int y = bounds.bottom - dp(4) - size;
+        deletedTrashDrawable.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFFFF3B30, android.graphics.PorterDuff.Mode.SRC_IN));
+        deletedTrashDrawable.setBounds(x, y, x + size, y + size);
+        deletedTrashDrawable.setAlpha((int) (255 * getAlpha()));
+        deletedTrashDrawable.draw(canvas);
+        deletedTrashDrawable.setAlpha(255);
     }
 
     public void drawBackgroundInternal(Canvas canvas, boolean fromParent) {

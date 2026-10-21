@@ -242,4 +242,15 @@
     <string name="OEDiveAnimationsHeader">Animations</string>
     <string name="OEDiveDisableAnimations">Disable animations</string>
     <string name="OEDiveAnimationsInfo">Turns off animations throughout the app. In the music player the wavy progress bar becomes flat and the lyrics light up fully at once.</string>
+    <string name="OEDiveDeletedHeader">Deleted messages</string>
+    <string name="OEDiveSaveDeleted">Save deleted messages</string>
+    <string name="OEDiveDeletedOpacity">Deleted message opacity</string>
+    <string name="OEDivePurgeDeletedTitle">Delete saved deleted messages</string>
+    <string name="OEDivePurgeDeletedText">%1$d saved deleted messages will be removed. They can no longer be quoted in a reply. The messages themselves stay unchanged on Telegram.</string>
+    <string name="OEDiveNoSavedDeleted">No saved deleted messages</string>
+    <string name="OEDiveSavedDeletedCleared">Saved deleted messages removed from chats</string>
+    <string name="OEDiveDelete">Delete</string>
+    <string name="OEDiveRemoveSavedDeletedTitle">Delete for myself</string>
+    <string name="OEDiveRemoveSavedDeletedText">Remove the saved copy of this deleted message from your chat?</string>
+    <string name="OEDiveDeletedInfo">Messages deleted by the other person do not disappear: they are marked with a trash icon and stay quotable. When the option is turned off, all saved deleted messages are removed from chats.</string>
 </resources>

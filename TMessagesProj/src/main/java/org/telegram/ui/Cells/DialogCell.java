@@ -2498,6 +2498,15 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         }
         if (dgStreakVisible) {
             dgReservedWidth += dp(DG_STREAK_SIZE + DG_BADGE_GAP);
+            // exteradive: рядом с огоньком рисуется ещё и число дней. Оно тоже
+            // занимает место в строке - без резерва строка вылезала за границы
+            // и цифра наезжала на то, что справа (дата, аватар в RTL).
+            if (dgStreakTextPaint == null) {
+                dgStreakTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                dgStreakTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+            }
+            dgStreakTextPaint.setTextSize(dp(13));
+            dgReservedWidth += (int) dgStreakTextPaint.measureText(String.valueOf(dgStreakInfo.days)) + dp(3);
         }
         nameWidth -= dgReservedWidth;
         nameAdditionalsForChannelSubscriber += dgReservedWidth;

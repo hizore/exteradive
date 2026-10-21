@@ -239,4 +239,15 @@
     <string name="OEDiveAnimationsHeader">Анимации</string>
     <string name="OEDiveDisableAnimations">Отключить анимации</string>
     <string name="OEDiveAnimationsInfo">Отключает анимации во всём приложении. В плеере музыки волнистая полоска времени становится плоской, а текст лирики сразу загорается целиком.</string>
+    <string name="OEDiveDeletedHeader">Удалённые сообщения</string>
+    <string name="OEDiveSaveDeleted">Сохранять удалённые сообщения</string>
+    <string name="OEDiveDeletedOpacity">Прозрачность удалённых сообщений</string>
+    <string name="OEDivePurgeDeletedTitle">Удалить сохранённые удалённые</string>
+    <string name="OEDivePurgeDeletedText">Будет убрано %1$d сохранённых удалённых сообщений. Их больше нельзя будет процитировать в ответе. Сами сообщения в Telegram при этом не изменятся.</string>
+    <string name="OEDiveNoSavedDeleted">Сохранённых удалённых сообщений нет</string>
+    <string name="OEDiveSavedDeletedCleared">Сохранённые удалённые сообщения убраны из чатов</string>
+    <string name="OEDiveDelete">Удалить</string>
+    <string name="OEDiveRemoveSavedDeletedTitle">Удалить у себя</string>
+    <string name="OEDiveRemoveSavedDeletedText">Удалить сохранённую копию этого удалённого сообщения из вашего чата?</string>
+    <string name="OEDiveDeletedInfo">Удалённые собеседником сообщения не исчезают: помечаются корзинкой, а цитата сохраняется. При выключении все сохранённые удаляются из чатов.</string>
 </resources>
