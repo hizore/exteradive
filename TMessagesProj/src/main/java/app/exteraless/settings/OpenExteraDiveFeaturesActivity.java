@@ -460,8 +460,7 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndCheck(getString(R.string.OEDiveNfcEnabled),
                                 SharedConfig.nfcPaymentEnabled, true);
                     } else if (position == nfcAppRow) {
-                        String pkg = app.exteraless.nfc.NfcPayment.getPaymentApp(getParentActivity());
-                        String label = pkg.isEmpty() ? "" : app.exteraless.nfc.NfcPayment.label(getParentActivity(), pkg);
+                        String label = app.exteraless.nfc.NfcPayment.getSystemDefaultPaymentLabel(getParentActivity());
                         cell.setTextAndValue(getString(R.string.OEDiveNfcApp),
                                 label.isEmpty() ? getString(R.string.OEDiveNfcAppNotSelected) : label,
                                 true, true);

@@ -512,9 +512,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     /** exteradive: запуск платёжного приложения, выбранного в системе. */
     private void openNfcPaymentApp() {
         final android.content.Context context = ApplicationLoader.applicationContext;
-        final String pkg = app.exteraless.nfc.NfcPayment.getPaymentApp(context);
+        final String pkg = app.exteraless.nfc.NfcPayment.getSystemDefaultPaymentApp(context);
         if (pkg.isEmpty()) {
-            // платёжных приложений не нашлось - просто ничего не делаем
+            // в системе ничего не выбрано - открываем системный выбор, молча
+            app.exteraless.nfc.NfcPayment.openSystemPaymentChooser(context);
             return;
         }
         app.exteraless.nfc.NfcPayment.launch(context, pkg);
