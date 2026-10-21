@@ -88,11 +88,13 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         disableAnimationsRow = addRow("diveDisableAnimations");
         animationsInfoRow = addRow();
 
-        deletedHeaderRow = addRow("diveDeletedHeader");
-        saveDeletedRow = addRow("diveSaveDeleted");
-        deletedOpacityRow = addRow("diveDeletedOpacity");
-        purgeDeletedRow = addRow("divePurgeDeleted");
-        deletedInfoRow = addRow();
+        // exteradive: ветка "Удалённые сообщения" скрыта - сами строки из списка
+        // убраны, индексы остаются -1, чтобы ни одна проверка не сработала.
+        deletedHeaderRow = -1;
+        saveDeletedRow = -1;
+        deletedOpacityRow = -1;
+        purgeDeletedRow = -1;
+        deletedInfoRow = -1;
 
         autoReplyRow = addRow("diveAutoReply");
         infoRow = addRow();
