@@ -1375,6 +1375,29 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private final android.graphics.Rect dgNameBadgeBounds = new android.graphics.Rect();
     /** Нажатие началось прямо по значку, а не по имени. */
     private boolean dgNameBadgePressed;
+    /** Размер значка в строке имени и отступы вокруг него. */
+    private static final int DG_MSG_BADGE_SIZE = 16;
+    private static final int DG_MSG_BADGE_GAP = 4;
+
+    /**
+     * exteradive: место, которое значок занимает в строке имени (с отступами).
+     * Считаем на лету, а не в layout: конфиг значков приходит из сети и может
+     * прийти уже после того, как ячейка собрана.
+     */
+    private int dgNameBadgeSpace() {
+        if (currentUser == null || !org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+            return 0;
+        }
+        return dp(DG_MSG_BADGE_GAP + DG_MSG_BADGE_SIZE + DG_MSG_BADGE_GAP);
+    }
+
+    /** На столько сдвигается тег (звёздочка премиума), чтобы значок был между ником и тегом. */
+    private int dgNameBadgeShift() {
+        if (currentUser == null || !org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+            return 0;
+        }
+        return dp(DG_MSG_BADGE_GAP + DG_MSG_BADGE_SIZE);
+    }
     private int foreverDrawableColor = 0xFFFFFFFF;
 
     private boolean timePressed;
@@ -19408,10 +19431,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (drawNameAvatar) {
                 nameWidth -= dp(32.33f);
             }
-            // exteradive: место под значок рядом с именем
-            if (currentUser != null && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
-                nameWidth += dp(24);
-            }
+            // exteradive: значок стоит между ником и тегом (звёздочкой премиума),
+            // поэтому под него резервируем место, а тег сдвигаем вправо.
+            nameWidth -= dgNameBadgeSpace();
             if (drawTopic && topicButton != null) {
                 nameWidth -= topicButton.width + dp(8);
             }
@@ -21985,10 +22007,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentNameEmojiStatusDrawable.draw(canvas);
             }
             if (currentNameStatusDrawable != null) {
+                // exteradive: если у отправителя есть значок, он стоит между ником
+                // и тегом - сдвигаем тег вправо, чтобы они не наезжали друг на друга.
+                int dgStatusShift = dgNameBadgeShift();
                 currentNameStatusDrawable.setBounds(
-                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(2)),
+                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(2) + dgStatusShift),
                     (int) (ny + nameLayout.getHeight() / 2 - dp(10)),
-                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(22)),
+                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(22) + dgStatusShift),
                     (int) (ny + nameLayout.getHeight() / 2 + dp(10))
                 );
                 currentNameStatusDrawable.setColor(ColorUtils.setAlphaComponent(color, 115));
@@ -22989,8 +23014,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     float starHorizontalOffset = isStarDrawable ? -5 : 0;
                     // exteradive: значок занимает первые ~20dp после имени,
                     // поэтому статус (звезда, премиум) сдвигаем за него.
-                    int dgStatusShift = currentUser != null
-                            && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id) ? dp(24) : 0;
+                    int dgStatusShift = dgNameBadgeShift();
                     nameStatusSelector.setBounds(
                         (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dgStatusShift),
                         (int) (ny - dp(1.33f + 2 - starVerticalOffset)),
@@ -23022,9 +23046,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     dgNameBadgeDrawable.setCallback(this);
                     dgNameBadgeDrawableId = dgBadgeObj.id;
                 }
-                int bs = dp(16);
+                int bs = dp(DG_MSG_BADGE_SIZE);
                 int bcy = (int) (ny + nameLayout.getHeight() / 2);
-                float badgeOffsetX = dp(4);
+                float badgeOffsetX = dp(DG_MSG_BADGE_GAP);
                 int dgBadgeLeft = (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX);
                 dgNameBadgeDrawable.setBounds(
                         dgBadgeLeft,
