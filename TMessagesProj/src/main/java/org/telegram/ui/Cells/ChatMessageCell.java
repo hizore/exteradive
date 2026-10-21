@@ -1371,6 +1371,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     // exteradive: значок рядом с именем (DiveLite)
     private Drawable dgNameBadgeDrawable;
     private String dgNameBadgeDrawableId;
+    /** Границы значка рядом с именем отправителя - по ним ловим нажатие. */
+    private final android.graphics.Rect dgNameBadgeBounds = new android.graphics.Rect();
+    /** Нажатие началось прямо по значку, а не по имени. */
+    private boolean dgNameBadgePressed;
     private int foreverDrawableColor = 0xFFFFFFFF;
 
     private boolean timePressed;
@@ -2327,16 +2331,28 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             nameLayoutPressed = false;
             return false;
         }
-        final boolean pressed = nameLayoutSelector.getBounds().contains((int) getEventX(event), (int) getEventY(event));
+        // exteradive: нажатие по самому значку (он нарисован правее имени, за
+        // пределами селектора) - открывает описание значка.
+        final boolean badgePressed = !dgNameBadgeBounds.isEmpty()
+                && dgNameBadgeBounds.contains((int) getEventX(event), (int) getEventY(event));
+        final boolean pressed = badgePressed || nameLayoutSelector.getBounds().contains((int) getEventX(event), (int) getEventY(event));
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             nameLayoutPressed = pressed;
+            dgNameBadgePressed = badgePressed;
             if (nameLayoutPressed) {
                 nameLayoutSelector.setHotspot((int) getEventX(event), (int) getEventY(event));
                 nameLayoutSelector.setState(pressedState);
             }
         } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             if (event.getAction() == MotionEvent.ACTION_UP && nameLayoutPressed) {
-                if (delegate != null) {
+                boolean badgeHandled = false;
+                if (dgNameBadgePressed && currentUser != null
+                        && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+                    // тап прямо по значку - показываем его описание
+                    org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id);
+                    badgeHandled = true;
+                }
+                if (!badgeHandled && delegate != null) {
                     if (viaOnly) {
                         if (currentViaBotUser != null && currentViaBotUser.bot_inline_placeholder == null) {
                             delegate.didPressViaBotNotInline(this, currentViaBotUser != null ? currentViaBotUser.id : 0);
@@ -2370,6 +2386,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             nameLayoutSelector.setState(StateSet.NOTHING);
             nameLayoutPressed = false;
+            dgNameBadgePressed = false;
         }
         return nameLayoutPressed;
     }
@@ -23006,12 +23023,15 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 int bs = dp(16);
                 int bcy = (int) (ny + nameLayout.getHeight() / 2);
                 float badgeOffsetX = dp(4);
+                int dgBadgeLeft = (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX);
                 dgNameBadgeDrawable.setBounds(
-                        (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX),
+                        dgBadgeLeft,
                         bcy - bs / 2,
-                        (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX + bs),
+                        dgBadgeLeft + bs,
                         bcy + bs / 2
                 );
+                // запоминаем, где значок нарисован - по этим границам ловим тап
+                dgNameBadgeBounds.set(dgNameBadgeDrawable.getBounds());
                 dgNameBadgeDrawable.setAlpha((int) (255 * nameAlpha));
                 dgNameBadgeDrawable.draw(canvas);
                 // invalidate() не нужен: AnimatedBadgeDrawable.draw() сам вызывает
@@ -23020,6 +23040,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 dgNameBadgeDrawable.setCallback(null);
                 dgNameBadgeDrawable = null;
                 dgNameBadgeDrawableId = null;
+                dgNameBadgeBounds.setEmpty();
             }
 
             float end;
