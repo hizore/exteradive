@@ -212,6 +212,10 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         } else if (position == nfcEnabledRow) {
             SharedConfig.setNfcPaymentEnabled(!SharedConfig.nfcPaymentEnabled);
             enabled = SharedConfig.nfcPaymentEnabled;
+            // вкладка NFC появляется вместе с переходом в платёжку
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.nfcTabVisibleToggled);
+            NotificationCenter.getInstance(UserConfig.selectedAccount)
+                    .postNotificationName(NotificationCenter.nfcTabVisibleToggled);
         } else if (position == nfcAppRow) {
             app.exteraless.nfc.NfcPayment.showAppPicker(this, SharedConfig.nfcPaymentApp, pkg -> {
                 SharedConfig.setNfcPaymentApp(pkg);

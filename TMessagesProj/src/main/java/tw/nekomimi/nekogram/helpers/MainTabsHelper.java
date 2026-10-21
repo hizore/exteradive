@@ -3,6 +3,7 @@ package tw.nekomimi.nekogram.helpers;
 import app.exteraless.appearance.AppearanceConfig;
 import app.exteraless.appearance.MainTabsUiHelper;
 
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.MainTabsActivity;
 
@@ -79,13 +80,19 @@ public final class MainTabsHelper {
         if (isProfileTabHidden()) {
             return -1;
         }
-        return hasContactsOrFeedTab() ? 3 : 2;
+        // exteradive: вкладка NFC стоит перед профилем, поэтому профиль сдвинут
+        // на одну позицию, если NFC-вкладка видна.
+        return getNfcPosition() + (isNfcTabVisible() ? 1 : 0);
     }
 
-    /** exteradive: вкладка NFC - последняя. */
+    /** exteradive: вкладка NFC - перед профилем. */
     public static int getNfcPosition() {
-        final int profile = getProfilePosition();
-        return profile < 0 ? getCallsOrSettingsPosition() + 1 : profile + 1;
+        return getCallsOrSettingsPosition() + 1;
+    }
+
+    /** exteradive: вкладка NFC показывается, только когда включён переход в платёжку. */
+    public static boolean isNfcTabVisible() {
+        return SharedConfig.nfcPaymentEnabled;
     }
 
     public static int getFragmentsCount() {
@@ -94,6 +101,9 @@ public final class MainTabsHelper {
             count--;
         }
         if (isProfileTabHidden()) {
+            count--;
+        }
+        if (!isNfcTabVisible()) {
             count--;
         }
         return count;

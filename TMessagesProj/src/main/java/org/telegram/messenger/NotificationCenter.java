@@ -414,6 +414,8 @@ public class NotificationCenter {
 
     public static final int feedNeedReload = totalEvents++;
     public static final int feedTabVisibleToggled = totalEvents++;
+    /** exteradive: вкладка NFC появилась или исчезла. */
+    public static final int nfcTabVisibleToggled = totalEvents++;
     public static final int pillStackLayoutChanged = totalEvents++;
     public static final int audioInfoLoaded = totalEvents++;
 

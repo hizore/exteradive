@@ -189,6 +189,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private boolean lastHideContacts = NaConfig.INSTANCE.getMainTabsHideContacts().Bool();
     private boolean lastHideCalls = MainTabsHelper.isCallsTabHidden();
     private boolean lastHideProfile = MainTabsHelper.isProfileTabHidden();
+    // exteradive: видимость вкладки NFC
+    private boolean lastNfcVisible = MainTabsHelper.isNfcTabVisible();
 
     public MainTabsActivity() {
         super();
@@ -414,7 +416,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         tabsView.addTabToIgnoreClick(tabs[INDEX_FEED]);
         tabsView.addTabToIgnoreClick(tabs[INDEX_NFC]);
 
-        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_PROFILE, INDEX_NFC};
+        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_NFC, INDEX_PROFILE};
         for (int index : displayOrder) {
             final GlassTabView view = tabs[index];
             final int tabIndex = index;
@@ -449,6 +451,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         }
         checkUi_callTabVisible(MainTabsHelper.isCallsTabShown(currentAccount), false);
         checkUi_contactsOrFeedTabVisible(false);
+        checkUi_nfcTabVisible(false);
 
         selectTab(viewPager.getCurrentPosition(), false);
 
@@ -1217,6 +1220,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             }
         } else if (id == NotificationCenter.feedTabVisibleToggled) {
             rebuildContactsSlot();
+        } else if (id == NotificationCenter.nfcTabVisibleToggled) {
+            rebuildNfcSlot();
         } else if (id == NotificationCenter.contactsPermissionBadgeCheck) {
             checkContactsTabBadge();
         }
@@ -1235,6 +1240,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             .add(NotificationCenter.updateInterfaces)
             .add(NotificationCenter.callTabsVisibleToggled)
             .add(NotificationCenter.feedTabVisibleToggled)
+            .add(NotificationCenter.nfcTabVisibleToggled)
             .add(NotificationCenter.mainUserInfoChanged)
             .add(NotificationCenter.contactsPermissionBadgeCheck)
             .addGlobal(NotificationCenter.appUpdateAvailable)
@@ -1346,6 +1352,50 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             tabsView.setViewVisible(tabs[INDEX_FEED], feedTabVisible, animated);
             tabsView.setViewVisible(tabs[INDEX_CONTACTS], !feedTabVisible && !MainTabsHelper.isContactsTabHidden(), animated);
         }
+    }
+
+    /** exteradive: вкладка NFC появляется только вместе с переходом в платёжку. */
+    private void checkUi_nfcTabVisible(boolean animated) {
+        if (tabsView != null) {
+            tabsView.setViewVisible(tabs[INDEX_NFC], MainTabsHelper.isNfcTabVisible(), animated);
+        }
+    }
+
+    /**
+     * exteradive: пересборка панели вкладок после включения/выключения перехода
+     * в платёжное приложение - меняется и набор вкладок, и их позиции.
+     */
+    private void rebuildNfcSlot() {
+        final boolean nowVisible = MainTabsHelper.isNfcTabVisible();
+        final boolean wasVisible = lastNfcVisible;
+        lastNfcVisible = nowVisible;
+        checkUi_nfcTabVisible(true);
+        checkUnreadCount(false);
+        if (viewPager == null) {
+            return;
+        }
+        int currentPosition = viewPager.getCurrentPosition();
+        final int nfcPosition = getNfcPosition();
+        if (wasVisible && !nowVisible) {
+            // вкладка исчезла - всё, что было правее, сдвинулось на позицию влево
+            if (currentPosition == nfcPosition) {
+                currentPosition = getPositionProfile() >= 0 ? getPositionProfile() : getPositionChats();
+            } else if (currentPosition > nfcPosition) {
+                currentPosition--;
+            }
+        } else if (!wasVisible && nowVisible) {
+            // вкладка появилась - всё, что было правее, сдвинулось на позицию вправо
+            if (currentPosition >= nfcPosition) {
+                currentPosition++;
+            }
+        }
+        clearAllHiddenFragments();
+        for (int position = 0; position < getTabsCount() + 1; position++) {
+            dropFragmentAtPosition(position);
+        }
+        viewPager.currentPosition = currentPosition;
+        viewPager.rebuild(false);
+        selectTab(currentPosition, false);
     }
 
     private void rebuildContactsSlot() {

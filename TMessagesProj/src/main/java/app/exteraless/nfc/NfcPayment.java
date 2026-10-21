@@ -25,10 +25,13 @@ import java.util.Locale;
  */
 public class NfcPayment {
 
-    /** Схемы, которые открывают банковские и платёжные приложения. */
+    /**
+     * Схемы, которые открывают банковские и платёжные приложения.
+     * Только платёжные - чтобы в списке не оказалось мессенджеров и маркетов.
+     */
     private static final String[] PAYMENT_SCHEMES = {
-            "nfc", "banking", "pay", "wallet", "mirpay", "mir", "sberbank", "sber",
-            "tinkoff", "tinkoffpay", "yandexpay", "yuandex", "cashback"
+            "nfc", "banking", "pay", "wallet", "mirpay", "sberbank", "tinkoff",
+            "tinkoffpay", "yandexpay", "yuandexpay"
     };
 
     /** Ссылки, по которым открываются приложения бесконтактной оплаты. */
@@ -37,6 +40,11 @@ public class NfcPayment {
             "https://mirpay.ru/",
             "https://www.nspk.ru/"
     };
+
+    /** Экшен HCE-сервиса бесконтактной оплаты. */
+    private static final String ACTION_HOST_APDU_SERVICE = "android.nfc.cardemulation.action.HOST_APDU_SERVICE";
+    /** Категория HCE-сервисов оплаты - так их находит система. */
+    private static final String CATEGORY_PAYMENT = "android.nfc.cardemulation.category.PAYMENT";
 
     public static class App {
         public final String packageName;
@@ -53,40 +61,49 @@ public class NfcPayment {
     private NfcPayment() {
     }
 
-    /** Все приложения, из которых можно выбрать платёжное. Платёжные идут первыми. */
+    /**
+     * Платёжные приложения, установленные на устройстве.
+     *
+     * Список берётся из системы: это приложения, у которых есть HCE-сервис
+     * бесконтактной оплаты (так их показывает системная настройка NFC),
+     * плюс те, кто умеет открывать платёжные схемы и ссылки. Список всех
+     * установленных приложений не используется - туда попадает всё подряд.
+     */
     public static ArrayList<App> getApps(Context context) {
         final PackageManager pm = context.getPackageManager();
-        final LinkedHashSet<String> payment = new LinkedHashSet<>();
+        final LinkedHashSet<String> packages = new LinkedHashSet<>();
 
-        for (int i = 0; i < PAYMENT_SCHEMES.length; i++) {
-            collect(pm, new Intent(Intent.ACTION_VIEW, Uri.parse(PAYMENT_SCHEMES[i] + ":")), payment);
+        // Системный список: HCE-сервисы оплаты.
+        try {
+            final Intent serviceIntent = new Intent(ACTION_HOST_APDU_SERVICE);
+            serviceIntent.addCategory(CATEGORY_PAYMENT);
+            final List<ResolveInfo> services = pm.queryIntentServices(serviceIntent, 0);
+            for (int i = 0; i < services.size(); i++) {
+                final ResolveInfo info = services.get(i);
+                if (info.serviceInfo != null && info.serviceInfo.packageName != null) {
+                    packages.add(info.serviceInfo.packageName);
+                }
+            }
+        } catch (Exception ignore) {
         }
+
+        // Приложения, открывающие платёжные схемы.
+        for (int i = 0; i < PAYMENT_SCHEMES.length; i++) {
+            collect(pm, new Intent(Intent.ACTION_VIEW, Uri.parse(PAYMENT_SCHEMES[i] + ":")), packages);
+        }
+        // Приложения, открывающие платёжные ссылки.
         for (int i = 0; i < PAYMENT_LINKS.length; i++) {
-            collect(pm, new Intent(Intent.ACTION_VIEW, Uri.parse(PAYMENT_LINKS[i])), payment);
+            collect(pm, new Intent(Intent.ACTION_VIEW, Uri.parse(PAYMENT_LINKS[i])), packages);
         }
 
         final ArrayList<App> result = new ArrayList<>();
-        final List<ApplicationInfo> installed = pm.getInstalledApplications(0);
-        for (int i = 0; i < installed.size(); i++) {
-            final ApplicationInfo info = installed.get(i);
-            final String pkg = info.packageName;
+        for (String pkg : packages) {
             if (pkg == null || pkg.equals(context.getPackageName())) {
                 continue;
             }
-            if (pm.getLaunchIntentForPackage(pkg) == null) {
-                continue;
-            }
-            final String label = label(context, pkg);
-            result.add(new App(pkg, label, payment.contains(pkg)));
+            result.add(new App(pkg, label(context, pkg), true));
         }
-
-        // Платёжные - первыми, остальные по названию.
-        result.sort((a, b) -> {
-            if (a.payment != b.payment) {
-                return a.payment ? -1 : 1;
-            }
-            return a.label.compareToIgnoreCase(b.label);
-        });
+        result.sort((a, b) -> a.label.compareToIgnoreCase(b.label));
         return result;
     }
 
