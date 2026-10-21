@@ -126,8 +126,11 @@ public class NfcActivity extends BaseFragment {
         }
         final String label = NfcPayment.getSystemDefaultPaymentLabel(getParentActivity());
         if (label.isEmpty()) {
-            appNameView.setText(getString(R.string.OENfcNoAppSelected));
+            // приложение не выбрано - ничего не показываем
+            appNameView.setText("");
+            appNameView.setVisibility(View.GONE);
         } else {
+            appNameView.setVisibility(View.VISIBLE);
             appNameView.setText(String.format(getString(R.string.OENfcSelectedApp), label));
         }
     }
@@ -143,8 +146,7 @@ public class NfcActivity extends BaseFragment {
         }
         final String pkg = NfcPayment.getSystemDefaultPaymentApp(context);
         if (pkg.isEmpty()) {
-            // в системе платёжное приложение не выбрано - открываем системный выбор
-            NfcPayment.openSystemPaymentChooser(context);
+            // в системе платёжное приложение не выбрано - молча ничего не делаем
             return;
         }
         if (!NfcPayment.launch(context, pkg)) {
