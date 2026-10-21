@@ -256,15 +256,15 @@
     <string name="OENfcTitle">NFC</string>
     <string name="OENfcDescription">Contactless payment. The button opens the selected payment app.</string>
     <string name="OENfcOpenPayment">Open payment app</string>
-    <string name="OENfcNoAppSelected">No payment app selected</string>
+    <string name="OENfcNoAppSelected">No payment app selected in the system</string>
     <string name="OENfcSelectedApp">Payment app: %1$s</string>
     <string name="OENfcDisabled">Opening the payment app is disabled in the settings</string>
     <string name="OENfcLaunchFailed">Could not open the app</string>
     <string name="OENfcPickApp">Select a payment app</string>
-    <string name="OENfcNoApps">No suitable apps on the device</string>
+    <string name="OENfcNoApps">Could not open the system payment app picker</string>
     <string name="OEDiveNfcHeader">NFC</string>
     <string name="OEDiveNfcEnabled">Open the payment app</string>
     <string name="OEDiveNfcApp">Payment app</string>
     <string name="OEDiveNfcAppNotSelected">Not selected</string>
-    <string name="OEDiveNfcInfo">The button in the NFC tab opens the selected payment app. If no app is selected, you can pick one right there.</string>
+    <string name="OEDiveNfcInfo">The button in the NFC tab opens the app the system has chosen as the NFC payment app (Settings → NFC → Tap to pay). If nothing is chosen, the button opens the system picker.</string>
 </resources>

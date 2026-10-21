@@ -105,64 +105,12 @@
             <data android:scheme="ton"/>
         </intent>
         <!-- exteradive: приложения бесконтактной оплаты. На Android 11+ без
-             этих записей они не видны приложению, и список платёжек пустой. -->
+             этих записей они не видны приложению. -->
         <intent>
             <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE"/>
             <category android:name="android.nfc.cardemulation.category.PAYMENT"/>
         </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="nfc"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="banking"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="pay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="wallet"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="mirpay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="sberbank"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="tinkoff"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="tinkoffpay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="yandexpay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="yuandexpay"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="https" android:host="qr.nspk.ru"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="https" android:host="mirpay.ru"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:scheme="https" android:host="www.nspk.ru"/>
-        </intent>
-        <!-- чтобы можно было запустить выбранное приложение -->
+        <!-- чтобы можно было запустить выбранное в системе приложение -->
         <intent>
             <action android:name="android.intent.action.MAIN"/>
             <category android:name="android.intent.category.LAUNCHER"/>

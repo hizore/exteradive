@@ -116,8 +116,6 @@ public class NfcActivity extends BaseFragment {
     public void onResume() {
         super.onResume();
         if (fragmentView != null) {
-            // могли выбрать приложение в системном диалоге
-            NfcPayment.syncSystemDefault(getParentActivity());
             updateAppName();
         }
     }
@@ -126,11 +124,11 @@ public class NfcActivity extends BaseFragment {
         if (appNameView == null) {
             return;
         }
-        final String pkg = SharedConfig.nfcPaymentApp;
-        if (pkg == null || pkg.isEmpty()) {
+        final String label = NfcPayment.getSystemDefaultPaymentLabel(getParentActivity());
+        if (label.isEmpty()) {
             appNameView.setText(getString(R.string.OENfcNoAppSelected));
         } else {
-            appNameView.setText(String.format(getString(R.string.OENfcSelectedApp), NfcPayment.label(getParentActivity(), pkg)));
+            appNameView.setText(String.format(getString(R.string.OENfcSelectedApp), label));
         }
     }
 
@@ -143,13 +141,11 @@ public class NfcActivity extends BaseFragment {
             Toast.makeText(context, getString(R.string.OENfcDisabled), Toast.LENGTH_SHORT).show();
             return;
         }
-        final String pkg = SharedConfig.nfcPaymentApp;
-        if (pkg == null || pkg.isEmpty()) {
-            NfcPayment.showAppPicker(this, "", p -> {
-                SharedConfig.setNfcPaymentApp(p);
-                updateAppName();
-                openPaymentApp();
-            });
+        final String pkg = NfcPayment.getSystemDefaultPaymentApp(context);
+        if (pkg.isEmpty()) {
+            // в системе платёжное приложение не выбрано - предлагаем выбрать
+            Toast.makeText(context, getString(R.string.OENfcNoAppSelected), Toast.LENGTH_SHORT).show();
+            NfcPayment.openSystemPaymentChooser(context);
             return;
         }
         if (!NfcPayment.launch(context, pkg)) {

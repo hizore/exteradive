@@ -217,10 +217,11 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
             NotificationCenter.getInstance(UserConfig.selectedAccount)
                     .postNotificationName(NotificationCenter.nfcTabVisibleToggled);
         } else if (position == nfcAppRow) {
-            app.exteraless.nfc.NfcPayment.showAppPicker(this, SharedConfig.nfcPaymentApp, pkg -> {
-                SharedConfig.setNfcPaymentApp(pkg);
-                listView.getAdapter().notifyItemChanged(nfcAppRow);
-            });
+            // выбор делается в системе - там список бесконтактной оплаты
+            if (!app.exteraless.nfc.NfcPayment.openSystemPaymentChooser(getParentActivity())) {
+                Toast.makeText(getParentActivity(),
+                        getString(R.string.OENfcNoApps), Toast.LENGTH_SHORT).show();
+            }
             return;
         } else if (position == autoReplyRow) {
             presentFragment(new AutoReplyActivity());
@@ -462,11 +463,9 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndCheck(getString(R.string.OEDiveNfcEnabled),
                                 SharedConfig.nfcPaymentEnabled, true);
                     } else if (position == nfcAppRow) {
-                        String pkg = SharedConfig.nfcPaymentApp;
+                        String label = app.exteraless.nfc.NfcPayment.getSystemDefaultPaymentLabel(getParentActivity());
                         cell.setTextAndValue(getString(R.string.OEDiveNfcApp),
-                                pkg == null || pkg.isEmpty()
-                                        ? getString(R.string.OEDiveNfcAppNotSelected)
-                                        : app.exteraless.nfc.NfcPayment.label(getParentActivity(), pkg),
+                                label.isEmpty() ? getString(R.string.OEDiveNfcAppNotSelected) : label,
                                 true, true);
                     } else if (position == autoReplyRow) {
                         cell.setTextAndValue(getString(R.string.OEDiveAutoReplyTitle),
