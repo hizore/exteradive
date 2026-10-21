@@ -547,12 +547,16 @@ public class DiveGramBadge {
     }
 
     public static void notifyBadgesChanged() {
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.DiveGramBadgesChanged);
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
-                NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.DiveGramBadgesChanged);
+        // exteradive: вызывается из фонового потока (fetch) - в UI-поток,
+        // иначе обработчик начнёт трогать вьюхи не из того потока.
+        AndroidUtilities.runOnUIThread(() -> {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.DiveGramBadgesChanged);
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (UserConfig.getInstance(a).isClientActivated()) {
+                    NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.DiveGramBadgesChanged);
+                }
             }
-        }
+        });
     }
 
     public static void fetch() {

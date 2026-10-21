@@ -290,7 +290,9 @@ public class DiveGramNfts {
 
     public static void notifyChanged() {
         try {
-            NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(NotificationCenter.DiveGramNftsChanged);
+            // exteradive: уведомление - только из UI-потока.
+            AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(UserConfig.selectedAccount)
+                    .postNotificationName(NotificationCenter.DiveGramNftsChanged));
         } catch (Throwable t) {
             FileLog.e(t);
         }

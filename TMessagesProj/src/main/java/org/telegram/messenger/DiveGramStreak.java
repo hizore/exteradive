@@ -128,7 +128,10 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
             }
             if (dialogId > 0 && DialogObject.isUserDialog(dialogId)) {
                 invalidateDialog(dialogId, account);
-                NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT);
+                // exteradive: уведомление обязано уйти в UI-поток, иначе обработчик
+                // начнёт трогать вьюхи не из того потока.
+                AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(account)
+                        .postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT));
             }
         }
     }
@@ -238,7 +241,10 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
                 PENDING_CALC.remove(key);
                 boolean rerun = DIRTY.remove(key) != null;
                 if (prev != null && (prev.days != finalInfo.days || prev.pending != finalInfo.pending || prev.unreliable != finalUnreliable)) {
-                    NotificationCenter.getInstance(prev.account).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT);
+                    // exteradive: считаем в фоновом потоке - уведомление в UI-поток.
+                    final int prevAccount = prev.account;
+                    AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(prevAccount)
+                            .postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT));
                 }
                 if (rerun) {
                     PENDING_CALC.add(key);
@@ -386,7 +392,10 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
             CACHE.put(key, new CachedEntry(account, dialogId, (int) run[0], pending, today, unreliable));
         }
         if (previous == null || previous.days != run[0] || previous.pending != pending || previous.unreliable != unreliable) {
-            NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT);
+            // exteradive: finishBackfill зовётся из фонового потока, а обработчик
+            // updateInterfaces дёргает вьюхи - отправляем уведомление в UI-поток.
+            AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(account)
+                    .postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT));
         }
     }
 
@@ -408,12 +417,15 @@ public class DiveGramStreak implements NotificationCenter.NotificationCenterDele
     }
 
     public static void notifyStreakChanged() {
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.DiveGramStreakChanged);
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
-                NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT);
+        // exteradive: вызывается из фонового потока (fetch) - в UI-поток.
+        AndroidUtilities.runOnUIThread(() -> {
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.DiveGramStreakChanged);
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (UserConfig.getInstance(a).isClientActivated()) {
+                    NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_CHAT);
+                }
             }
-        }
+        });
     }
 
     public static void fetch() {
