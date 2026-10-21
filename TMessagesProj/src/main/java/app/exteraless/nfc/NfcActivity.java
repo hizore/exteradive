@@ -116,6 +116,8 @@ public class NfcActivity extends BaseFragment {
     public void onResume() {
         super.onResume();
         if (fragmentView != null) {
+            // могли выбрать приложение в системном диалоге
+            NfcPayment.syncSystemDefault(getParentActivity());
             updateAppName();
         }
     }

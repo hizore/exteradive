@@ -86,6 +86,8 @@ public class NfcPayment {
             }
         } catch (Exception ignore) {
         }
+        // Тот же список, но напрямую из системного CardEmulationManager.
+        collectSystemServices(context, packages);
 
         // Приложения, открывающие платёжные схемы.
         for (int i = 0; i < PAYMENT_SCHEMES.length; i++) {
@@ -94,6 +96,11 @@ public class NfcPayment {
         // Приложения, открывающие платёжные ссылки.
         for (int i = 0; i < PAYMENT_LINKS.length; i++) {
             collect(pm, new Intent(Intent.ACTION_VIEW, Uri.parse(PAYMENT_LINKS[i])), packages);
+        }
+        // Платёжное приложение по умолчанию из настроек системы.
+        final String defaultApp = getSystemDefaultPaymentApp(context);
+        if (!defaultApp.isEmpty()) {
+            packages.add(defaultApp);
         }
 
         final ArrayList<App> result = new ArrayList<>();
@@ -104,7 +111,109 @@ public class NfcPayment {
             result.add(new App(pkg, label(context, pkg), true));
         }
         result.sort((a, b) -> a.label.compareToIgnoreCase(b.label));
+        org.telegram.messenger.FileLog.d("NFC payment apps found: " + result.size());
         return result;
+    }
+
+    /**
+     * Список приложений бесконтактной оплаты прямо из системного
+     * CardEmulationManager - так его получает системная настройка NFC.
+     * API скрытое, поэтому через reflection; если недоступно - просто ничего.
+     */
+    private static void collectSystemServices(Context context, LinkedHashSet<String> out) {
+        Object manager = null;
+        try {
+            manager = context.getSystemService("cardemulation");
+        } catch (Throwable ignore) {
+        }
+        if (manager == null) {
+            return;
+        }
+        try {
+            for (java.lang.reflect.Method method : manager.getClass().getMethods()) {
+                if (!"getServices".equals(method.getName())) {
+                    continue;
+                }
+                final Class<?>[] types = method.getParameterTypes();
+                final Object[] args;
+                if (types.length == 2 && types[0] == String.class && types[1] == int.class) {
+                    args = new Object[]{CATEGORY_PAYMENT, 0};
+                } else if (types.length == 2 && types[0] == int.class && types[1] == int.class) {
+                    args = new Object[]{0, 0};
+                } else if (types.length == 1 && types[0] == String.class) {
+                    args = new Object[]{CATEGORY_PAYMENT};
+                } else {
+                    continue;
+                }
+                final Object result = method.invoke(manager, args);
+                if (!(result instanceof List)) {
+                    continue;
+                }
+                for (Object item : (List<?>) result) {
+                    if (item == null) {
+                        continue;
+                    }
+                    try {
+                        final Object component = item.getClass().getMethod("getComponent").invoke(item);
+                        if (component instanceof android.content.ComponentName) {
+                            out.add(((android.content.ComponentName) component).getPackageName());
+                        }
+                    } catch (Throwable ignore) {
+                    }
+                }
+                return;
+            }
+        } catch (Throwable ignore) {
+        }
+    }
+
+    /** Платёжное приложение по умолчанию из системных настроек. */
+    public static String getSystemDefaultPaymentApp(Context context) {        try {
+            final String value = android.provider.Settings.Secure.getString(
+                    context.getContentResolver(), "nfc_payment_default_component");
+            if (value == null || value.isEmpty()) {
+                return "";
+            }
+            final android.content.ComponentName component =
+                    android.content.ComponentName.unflattenFromString(value);
+            return component == null ? "" : component.getPackageName();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
+     * Подхватывает выбор, сделанный в системном диалоге: если приложение
+     * ещё не выбрано, берём то, что система считает платёжным по умолчанию.
+     */
+    public static void syncSystemDefault(Context context) {
+        if (context == null) {
+            return;
+        }
+        final String current = org.telegram.messenger.SharedConfig.nfcPaymentApp;
+        if (current != null && !current.isEmpty()) {
+            return;
+        }
+        final String sys = getSystemDefaultPaymentApp(context);
+        if (!sys.isEmpty()) {
+            org.telegram.messenger.SharedConfig.setNfcPaymentApp(sys);
+        }
+    }
+
+    /**
+     * Системный выбор приложения бесконтактной оплаты.
+     * Список там всегда настоящий - так он и нужен, если свой не нашёлся.
+     */
+    public static boolean openSystemPaymentChooser(Context context) {
+        try {
+            final Intent intent = new Intent("android.nfc.cardemulation.action.ACTION_CHANGE_DEFAULT");
+            intent.putExtra("category", "payment");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static void collect(PackageManager pm, Intent intent, LinkedHashSet<String> out) {
@@ -174,6 +283,10 @@ public class NfcPayment {
         }
         final ArrayList<App> apps = getApps(activity);
         if (apps.isEmpty()) {
+            // своего списка не нашлось - предлагаем системный выбор
+            if (openSystemPaymentChooser(activity)) {
+                return;
+            }
             android.widget.Toast.makeText(activity,
                     org.telegram.messenger.LocaleController.getString(R.string.OENfcNoApps),
                     android.widget.Toast.LENGTH_SHORT).show();
