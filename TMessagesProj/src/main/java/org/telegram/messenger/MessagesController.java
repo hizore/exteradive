@@ -11823,27 +11823,37 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 continue;
             }
-        }
 
-        if (!changed && elsewhereTypingUsers.size() == 0) {
-            return;
-        }
-        for (int i = 0; i < elsewhereTypingUsers.size(); i++) {
-            final long userIdKey = elsewhereTypingUsers.keyAt(i);
-            final ElsewhereTyping et = elsewhereTypingUsers.valueAt(i);
-            if (et == null || isDialogTypingDirectly(userIdKey) || printingStrings.get(userIdKey) != null) {
+            // печатает прямо в этом чате - показываем обычную строку печати
+            if (isDialogTypingDirectly(userIdKey)) {
                 continue;
             }
+
+            // название чата, в котором печатает собеседник
+            String title = null;
             TLRPC.Chat typingChat = getChat(-et.dialogId);
-            if (typingChat == null || TextUtils.isEmpty(typingChat.title)) {
+            if (typingChat != null && !TextUtils.isEmpty(typingChat.title)) {
+                title = typingChat.title;
+            } else {
+                TLRPC.Chat typingChatById = getChat(et.dialogId);
+                if (typingChatById != null && !TextUtils.isEmpty(typingChatById.title)) {
+                    title = typingChatById.title;
+                } else {
+                    TLRPC.User typingUser = getUser(et.dialogId);
+                    if (typingUser != null) {
+                        title = UserObject.getUserName(typingUser);
+                    }
+                }
+            }
+            if (title == null) {
                 continue;
             }
-            LongSparseArray<CharSequence> threads = new LongSparseArray<>();
+            LongSparseArray<CharSequence> strings = new LongSparseArray<>();
             LongSparseArray<Integer> types = new LongSparseArray<>();
-            threads.put(0, LocaleController.formatString("TypingInChat",
-                    R.string.TypingInChat, typingChat.title));
+            strings.put(0, LocaleController.formatString("TypingInChat",
+                    R.string.TypingInChat, title));
             types.put(0, 0);
-            printingStrings.put(userIdKey, threads);
+            printingStrings.put(userIdKey, strings);
             printingStringsTypes.put(userIdKey, types);
             changed = true;
         }
