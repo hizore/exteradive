@@ -2332,9 +2332,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return false;
         }
         // exteradive: нажатие по самому значку (он нарисован правее имени, за
-        // пределами селектора) - открывает описание значка.
+        // пределами селектора) - открывает описание значка. Область нажатия
+        // чуть шире самого значка, чтобы по нему было легко попасть пальцем.
         final boolean badgePressed = !dgNameBadgeBounds.isEmpty()
-                && dgNameBadgeBounds.contains((int) getEventX(event), (int) getEventY(event));
+                && getEventX(event) >= dgNameBadgeBounds.left - dp(2)
+                && getEventX(event) <= dgNameBadgeBounds.right + dp(6)
+                && getEventY(event) >= dgNameBadgeBounds.top - dp(6)
+                && getEventY(event) <= dgNameBadgeBounds.bottom + dp(6);
         final boolean pressed = badgePressed || nameLayoutSelector.getBounds().contains((int) getEventX(event), (int) getEventY(event));
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             nameLayoutPressed = pressed;
@@ -2361,12 +2365,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             delegate.didPressViaBot(this, username != null ? username : currentMessageObject.messageOwner.via_bot_name);
                         }
                     } else if (currentUser != null) {
-                        // exteradive: тап по значку показывает его описание
-                        if (org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
-                            org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id);
-                        } else {
-                            delegate.didPressUserAvatar(this, currentUser, getEventX(event), getEventY(event), false);
-                        }
+                        // exteradive: тап по нику открывает профиль как обычно.
+                        // Описание значка - только если нажали прямо по значку,
+                        // его ловит dgNameBadgePressed выше.
+                        delegate.didPressUserAvatar(this, currentUser, getEventX(event), getEventY(event), false);
                     } else if (currentChat != null) {
                         int id;
                         TLRPC.Chat chat = currentChat;
