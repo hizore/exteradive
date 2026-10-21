@@ -1237,7 +1237,11 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
         // ставим в первый свободный, иначе - в левый слот, чтобы он был виден
         // всегда, даже когда у владельца есть премиум.
         TLRPC.User dgHeaderUser = parentFragment != null ? parentFragment.getCurrentUser() : null;
-        org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = dgHeaderUser != null
+        // exteradive: в чате "Избранное" значка нет - там вы сами.
+        final boolean dgSavedMessages = dgHeaderUser != null && parentFragment != null
+                && dgHeaderUser.id == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId()
+                && parentFragment.getDialogId() == dgHeaderUser.id;
+        org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = !dgSavedMessages && dgHeaderUser != null
                 ? org.telegram.messenger.DiveGramBadge.getBadge(dgHeaderUser.id) : null;
         if (dgBadgeObj != null) {
             Drawable dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createDiveGramBadge(

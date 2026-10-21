@@ -23034,8 +23034,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             Theme.chat_namePaint.setAlpha(oldAlpha);
             canvas.restore();
 
-            // exteradive: значок рядом с именем отправителя (функция DiveLite)
-            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = currentUser != null
+            // exteradive: значок рядом с именем отправителя (функция DiveLite).
+            // В чате "Избранное" отправитель - это сам пользователь, значка там нет.
+            final boolean dgSavedMessages = currentMessageObject != null && currentUser != null
+                    && currentUser.id == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId()
+                    && currentMessageObject.getDialogId() == currentUser.id;
+            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = !dgSavedMessages && currentUser != null
                     ? org.telegram.messenger.DiveGramBadge.getBadge(currentUser.id) : null;
             if (dgBadgeObj != null && nameLayout != null) {
                 if (dgNameBadgeDrawable == null || !java.util.Objects.equals(dgNameBadgeDrawableId, dgBadgeObj.id)) {

@@ -2485,9 +2485,12 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         // имени. Резервируем под них место, иначе они наезжают на префиксы и
         // на само имя. Имя при этом ужимается (эллипсис), а вся строка
         // остаётся в прежних границах.
-        dgBadgeObj = currentDialogId > 0 && DialogObject.isUserDialog(currentDialogId)
+        // В чате "Избранное" значков нет - это чат с самим собой.
+        final boolean dgSavedMessages = currentDialogId > 0
+                && currentDialogId == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId();
+        dgBadgeObj = !dgSavedMessages && currentDialogId > 0 && DialogObject.isUserDialog(currentDialogId)
                 ? org.telegram.messenger.DiveGramBadge.getBadge(currentDialogId) : null;
-        org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo =
+        org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = dgSavedMessages ? null :
                 org.telegram.messenger.DiveGramStreak.getStreak(currentDialogId, currentAccount);
         this.dgStreakInfo = dgStreakInfo;
         dgStreakVisible = dgStreakInfo != null
