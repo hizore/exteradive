@@ -63,6 +63,11 @@ public class PushListenerController {
         }
         SharedConfig.pushString = token;
         SharedConfig.pushType = pushType;
+        // exteradive: в релизе FileLog молчит, поэтому ход регистрации пуша
+        // виден только в logcat.
+        android.util.Log.d("PushReg", "sendRegistrationToServer type=" + pushType
+                + " tokenLen=" + (token == null ? 0 : token.length())
+                + " status=" + SharedConfig.pushStringStatus);
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             UserConfig userConfig = UserConfig.getInstance(a);
             userConfig.registeredForPush = false;
