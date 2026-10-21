@@ -434,6 +434,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                     return;
                 }
 
+                // exteradive: по вкладке NFC сразу открывается платёжное приложение,
+                // выбранное в системе.
+                if (tabIndex == INDEX_NFC) {
+                    openNfcPaymentApp();
+                }
+
                 if (viewPager.getCurrentPosition() == position) {
                     final BaseFragment fragment = getCurrentVisibleFragment();
                     if (fragment instanceof MainTabsActivity.TabFragmentDelegate) {
@@ -501,6 +507,18 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         updateLayout();
         checkUnreadCount(false);
         return contentView;
+    }
+
+    /** exteradive: запуск платёжного приложения, выбранного в системе. */
+    private void openNfcPaymentApp() {
+        final android.content.Context context = ApplicationLoader.applicationContext;
+        final String pkg = app.exteraless.nfc.NfcPayment.getSystemDefaultPaymentApp(context);
+        if (pkg.isEmpty()) {
+            // в системе ничего не выбрано - открываем системный выбор, молча
+            app.exteraless.nfc.NfcPayment.openSystemPaymentChooser(context);
+            return;
+        }
+        app.exteraless.nfc.NfcPayment.launch(context, pkg);
     }
 
     private void checkUnreadCount(boolean animated) {

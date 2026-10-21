@@ -218,10 +218,7 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                     .postNotificationName(NotificationCenter.nfcTabVisibleToggled);
         } else if (position == nfcAppRow) {
             // выбор делается в системе - там список бесконтактной оплаты
-            if (!app.exteraless.nfc.NfcPayment.openSystemPaymentChooser(getParentActivity())) {
-                Toast.makeText(getParentActivity(),
-                        getString(R.string.OENfcNoApps), Toast.LENGTH_SHORT).show();
-            }
+            app.exteraless.nfc.NfcPayment.openSystemPaymentChooser(getParentActivity());
             return;
         } else if (position == autoReplyRow) {
             presentFragment(new AutoReplyActivity());

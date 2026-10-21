@@ -143,8 +143,7 @@ public class NfcActivity extends BaseFragment {
         }
         final String pkg = NfcPayment.getSystemDefaultPaymentApp(context);
         if (pkg.isEmpty()) {
-            // в системе платёжное приложение не выбрано - предлагаем выбрать
-            Toast.makeText(context, getString(R.string.OENfcNoAppSelected), Toast.LENGTH_SHORT).show();
+            // в системе платёжное приложение не выбрано - открываем системный выбор
             NfcPayment.openSystemPaymentChooser(context);
             return;
         }
