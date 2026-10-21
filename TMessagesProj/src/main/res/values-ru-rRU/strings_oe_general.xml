@@ -236,4 +236,7 @@
     <string name="OEAutoReplyTextHint">Введите текст автоответа…</string>
     <string name="OEDivePrivacyInfo">Ваш номер показывается как +79*******11 в Настройки &gt; Аккаунт.</string>
     <string name="OEDiveMentionAllSplit">Отправлять отметки частями</string>
+    <string name="OEDiveAnimationsHeader">Анимации</string>
+    <string name="OEDiveDisableAnimations">Отключить анимации</string>
+    <string name="OEDiveAnimationsInfo">Отключает анимации во всём приложении. В плеере музыки волнистая полоска времени становится плоской, а текст лирики сразу загорается целиком.</string>
 </resources>

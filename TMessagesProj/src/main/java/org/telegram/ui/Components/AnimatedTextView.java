@@ -438,6 +438,11 @@ public class AnimatedTextView extends View {
         }
 
         public void setText(CharSequence text, boolean animated, boolean moveDown) {
+            // exteradive: переключатель "Отключить анимации" действует на все
+            // AnimatedTextView в приложении - текст меняется сразу.
+            if (!org.telegram.messenger.SharedConfig.animationsEnabled()) {
+                animated = false;
+            }
             if (this.currentText == null || text == null) {
                 animated = false;
             }

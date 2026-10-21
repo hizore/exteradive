@@ -303,6 +303,8 @@ public class NotificationCenter {
     public static final int DiveGramBadgesChanged = totalEvents++;
     public static final int DiveGramStreakChanged = totalEvents++;
     public static final int DiveGramNftsChanged = totalEvents++;
+    // exteradive: переключатель "Отключить анимации" изменился
+    public static final int animationsToggled = totalEvents++;
     public static final int closeOtherAppActivities = totalEvents++;
     public static final int cameraInitied = totalEvents++;
     public static final int didReplacedPhotoInMemCache = totalEvents++;

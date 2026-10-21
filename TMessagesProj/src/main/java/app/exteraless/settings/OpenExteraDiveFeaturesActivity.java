@@ -46,6 +46,9 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
     private int voiceBitrateRow;
     private int playerBitrateRow;
     private int mediaInfoRow;
+    private int animationsHeaderRow;
+    private int disableAnimationsRow;
+    private int animationsInfoRow;
     private int autoReplyRow;
     private int infoRow;
 
@@ -72,6 +75,10 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         voiceBitrateRow = addRow("diveVoiceBitrate");
         playerBitrateRow = addRow("divePlayerBitrate");
         mediaInfoRow = addRow();
+
+        animationsHeaderRow = addRow("diveAnimationsHeader");
+        disableAnimationsRow = addRow("diveDisableAnimations");
+        animationsInfoRow = addRow();
 
         autoReplyRow = addRow("diveAutoReply");
         infoRow = addRow();
@@ -104,6 +111,21 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
 
     @Override
     protected void onItemClick(View view, int position, float x, float y) {
+        handleRowClick(position, view);
+    }
+
+    /** Защита от двойного срабатывания: клик по ячейке и по списку могут прийти вместе. */
+    private long lastClickTime;
+    private int lastClickPosition = -1;
+
+    private void handleRowClick(int position, View view) {
+        long now = System.currentTimeMillis();
+        if (position == lastClickPosition && now - lastClickTime < 600) {
+            return;
+        }
+        lastClickPosition = position;
+        lastClickTime = now;
+
         boolean enabled = false;
         if (position == badgesRow) {
             SharedConfig.badgesEnabled = !SharedConfig.badgesEnabled;
@@ -129,6 +151,19 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         } else if (position == playerBitrateRow) {
             SharedConfig.setPlayerBitrate(!SharedConfig.playerBitrate);
             enabled = SharedConfig.playerBitrate;
+        } else if (position == disableAnimationsRow) {
+            // exteradive: переключатель "Отключить анимации". В SharedConfig флаг означает
+            // обратное - "анимации разрешены", поэтому инвертируем его.
+            SharedConfig.setAnimationsEnabled(!SharedConfig.animationsEnabled());
+            enabled = !SharedConfig.animationsEnabled();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(enabled);
+            }
+            // сообщаем плееру и остальным экранам, что режим анимаций сменился
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.animationsToggled);
+            NotificationCenter.getInstance(UserConfig.selectedAccount)
+                    .postNotificationName(NotificationCenter.animationsToggled);
+            return;
         } else if (position == audioCodecRow) {
             showAudioCodecDialog();
             return;
@@ -190,10 +225,12 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         @Override
         public int getItemViewType(int position) {
             if (position == headerRow || position == typingHeaderRow
-                    || position == privacyHeaderRow || position == mediaHeaderRow) {
+                    || position == privacyHeaderRow || position == mediaHeaderRow
+                    || position == animationsHeaderRow) {
                 return TYPE_HEADER;
             } else if (position == infoRow || position == typingInfoRow
-                    || position == privacyInfoRow || position == mediaInfoRow) {
+                    || position == privacyInfoRow || position == mediaInfoRow
+                    || position == animationsInfoRow) {
                 return TYPE_INFO_PRIVACY;
             }
             return TYPE_CHECK;
@@ -210,6 +247,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDiveTypingHeader));
                     } else if (position == privacyHeaderRow) {
                         cell.setText(getString(R.string.OEDivePrivacyHeader));
+                    } else if (position == animationsHeaderRow) {
+                        cell.setText(getString(R.string.OEDiveAnimationsHeader));
                     } else {
                         cell.setText(getString(R.string.OEDiveMediaHeader));
                     }
@@ -221,6 +260,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDiveTypingInfo));
                     } else if (position == privacyInfoRow) {
                         cell.setText(getString(R.string.OEDivePrivacyInfo));
+                    } else if (position == animationsInfoRow) {
+                        cell.setText(getString(R.string.OEDiveAnimationsInfo));
                     } else if (position == mediaInfoRow) {
                         cell.setText(getString(R.string.OEDiveMediaInfo));
                     } else {
@@ -232,6 +273,9 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                 }
                 case TYPE_CHECK: {
                     TextCheckCell cell = (TextCheckCell) holder.itemView;
+                    // exteradive: клик вешаем прямо на ячейку. Список отдаёт клик
+                    // не всем подряд, а на переключателе он не доходил.
+                    cell.setOnClickListener(v -> handleRowClick(position, cell));
                     if (position == badgesRow) {
                         cell.setTextAndCheck(getString(R.string.OEDiveBadges),
                                 SharedConfig.badgesEnabled, true);
@@ -259,6 +303,9 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                     } else if (position == playerBitrateRow) {
                         cell.setTextAndCheck(getString(R.string.OEDivePlayerBitrate),
                                 SharedConfig.playerBitrate, true);
+                    } else if (position == disableAnimationsRow) {
+                        cell.setTextAndCheck(getString(R.string.OEDiveDisableAnimations),
+                                !SharedConfig.animationsEnabled(), true);
                     } else if (position == autoReplyRow) {
                         cell.setTextAndValue(getString(R.string.OEDiveAutoReplyTitle),
                                 SharedConfig.autoReplyEnabled

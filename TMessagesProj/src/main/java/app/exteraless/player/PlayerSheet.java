@@ -513,6 +513,8 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         nc.addObserver(this, NotificationCenter.audioInfoLoaded);
         nc.addObserver(this, NotificationCenter.musicIdsLoaded);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.messagePlayingSpeedChanged);
+        // exteradive: после переключения "Отключить анимации" плеер должен перерисоваться
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.animationsToggled);
         applySystemBars(true);
     }
 
@@ -924,6 +926,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         nc.removeObserver(this, NotificationCenter.audioInfoLoaded);
         nc.removeObserver(this, NotificationCenter.musicIdsLoaded);
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.messagePlayingSpeedChanged);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.animationsToggled);
         if (colorAnimator != null) {
             colorAnimator.cancel();
         }
@@ -980,6 +983,14 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
             updateLike(true);
         } else if (id == NotificationCenter.messagePlayingSpeedChanged) {
             updateSpeed();
+        } else if (id == NotificationCenter.animationsToggled) {
+            // exteradive: перерисовать полоску времени и лирику под новый режим анимаций
+            if (seekBar != null) {
+                seekBar.invalidate();
+            }
+            if (lyricsView != null) {
+                lyricsView.invalidate();
+            }
         }
     }
 

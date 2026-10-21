@@ -177,4 +177,7 @@
     <string name="OEAutoReplyTextHint">Wpisz tekst odpowiedzi…</string>
     <string name="OEDivePrivacyInfo">Twój numer jest pokazywany jako +79*******11 w Ustawienia &gt; Konto.</string>
     <string name="OEDiveMentionAllSplit">Wysyłaj wspomnienia częściami</string>
+    <string name="OEDiveAnimationsHeader">Animacje</string>
+    <string name="OEDiveDisableAnimations">Wyłącz animacje</string>
+    <string name="OEDiveAnimationsInfo">Wyłącza animacje w całej aplikacji. W odtwarzaczu muzyki falujący pasek czasu staje się płaski, a tekst piosenki zapala się od razu w całości.</string>
 </resources>

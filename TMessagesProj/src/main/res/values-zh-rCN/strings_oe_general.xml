@@ -177,4 +177,7 @@
     <string name="OEAutoReplyTextHint">输入回复文本…</string>
     <string name="OEDivePrivacyInfo">您的号码在 设置 &gt; 账户 中显示为 +79*******11。</string>
     <string name="OEDiveMentionAllSplit">分段发送提及</string>
+    <string name="OEDiveAnimationsHeader">动画</string>
+    <string name="OEDiveDisableAnimations">关闭动画</string>
+    <string name="OEDiveAnimationsInfo">关闭整个应用的动画。在音乐播放器中，波浪形进度条会变为平直，歌词也会一次性完全点亮。</string>
 </resources>

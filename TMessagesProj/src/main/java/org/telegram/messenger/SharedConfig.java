@@ -2228,6 +2228,11 @@ public class SharedConfig {
 
     public static void setAnimationsEnabled(boolean b) {
         animationsEnabled = b;
+        // exteradive: значение должно переживать перезапуск, иначе переключатель
+        // "Отключить анимации" работал бы только до перезапуска приложения.
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("view_animations", b)
+                .apply();
     }
 
     public static boolean animationsEnabled() {

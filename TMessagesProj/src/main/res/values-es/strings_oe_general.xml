@@ -177,4 +177,7 @@
     <string name="OEAutoReplyTextHint">Introduce el texto de respuesta…</string>
     <string name="OEDivePrivacyInfo">Tu número se muestra como +79*******11 en Ajustes &gt; Cuenta.</string>
     <string name="OEDiveMentionAllSplit">Enviar menciones en partes</string>
+    <string name="OEDiveAnimationsHeader">Animaciones</string>
+    <string name="OEDiveDisableAnimations">Desactivar animaciones</string>
+    <string name="OEDiveAnimationsInfo">Desactiva las animaciones en toda la aplicación. En el reproductor de música la barra de tiempo ondulada se vuelve plana y la letra se enciende entera de golpe.</string>
 </resources>

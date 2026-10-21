@@ -219,4 +219,7 @@
     <string name="OEAutoReplyTextHint">أدخل نص الرد…</string>
     <string name="OEDivePrivacyInfo">يظهر رقمك كـ +79*******11 في الإعدادات &gt; الحساب.</string>
     <string name="OEDiveMentionAllSplit">إرسال الإشارات على دفعات</string>
+    <string name="OEDiveAnimationsHeader">الحركات</string>
+    <string name="OEDiveDisableAnimations">تعطيل الحركات</string>
+    <string name="OEDiveAnimationsInfo">يعطّل الحركات في كل التطبيق. في مشغّل الموسيقى يصبح شريط الوقت مسطحًا وتُضاء كلمات الأغنية دفعة واحدة.</string>
 </resources>

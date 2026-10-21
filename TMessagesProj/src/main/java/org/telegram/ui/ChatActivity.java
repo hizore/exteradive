@@ -3258,6 +3258,12 @@ public class ChatActivity extends BaseFragment implements
         // exteraless plugins: реестр пунктов меняется, когда плагин включают/выключают.
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.pluginMenuItemsUpdated);
 
+        // exteradive (DiveGram): значок в шапке. Конфиг значков приезжает из сети
+        // уже после открытия чата, поэтому без этой подписки заголовок не
+        // обновится и значок в шапке так и не появится.
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
+        getNotificationCenter().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
+
         if (chatMode != MODE_SCHEDULED) {
             if (threadMessageId == 0) {
                 observersGroup
@@ -21979,6 +21985,12 @@ public class ChatActivity extends BaseFragment implements
 
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
+        if (id == NotificationCenter.DiveGramBadgesChanged) {
+            // exteradive (DiveGram): конфиг значков приехал из сети - перерисовываем
+            // заголовок, чтобы значок появился в шапке чата.
+            updateTitle(false);
+            return;
+        }
         if (id == NotificationCenter.messagesDidLoad) {
             didReceivedNotification_messagesDidLoad(id, account, args);
         } else {

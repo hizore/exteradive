@@ -239,4 +239,7 @@
     <string name="OEAutoReplyTextHint">Enter reply text…</string>
     <string name="OEDivePrivacyInfo">Your phone number is shown as +79*******11 in Settings &gt; Account.</string>
     <string name="OEDiveMentionAllSplit">Send mentions in parts</string>
+    <string name="OEDiveAnimationsHeader">Animations</string>
+    <string name="OEDiveDisableAnimations">Disable animations</string>
+    <string name="OEDiveAnimationsInfo">Turns off animations throughout the app. In the music player the wavy progress bar becomes flat and the lyrics light up fully at once.</string>
 </resources>
