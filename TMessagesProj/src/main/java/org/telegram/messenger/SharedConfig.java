@@ -280,9 +280,6 @@ public class SharedConfig {
     public static int deletedMessagesOpacity = 100;
     public static final HashSet<String> deletedMessagesIds = new HashSet<>();
 
-    // NFC: переход в платёжное приложение
-    public static boolean nfcPaymentEnabled = false;
-
     // Автоответчик (DiveGram)
     public static boolean autoReplyEnabled = false;
     public static String autoReplyText = "";
@@ -705,45 +702,46 @@ public class SharedConfig {
             BackgroundActivityPrefs.prefs = ApplicationLoader.applicationContext.getSharedPreferences("background_activity", Context.MODE_PRIVATE);
 
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
-            // exteradive: функции DiveLite
-            infiniteRecents = preferences.getBoolean("infiniteRecents", false);
-            infinitePinnedChats = preferences.getBoolean("dgInfinitePinnedChats", false);
-            hideAllStories = preferences.getBoolean("hideAllStories", false);
-            useSystemFont = preferences.getBoolean("useSystemFont", false);
-            stickerScale = preferences.getInt("stickerScale", 100);
-            gifScale = preferences.getInt("gifScale", 100);
-            oldDesign = preferences.getBoolean("dgOldDesign", true);
-            hideCameraInPicker = preferences.getBoolean("dgHideCameraInPicker", false);
+            // exteradive: функции DiveLite. Сеттеры для них пишут в mainconfig
+            // (MessagesController.getGlobalMainSettings), поэтому и читать надо
+            // оттуда же - иначе значения не переживают перезапуск приложения.
+            SharedPreferences forkPrefs = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+            infiniteRecents = forkPrefs.getBoolean("infiniteRecents", false);
+            infinitePinnedChats = forkPrefs.getBoolean("dgInfinitePinnedChats", false);
+            hideAllStories = forkPrefs.getBoolean("hideAllStories", false);
+            useSystemFont = forkPrefs.getBoolean("useSystemFont", false);
+            stickerScale = forkPrefs.getInt("stickerScale", 100);
+            gifScale = forkPrefs.getInt("gifScale", 100);
+            oldDesign = forkPrefs.getBoolean("dgOldDesign", true);
+            hideCameraInPicker = forkPrefs.getBoolean("dgHideCameraInPicker", false);
             // Значки и серии
-            badgesEnabled = preferences.getBoolean("dgBadgesEnabled", true);
-            badgesFetchTime = preferences.getLong("dgBadgesFetchTime", 0);
-            streaksEnabled = preferences.getBoolean("dgStreaksEnabled", true);
-            streakFetchTime = preferences.getLong("dgStreaksFetchTime", 0);
-            nftsEnabled = preferences.getBoolean("dgNftsEnabled", true);
-            nftsFetchTime = preferences.getLong("dgNftsFetchTime", 0);
-            showTypingLocation = preferences.getBoolean("dgShowTypingLocation", false);
-            mentionAllEnabled = preferences.getBoolean("dgMentionAllEnabled", false);
-            mentionAllSplitEnabled = preferences.getBoolean("dgMentionAllSplitEnabled", false);
-            audioCodec = preferences.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
-            voiceRecordBitrate = preferences.getInt("dgVoiceRecordBitrate", 0);
-            playerBitrate = preferences.getBoolean("dgPlayerBitrate", false);
+            badgesEnabled = forkPrefs.getBoolean("dgBadgesEnabled", true);
+            badgesFetchTime = forkPrefs.getLong("dgBadgesFetchTime", 0);
+            streaksEnabled = forkPrefs.getBoolean("dgStreaksEnabled", true);
+            streakFetchTime = forkPrefs.getLong("dgStreaksFetchTime", 0);
+            nftsEnabled = forkPrefs.getBoolean("dgNftsEnabled", true);
+            nftsFetchTime = forkPrefs.getLong("dgNftsFetchTime", 0);
+            showTypingLocation = forkPrefs.getBoolean("dgShowTypingLocation", false);
+            mentionAllEnabled = forkPrefs.getBoolean("dgMentionAllEnabled", false);
+            mentionAllSplitEnabled = forkPrefs.getBoolean("dgMentionAllSplitEnabled", false);
+            audioCodec = forkPrefs.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
+            voiceRecordBitrate = forkPrefs.getInt("dgVoiceRecordBitrate", 0);
+            playerBitrate = forkPrefs.getBoolean("dgPlayerBitrate", false);
             // Сохранённые удалённые сообщения
-            saveDeletedMessages = preferences.getBoolean("dgSaveDeletedMessages", false);
-            deletedMessagesOpacity = preferences.getInt("dgDeletedMessagesOpacity", 100);
+            saveDeletedMessages = forkPrefs.getBoolean("dgSaveDeletedMessages", false);
+            deletedMessagesOpacity = forkPrefs.getInt("dgDeletedMessagesOpacity", 100);
             deletedMessagesIds.clear();
-            deletedMessagesIds.addAll(preferences.getStringSet("dgDeletedMessagesIds", new HashSet<>()));
-            // NFC
-            nfcPaymentEnabled = preferences.getBoolean("dgNfcPaymentEnabled", false);
-            autoReplyEnabled = preferences.getBoolean("dgAutoReplyEnabled", false);
-            autoReplyText = preferences.getString("dgAutoReplyText", "");
-            autoReplyCooldownSec = preferences.getInt("dgAutoReplyCooldownSec", 300);
+            deletedMessagesIds.addAll(forkPrefs.getStringSet("dgDeletedMessagesIds", new HashSet<>()));
+            autoReplyEnabled = forkPrefs.getBoolean("dgAutoReplyEnabled", false);
+            autoReplyText = forkPrefs.getString("dgAutoReplyText", "");
+            autoReplyCooldownSec = forkPrefs.getInt("dgAutoReplyCooldownSec", 300);
             // Погода
-            weatherEnabled = preferences.getBoolean("dgWeatherEnabled", false);
-            weatherCity = preferences.getString("dgWeatherCity", "");
-            weatherText = preferences.getString("dgWeatherText", "");
-            weatherTime = preferences.getLong("dgWeatherTime", 0);
-            weatherLat = Double.longBitsToDouble(preferences.getLong("dgWeatherLat", 0));
-            weatherLon = Double.longBitsToDouble(preferences.getLong("dgWeatherLon", 0));
+            weatherEnabled = forkPrefs.getBoolean("dgWeatherEnabled", false);
+            weatherCity = forkPrefs.getString("dgWeatherCity", "");
+            weatherText = forkPrefs.getString("dgWeatherText", "");
+            weatherTime = forkPrefs.getLong("dgWeatherTime", 0);
+            weatherLat = Double.longBitsToDouble(forkPrefs.getLong("dgWeatherLat", 0));
+            weatherLon = Double.longBitsToDouble(forkPrefs.getLong("dgWeatherLon", 0));
             // Аудио и прочее
             saveIncomingPhotos = preferences.getBoolean("saveIncomingPhotos", false);
             passcodeHash = preferences.getString("passcodeHash1", "");
@@ -1703,15 +1701,6 @@ public class SharedConfig {
         saveDeletedMessages = value;
         MessagesController.getGlobalMainSettings().edit()
                 .putBoolean("dgSaveDeletedMessages", value)
-                .apply();
-    }
-
-    // ---- NFC: переход в платёжное приложение ----
-
-    public static void setNfcPaymentEnabled(boolean value) {
-        nfcPaymentEnabled = value;
-        MessagesController.getGlobalMainSettings().edit()
-                .putBoolean("dgNfcPaymentEnabled", value)
                 .apply();
     }
 

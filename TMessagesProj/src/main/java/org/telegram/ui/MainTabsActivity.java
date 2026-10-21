@@ -108,7 +108,7 @@ import xyz.nextalone.nagram.NaConfig;
 
 public class MainTabsActivity extends ViewPagerActivity implements NotificationCenter.NotificationCenterDelegate, FactorAnimator.Target {
 
-    public static final int TABS_COUNT = 5;
+    public static final int TABS_COUNT = 4;
     private static final int POSITION_CHATS = 0;
     private static final int POSITION_CONTACTS = 1;
     private static final int POSITION_CALLS_OR_SETTINGS = 2;
@@ -120,8 +120,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private static final int INDEX_CALLS = 3;
     private static final int INDEX_PROFILE = 4;
     private static final int INDEX_FEED = 5;
-    // exteradive: вкладка NFC
-    private static final int INDEX_NFC = 6;
 
     private int indexToPosition(int index) {
         // return index > 2 ? index - 1 : index;
@@ -133,8 +131,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             return isFeedTabEnabled() ? getPositionContacts() : -1;
         } else if (index == INDEX_PROFILE) {
             return getPositionProfile();
-        } else if (index == INDEX_NFC) {
-            return getNfcPosition();
         } else {
             return getPositionCallsOrSettings();
         }
@@ -164,10 +160,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         return MainTabsHelper.getProfilePosition();
     }
 
-    private int getNfcPosition() {
-        return MainTabsHelper.getNfcPosition();
-    }
-
     private int getTabsCount() {
         return MainTabsHelper.getFragmentsCount();
     }
@@ -189,8 +181,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private boolean lastHideContacts = NaConfig.INSTANCE.getMainTabsHideContacts().Bool();
     private boolean lastHideCalls = MainTabsHelper.isCallsTabHidden();
     private boolean lastHideProfile = MainTabsHelper.isProfileTabHidden();
-    // exteradive: видимость вкладки NFC
-    private boolean lastNfcVisible = MainTabsHelper.isNfcTabVisible();
 
     public MainTabsActivity() {
         super();
@@ -391,15 +381,13 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         // отступов и без ограничения ширины
         MainTabsUiHelper.applyTabsLayoutStyle(tabsView, dp(328 + DialogsActivity.MAIN_TABS_MARGIN * 2));
 
-        tabs = new GlassTabView[7];
+        tabs = new GlassTabView[6];
         tabs[INDEX_CHATS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CHATS, R.string.MainTabsChats);
         tabs[INDEX_CONTACTS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CONTACTS, R.string.MainTabsContacts);
         tabs[INDEX_SETTINGS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.SETTINGS, R.string.Settings);
         tabs[INDEX_CALLS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CALLS, R.string.MainTabsCalls);
         tabs[INDEX_PROFILE] = GlassTabView.createAvatar(context, resourceProvider, currentAccount, R.string.MainTabsProfile);
         tabs[INDEX_FEED] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.FEED, R.string.Feed);
-        // exteradive: вкладка NFC, иконка кошелька
-        tabs[INDEX_NFC] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.WALLET, R.string.OENfcTitle);
         tabs[INDEX_CHATS].setOnLongClickListener(this::openFoldersSelector);
         tabs[INDEX_CONTACTS].setOnLongClickListener(this::openContactsSelector);
         tabs[INDEX_CALLS].setOnLongClickListener(this::openCallsSelector);
@@ -414,9 +402,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         tabsView.addTabToIgnoreClick(tabs[INDEX_PROFILE]);
         tabsView.addTabToIgnoreClick(tabs[INDEX_CALLS]);
         tabsView.addTabToIgnoreClick(tabs[INDEX_FEED]);
-        tabsView.addTabToIgnoreClick(tabs[INDEX_NFC]);
 
-        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_NFC, INDEX_PROFILE};
+        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_PROFILE};
         for (int index : displayOrder) {
             final GlassTabView view = tabs[index];
             final int tabIndex = index;
@@ -432,12 +419,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 final int position = indexToPosition(tabIndex);
                 if (position < 0) {
                     return;
-                }
-
-                // exteradive: по вкладке NFC сразу открывается платёжное приложение,
-                // выбранное в системе.
-                if (tabIndex == INDEX_NFC) {
-                    openNfcPaymentApp();
                 }
 
                 if (viewPager.getCurrentPosition() == position) {
@@ -457,7 +438,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         }
         checkUi_callTabVisible(MainTabsHelper.isCallsTabShown(currentAccount), false);
         checkUi_contactsOrFeedTabVisible(false);
-        checkUi_nfcTabVisible(false);
 
         selectTab(viewPager.getCurrentPosition(), false);
 
@@ -507,17 +487,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         updateLayout();
         checkUnreadCount(false);
         return contentView;
-    }
-
-    /** exteradive: запуск платёжного приложения, выбранного в системе. */
-    private void openNfcPaymentApp() {
-        final android.content.Context context = ApplicationLoader.applicationContext;
-        final String pkg = app.exteraless.nfc.NfcPayment.getSystemDefaultPaymentApp(context);
-        if (pkg.isEmpty()) {
-            // в системе ничего не выбрано - молча ничего не делаем
-            return;
-        }
-        app.exteraless.nfc.NfcPayment.launch(context, pkg);
     }
 
     private void checkUnreadCount(boolean animated) {
@@ -1001,9 +970,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             // args.putBoolean("expandPhoto", true);
             args.putBoolean("hasMainTabs", true);
             return prepareTabFragment(new ProfileActivity(args));
-        } else if (position == getNfcPosition()) {
-            // exteradive: вкладка NFC
-            return prepareTabFragment(new app.exteraless.nfc.NfcActivity());
         }
         return null;
     }
@@ -1237,8 +1203,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             }
         } else if (id == NotificationCenter.feedTabVisibleToggled) {
             rebuildContactsSlot();
-        } else if (id == NotificationCenter.nfcTabVisibleToggled) {
-            rebuildNfcSlot();
         } else if (id == NotificationCenter.contactsPermissionBadgeCheck) {
             checkContactsTabBadge();
         }
@@ -1257,7 +1221,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             .add(NotificationCenter.updateInterfaces)
             .add(NotificationCenter.callTabsVisibleToggled)
             .add(NotificationCenter.feedTabVisibleToggled)
-            .add(NotificationCenter.nfcTabVisibleToggled)
             .add(NotificationCenter.mainUserInfoChanged)
             .add(NotificationCenter.contactsPermissionBadgeCheck)
             .addGlobal(NotificationCenter.appUpdateAvailable)
@@ -1369,50 +1332,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             tabsView.setViewVisible(tabs[INDEX_FEED], feedTabVisible, animated);
             tabsView.setViewVisible(tabs[INDEX_CONTACTS], !feedTabVisible && !MainTabsHelper.isContactsTabHidden(), animated);
         }
-    }
-
-    /** exteradive: вкладка NFC появляется только вместе с переходом в платёжку. */
-    private void checkUi_nfcTabVisible(boolean animated) {
-        if (tabsView != null) {
-            tabsView.setViewVisible(tabs[INDEX_NFC], MainTabsHelper.isNfcTabVisible(), animated);
-        }
-    }
-
-    /**
-     * exteradive: пересборка панели вкладок после включения/выключения перехода
-     * в платёжное приложение - меняется и набор вкладок, и их позиции.
-     */
-    private void rebuildNfcSlot() {
-        final boolean nowVisible = MainTabsHelper.isNfcTabVisible();
-        final boolean wasVisible = lastNfcVisible;
-        lastNfcVisible = nowVisible;
-        checkUi_nfcTabVisible(true);
-        checkUnreadCount(false);
-        if (viewPager == null) {
-            return;
-        }
-        int currentPosition = viewPager.getCurrentPosition();
-        final int nfcPosition = getNfcPosition();
-        if (wasVisible && !nowVisible) {
-            // вкладка исчезла - всё, что было правее, сдвинулось на позицию влево
-            if (currentPosition == nfcPosition) {
-                currentPosition = getPositionProfile() >= 0 ? getPositionProfile() : getPositionChats();
-            } else if (currentPosition > nfcPosition) {
-                currentPosition--;
-            }
-        } else if (!wasVisible && nowVisible) {
-            // вкладка появилась - всё, что было правее, сдвинулось на позицию вправо
-            if (currentPosition >= nfcPosition) {
-                currentPosition++;
-            }
-        }
-        clearAllHiddenFragments();
-        for (int position = 0; position < getTabsCount() + 1; position++) {
-            dropFragmentAtPosition(position);
-        }
-        viewPager.currentPosition = currentPosition;
-        viewPager.rebuild(false);
-        selectTab(currentPosition, false);
     }
 
     private void rebuildContactsSlot() {

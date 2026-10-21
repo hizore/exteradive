@@ -104,17 +104,6 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="ton"/>
         </intent>
-        <!-- exteradive: приложения бесконтактной оплаты. На Android 11+ без
-             этих записей они не видны приложению. -->
-        <intent>
-            <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE"/>
-            <category android:name="android.nfc.cardemulation.category.PAYMENT"/>
-        </intent>
-        <!-- чтобы можно было запустить выбранное в системе приложение -->
-        <intent>
-            <action android:name="android.intent.action.MAIN"/>
-            <category android:name="android.intent.category.LAUNCHER"/>
-        </intent>
     </queries>
 
     <application

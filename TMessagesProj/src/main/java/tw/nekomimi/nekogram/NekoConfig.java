@@ -129,7 +129,7 @@ public class NekoConfig {
     public static ConfigItem cachePath = addConfig("cache_path", configTypeString, "");
     // Имя форка, а не «Nagram»: значение видно в настройках («Save Path») и в пути
     // Downloads/<папка>, куда уходят сохранённые файлы.
-    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "exteraless");
+    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "exteradive");
 
     public static ConfigItem translationProvider = addConfig("translationProvider", configTypeInt, 1);
     public static ConfigItem translateToLang = addConfig("TransToLang", configTypeString, ""); // "" -> translate to current language (MessageTrans.kt & Translator.kt)
@@ -279,6 +279,12 @@ public class NekoConfig {
                     o.value = o.defaultValue;
                     getPreferences().edit().remove(o.key).apply();
                 }
+            }
+            // exteradive: папка сохранений раньше называлась "exteraless".
+            // Уже установленным приложениям старое значение заменяем на новое,
+            // иначе папка так и останется прежней.
+            if ("exteraless".equals(customSavePath.value)) {
+                customSavePath.setConfigString("exteradive");
             }
             if (!configLoaded) {
                 // Синхронизации настроек с облаком больше нет — слушатель был заведён
