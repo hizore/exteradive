@@ -250,4 +250,18 @@
     <string name="OEDiveRemoveSavedDeletedTitle">Удалить у себя</string>
     <string name="OEDiveRemoveSavedDeletedText">Удалить сохранённую копию этого удалённого сообщения из вашего чата?</string>
     <string name="OEDiveDeletedInfo">Удалённые собеседником сообщения не исчезают: помечаются корзинкой, а цитата сохраняется. При выключении все сохранённые удаляются из чатов.</string>
+    <string name="OENfcTitle">NFC</string>
+    <string name="OENfcDescription">Бесконтактная оплата. Кнопка открывает выбранное платёжное приложение.</string>
+    <string name="OENfcOpenPayment">Открыть платёжное приложение</string>
+    <string name="OENfcNoAppSelected">Платёжное приложение не выбрано</string>
+    <string name="OENfcSelectedApp">Платёжное приложение: %1$s</string>
+    <string name="OENfcDisabled">Переход в платёжное приложение выключен в настройках</string>
+    <string name="OENfcLaunchFailed">Не удалось открыть приложение</string>
+    <string name="OENfcPickApp">Выберите платёжное приложение</string>
+    <string name="OENfcNoApps">На устройстве нет подходящих приложений</string>
+    <string name="OEDiveNfcHeader">NFC</string>
+    <string name="OEDiveNfcEnabled">Переход в платёжное приложение</string>
+    <string name="OEDiveNfcApp">Платёжное приложение</string>
+    <string name="OEDiveNfcAppNotSelected">Не выбрано</string>
+    <string name="OEDiveNfcInfo">Кнопка во вкладке NFC открывает выбранное платёжное приложение. Если приложение не выбрано, его можно выбрать прямо оттуда.</string>
 </resources>

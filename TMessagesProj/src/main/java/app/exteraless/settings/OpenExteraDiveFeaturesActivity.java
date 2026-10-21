@@ -57,6 +57,10 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
     private int deletedOpacityRow;
     private int purgeDeletedRow;
     private int deletedInfoRow;
+    private int nfcHeaderRow;
+    private int nfcEnabledRow;
+    private int nfcAppRow;
+    private int nfcInfoRow;
     private int autoReplyRow;
     private int infoRow;
 
@@ -95,6 +99,11 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         deletedOpacityRow = -1;
         purgeDeletedRow = -1;
         deletedInfoRow = -1;
+
+        nfcHeaderRow = addRow("diveNfcHeader");
+        nfcEnabledRow = addRow("diveNfcEnabled");
+        nfcAppRow = addRow("diveNfcApp");
+        nfcInfoRow = addRow();
 
         autoReplyRow = addRow("diveAutoReply");
         infoRow = addRow();
@@ -200,6 +209,15 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         } else if (position == purgeDeletedRow) {
             showPurgeDeletedDialog();
             return;
+        } else if (position == nfcEnabledRow) {
+            SharedConfig.setNfcPaymentEnabled(!SharedConfig.nfcPaymentEnabled);
+            enabled = SharedConfig.nfcPaymentEnabled;
+        } else if (position == nfcAppRow) {
+            app.exteraless.nfc.NfcPayment.showAppPicker(this, SharedConfig.nfcPaymentApp, pkg -> {
+                SharedConfig.setNfcPaymentApp(pkg);
+                listView.getAdapter().notifyItemChanged(nfcAppRow);
+            });
+            return;
         } else if (position == autoReplyRow) {
             presentFragment(new AutoReplyActivity());
             return;
@@ -287,11 +305,13 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         public int getItemViewType(int position) {
             if (position == headerRow || position == typingHeaderRow
                     || position == privacyHeaderRow || position == mediaHeaderRow
-                    || position == animationsHeaderRow || position == deletedHeaderRow) {
+                    || position == animationsHeaderRow || position == deletedHeaderRow
+                    || position == nfcHeaderRow) {
                 return TYPE_HEADER;
             } else if (position == infoRow || position == typingInfoRow
                     || position == privacyInfoRow || position == mediaInfoRow
-                    || position == animationsInfoRow || position == deletedInfoRow) {
+                    || position == animationsInfoRow || position == deletedInfoRow
+                    || position == nfcInfoRow) {
                 return TYPE_INFO_PRIVACY;
             } else if (position == deletedOpacityRow) {
                 return TYPE_SLIDER;
@@ -363,6 +383,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDiveAnimationsHeader));
                     } else if (position == deletedHeaderRow) {
                         cell.setText(getString(R.string.OEDiveDeletedHeader));
+                    } else if (position == nfcHeaderRow) {
+                        cell.setText(getString(R.string.OEDiveNfcHeader));
                     } else {
                         cell.setText(getString(R.string.OEDiveMediaHeader));
                     }
@@ -378,6 +400,8 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEDiveAnimationsInfo));
                     } else if (position == deletedInfoRow) {
                         cell.setText(getString(R.string.OEDiveDeletedInfo));
+                    } else if (position == nfcInfoRow) {
+                        cell.setText(getString(R.string.OEDiveNfcInfo));
                     } else if (position == mediaInfoRow) {
                         cell.setText(getString(R.string.OEDiveMediaInfo));
                     } else {
@@ -430,6 +454,16 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndValue(getString(R.string.OEDivePurgeDeletedTitle),
                                 count == 0 ? getString(R.string.OEDiveNoSavedDeleted)
                                         : String.valueOf(count), true, true);
+                    } else if (position == nfcEnabledRow) {
+                        cell.setTextAndCheck(getString(R.string.OEDiveNfcEnabled),
+                                SharedConfig.nfcPaymentEnabled, true);
+                    } else if (position == nfcAppRow) {
+                        String pkg = SharedConfig.nfcPaymentApp;
+                        cell.setTextAndValue(getString(R.string.OEDiveNfcApp),
+                                pkg == null || pkg.isEmpty()
+                                        ? getString(R.string.OEDiveNfcAppNotSelected)
+                                        : app.exteraless.nfc.NfcPayment.label(getParentActivity(), pkg),
+                                true, true);
                     } else if (position == autoReplyRow) {
                         cell.setTextAndValue(getString(R.string.OEDiveAutoReplyTitle),
                                 SharedConfig.autoReplyEnabled

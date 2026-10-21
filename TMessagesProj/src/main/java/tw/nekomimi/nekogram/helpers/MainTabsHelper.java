@@ -82,6 +82,12 @@ public final class MainTabsHelper {
         return hasContactsOrFeedTab() ? 3 : 2;
     }
 
+    /** exteradive: вкладка NFC - последняя. */
+    public static int getNfcPosition() {
+        final int profile = getProfilePosition();
+        return profile < 0 ? getCallsOrSettingsPosition() + 1 : profile + 1;
+    }
+
     public static int getFragmentsCount() {
         int count = MainTabsActivity.TABS_COUNT;
         if (!hasContactsOrFeedTab()) {

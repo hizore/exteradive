@@ -280,6 +280,10 @@ public class SharedConfig {
     public static int deletedMessagesOpacity = 100;
     public static final HashSet<String> deletedMessagesIds = new HashSet<>();
 
+    // NFC: переход в платёжное приложение
+    public static boolean nfcPaymentEnabled = false;
+    public static String nfcPaymentApp = "";
+
     // Автоответчик (DiveGram)
     public static boolean autoReplyEnabled = false;
     public static String autoReplyText = "";
@@ -729,6 +733,9 @@ public class SharedConfig {
             deletedMessagesOpacity = preferences.getInt("dgDeletedMessagesOpacity", 100);
             deletedMessagesIds.clear();
             deletedMessagesIds.addAll(preferences.getStringSet("dgDeletedMessagesIds", new HashSet<>()));
+            // NFC
+            nfcPaymentEnabled = preferences.getBoolean("dgNfcPaymentEnabled", false);
+            nfcPaymentApp = preferences.getString("dgNfcPaymentApp", "");
             autoReplyEnabled = preferences.getBoolean("dgAutoReplyEnabled", false);
             autoReplyText = preferences.getString("dgAutoReplyText", "");
             autoReplyCooldownSec = preferences.getInt("dgAutoReplyCooldownSec", 300);
@@ -1698,6 +1705,22 @@ public class SharedConfig {
         saveDeletedMessages = value;
         MessagesController.getGlobalMainSettings().edit()
                 .putBoolean("dgSaveDeletedMessages", value)
+                .apply();
+    }
+
+    // ---- NFC: переход в платёжное приложение ----
+
+    public static void setNfcPaymentEnabled(boolean value) {
+        nfcPaymentEnabled = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgNfcPaymentEnabled", value)
+                .apply();
+    }
+
+    public static void setNfcPaymentApp(String value) {
+        nfcPaymentApp = value == null ? "" : value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putString("dgNfcPaymentApp", nfcPaymentApp)
                 .apply();
     }
 

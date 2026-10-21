@@ -108,7 +108,7 @@ import xyz.nextalone.nagram.NaConfig;
 
 public class MainTabsActivity extends ViewPagerActivity implements NotificationCenter.NotificationCenterDelegate, FactorAnimator.Target {
 
-    public static final int TABS_COUNT = 4;
+    public static final int TABS_COUNT = 5;
     private static final int POSITION_CHATS = 0;
     private static final int POSITION_CONTACTS = 1;
     private static final int POSITION_CALLS_OR_SETTINGS = 2;
@@ -120,6 +120,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     private static final int INDEX_CALLS = 3;
     private static final int INDEX_PROFILE = 4;
     private static final int INDEX_FEED = 5;
+    // exteradive: вкладка NFC
+    private static final int INDEX_NFC = 6;
 
     private int indexToPosition(int index) {
         // return index > 2 ? index - 1 : index;
@@ -131,6 +133,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             return isFeedTabEnabled() ? getPositionContacts() : -1;
         } else if (index == INDEX_PROFILE) {
             return getPositionProfile();
+        } else if (index == INDEX_NFC) {
+            return getNfcPosition();
         } else {
             return getPositionCallsOrSettings();
         }
@@ -158,6 +162,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     private int getPositionProfile() {
         return MainTabsHelper.getProfilePosition();
+    }
+
+    private int getNfcPosition() {
+        return MainTabsHelper.getNfcPosition();
     }
 
     private int getTabsCount() {
@@ -381,13 +389,15 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         // отступов и без ограничения ширины
         MainTabsUiHelper.applyTabsLayoutStyle(tabsView, dp(328 + DialogsActivity.MAIN_TABS_MARGIN * 2));
 
-        tabs = new GlassTabView[6];
+        tabs = new GlassTabView[7];
         tabs[INDEX_CHATS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CHATS, R.string.MainTabsChats);
         tabs[INDEX_CONTACTS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CONTACTS, R.string.MainTabsContacts);
         tabs[INDEX_SETTINGS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.SETTINGS, R.string.Settings);
         tabs[INDEX_CALLS] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.CALLS, R.string.MainTabsCalls);
         tabs[INDEX_PROFILE] = GlassTabView.createAvatar(context, resourceProvider, currentAccount, R.string.MainTabsProfile);
         tabs[INDEX_FEED] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.FEED, R.string.Feed);
+        // exteradive: вкладка NFC, иконка кошелька
+        tabs[INDEX_NFC] = GlassTabView.createMainTab(context, resourceProvider, GlassTabView.TabAnimation.WALLET, R.string.OENfcTitle);
         tabs[INDEX_CHATS].setOnLongClickListener(this::openFoldersSelector);
         tabs[INDEX_CONTACTS].setOnLongClickListener(this::openContactsSelector);
         tabs[INDEX_CALLS].setOnLongClickListener(this::openCallsSelector);
@@ -402,8 +412,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         tabsView.addTabToIgnoreClick(tabs[INDEX_PROFILE]);
         tabsView.addTabToIgnoreClick(tabs[INDEX_CALLS]);
         tabsView.addTabToIgnoreClick(tabs[INDEX_FEED]);
+        tabsView.addTabToIgnoreClick(tabs[INDEX_NFC]);
 
-        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_PROFILE};
+        final int[] displayOrder = {INDEX_CHATS, INDEX_FEED, INDEX_CONTACTS, INDEX_SETTINGS, INDEX_CALLS, INDEX_PROFILE, INDEX_NFC};
         for (int index : displayOrder) {
             final GlassTabView view = tabs[index];
             final int tabIndex = index;
@@ -970,6 +981,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             // args.putBoolean("expandPhoto", true);
             args.putBoolean("hasMainTabs", true);
             return prepareTabFragment(new ProfileActivity(args));
+        } else if (position == getNfcPosition()) {
+            // exteradive: вкладка NFC
+            return prepareTabFragment(new app.exteraless.nfc.NfcActivity());
         }
         return null;
     }
