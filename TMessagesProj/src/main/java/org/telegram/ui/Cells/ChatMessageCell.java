@@ -7982,7 +7982,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
 
                 int maxChildWidth = backgroundWidth;
-                maxChildWidth = Math.max(maxChildWidth, nameWidth);
+                // exteradive: значок стоит между ником и тегом, поэтому пузырь
+                // должен быть шире на его ширину - иначе значок наедет на тег.
+                maxChildWidth = Math.max(maxChildWidth, nameWidth + dgNameBadgeSpace());
                 maxChildWidth = Math.max(maxChildWidth, sideNameWidth);
                 maxChildWidth = Math.max(maxChildWidth, forwardedNameWidth);
                 maxChildWidth = Math.max(maxChildWidth, replyNameWidth);
@@ -19431,9 +19433,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (drawNameAvatar) {
                 nameWidth -= dp(32.33f);
             }
-            // exteradive: значок стоит между ником и тегом (звёздочкой премиума),
-            // поэтому под него резервируем место, а тег сдвигаем вправо.
-            nameWidth -= dgNameBadgeSpace();
+            // exteradive: место под значок между ником и тегом даёт расширение
+            // пузыря (maxChildWidth), сам ник укорачивать не нужно.
             if (drawTopic && topicButton != null) {
                 nameWidth -= topicButton.width + dp(8);
             }
