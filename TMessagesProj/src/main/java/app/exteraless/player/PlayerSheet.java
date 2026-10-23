@@ -7,6 +7,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Outline;
@@ -107,6 +108,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
     private final ControlsRow controls;
     private final LinearLayout group;
     private final MorphButton speedButton;
+    private final MorphButton equalizerButton;
     private final MorphButton lyricsButton;
     private final MorphButton queueButton;
     private final Bulletin.Delegate bulletinDelegate = new Bulletin.Delegate() {
@@ -449,7 +451,12 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         speedButton = new MorphButton(context, PlayerIcon.stroke(PlayerIcon.SPEED, 20));
         speedButton.setRadius(dp(26), dp(8), false);
         speedButton.setOnClickListener(v -> cycleSpeed());
-        group.addView(speedButton, LayoutHelper.createLinear(0, 52, 1f));
+        group.addView(speedButton, LayoutHelper.createLinear(0, 52, 1f, 8, 0, 4, 0));
+        equalizerButton = new MorphButton(context, PlayerIcon.stroke(PlayerIcon.EQUALIZER, 20));
+        equalizerButton.setText(getString(R.string.OEPlayerEqualizer));
+        equalizerButton.setRadius(dp(8), dp(8), false);
+        equalizerButton.setOnClickListener(v -> showEqualizerDialog());
+        group.addView(equalizerButton, LayoutHelper.createLinear(0, 52, 1f, 4, 0, 4, 0));
         lyricsButton = new MorphButton(context, PlayerIcon.stroke(PlayerIcon.LYRICS, 20));
         lyricsButton.setText(getString(R.string.OEPlayerLyrics));
         lyricsButton.setRadius(dp(8), false);
@@ -1397,6 +1404,28 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         new PlayerQueueSheet(getContext(), colors, resourcesProvider).show();
     }
 
+    private static final String[] EQUALIZER_PRESETS = {"Off", "Bass", "Treble", "Rock", "Pop", "Classical", "Vocal"};
+
+    private void showEqualizerDialog() {
+        if (activity == null) {
+            return;
+        }
+        int current = SharedConfig.getPreferences().getInt("MusicEqualizerPreset", 0);
+        new AlertDialog.Builder(activity)
+                .setTitle(getString(R.string.OEPlayerEqualizer))
+                .setSingleChoiceItems(EQUALIZER_PRESETS, current, (dialog, which) -> {
+                    SharedConfig.getPreferences().edit().putInt("MusicEqualizerPreset", which).apply();
+                    SharedConfig.saveConfig();
+                    dialog.dismiss();
+                    Theme.ResourcesProvider rp = colors.provider(resourcesProvider);
+                    BulletinFactory.of(root, rp).createSimpleBulletin(
+                            R.raw.done,
+                            getString(R.string.OEPlayerEqualizer) + ": " + EQUALIZER_PRESETS[which]).show();
+                })
+                .setNegativeButton(getString(R.string.Cancel), null)
+                .show();
+    }
+
     private void openClassic() {
         dismissImmediately();
         if (activity != null) {
@@ -1601,6 +1630,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         controls.next.setColors(c.primaryContainer, c.onPrimaryContainer, c.primaryContainer, c.onPrimaryContainer);
         controls.play.setColors(c.primary, c.onPrimary, c.primary, c.onPrimary);
         speedButton.setColors(c.surfaceHigh, c.onSurface, c.surfaceHigh, c.onSurface);
+        equalizerButton.setColors(c.surfaceHigh, c.onSurface, c.primary, c.onPrimary);
         lyricsButton.setColors(c.surfaceHigh, c.onSurface, c.primary, c.onPrimary);
         queueButton.setColors(c.surfaceHigh, c.onSurface, c.surfaceHigh, c.onSurface);
         applySystemBars(false);
