@@ -9,6 +9,7 @@
     <string name="OEPlayerLyrics">Lyrics</string>
     <string name="OEPlayerQueue">Up next</string>
     <string name="OEPlayerEqualizer">Equalizer</string>
+    <string name="OEPlayerChatPlaylist">Chat playlist</string>
     <string name="OEPlayerShuffle">Shuffle</string>
     <string name="OEPlayerSpeed">Playback speed</string>
     <string name="OEPlayerSeek">Seek</string>
