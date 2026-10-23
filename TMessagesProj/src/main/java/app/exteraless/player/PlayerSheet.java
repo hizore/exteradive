@@ -111,7 +111,6 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
     private final MorphButton equalizerButton;
     private final MorphButton lyricsButton;
     private final MorphButton queueButton;
-    private MessagesController.SavedMusicList pendingChatPlaylist;
     private final Bulletin.Delegate bulletinDelegate = new Bulletin.Delegate() {
         @Override
         public int getBottomOffset(int tag) {
@@ -991,20 +990,14 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
             updateLike(true);
         } else if (id == NotificationCenter.messagePlayingSpeedChanged) {
             updateSpeed();
-        } else if (id == NotificationCenter.musicListLoaded && pendingChatPlaylist != null && args.length > 0 && args[0] == pendingChatPlaylist) {
-            MessagesController.SavedMusicList pl = pendingChatPlaylist;
-            pendingChatPlaylist = null;
-            if (pl.list.isEmpty()) {
-                return;
+        } else if (id == NotificationCenter.animationsToggled) {
+            // exteradive: перерисовать полоску времени и лирику под новый режим анимаций
+            if (seekBar != null) {
+                seekBar.invalidate();
             }
-            MediaController.getInstance().cleanup();
-            MediaController.getInstance().currentSavedMusicList = pl;
-            MediaController.getInstance().getPlaylist().clear();
-            MediaController.getInstance().getPlaylist().addAll(pl.list);
-            if (!pl.list.isEmpty()) {
-                MediaController.getInstance().playMessage(pl.list.get(0));
+            if (lyricsView != null) {
+                lyricsView.invalidate();
             }
-            Md3Player.create(getContext(), resourcesProvider).show();
         }
     }
 
@@ -1433,65 +1426,6 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
                 .show();
     }
 
-    private void saveTrackToChatPlaylist() {
-        MessageObject mo = current;
-        if (mo == null || mo.getDocument() == null || activity == null) {
-            return;
-        }
-        int account = mo.currentAccount;
-        long did = mo.getDialogId();
-        if (did == 0) {
-            return;
-        }
-        MessagesController.SavedMusicList list;
-        if (MediaController.getInstance().currentSavedMusicList != null
-                && MediaController.getInstance().currentSavedMusicList.currentAccount == account
-                && MediaController.getInstance().currentSavedMusicList.dialogId == did) {
-            list = MediaController.getInstance().currentSavedMusicList;
-        } else {
-            list = new MessagesController.SavedMusicList(account, did);
-        }
-        list.add(mo.getDocument());
-        MediaController.getInstance().currentSavedMusicList = list;
-        Theme.ResourcesProvider rp = colors.provider(resourcesProvider);
-        BulletinFactory.of(root, rp).createSimpleBulletin(
-                R.raw.done,
-                "\u2192 " + getString(R.string.OEPlayerChatPlaylist)).show();
-    }
-
-    private void openChatPlaylist() {
-        MessageObject mo = current;
-        if (mo == null || activity == null) {
-            return;
-        }
-        int account = mo.currentAccount;
-        long did = mo.getDialogId();
-        if (did == 0) {
-            return;
-        }
-        MessagesController.SavedMusicList list;
-        if (MediaController.getInstance().currentSavedMusicList != null
-                && MediaController.getInstance().currentSavedMusicList.currentAccount == account
-                && MediaController.getInstance().currentSavedMusicList.dialogId == did) {
-            list = MediaController.getInstance().currentSavedMusicList;
-        } else {
-            list = new MessagesController.SavedMusicList(account, did);
-            pendingChatPlaylist = list;
-            NotificationCenter.getInstance(account).addObserver(this, NotificationCenter.musicListLoaded);
-            list.load();
-        }
-        MediaController.getInstance().currentSavedMusicList = list;
-        if (pendingChatPlaylist != list) {
-            MediaController.getInstance().cleanup();
-            MediaController.getInstance().getPlaylist().clear();
-            MediaController.getInstance().getPlaylist().addAll(list.list);
-            if (!list.list.isEmpty()) {
-                MediaController.getInstance().playMessage(list.list.get(0));
-            }
-            Md3Player.create(getContext(), resourcesProvider).show();
-        }
-    }
-
     private void openClassic() {
         dismissImmediately();
         if (activity != null) {
@@ -1523,10 +1457,6 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
                 o.dismiss();
                 PlayerActions.saveToMusic(activity, mo, root, rp);
             });
-            sub.add(R.drawable.msg_filled_data_music, "→ " + getString(R.string.OEPlayerChatPlaylist), () -> {
-                o.dismiss();
-                saveTrackToChatPlaylist();
-            });
             sub.addGap();
             sub.addText(getString(R.string.AudioSaveToInfo), 12, dp(200));
             o.add(R.drawable.msg_stories_save, getString(R.string.AudioSaveTo), () -> o.openSwipeback(sub));
@@ -1552,11 +1482,6 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
             o.dismiss();
             dismissImmediately();
             PlayerActions.showInChat(activity, mo);
-        });
-        o.addIf(mo.getDialogId() != 0, R.drawable.msg_filled_data_music, getString(R.string.OEPlayerChatPlaylist), () -> {
-            o.dismiss();
-            dismissImmediately();
-            openChatPlaylist();
         });
         o.addGap();
         o.add(R.drawable.msg_filled_data_music, getString(R.string.OEPlayerClassic), () -> {
