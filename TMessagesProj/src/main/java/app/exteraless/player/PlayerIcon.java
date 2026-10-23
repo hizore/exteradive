@@ -30,7 +30,6 @@ public class PlayerIcon extends Drawable {
     public static final String SPEED = "M12 14l3.5-3.5M4.6 18a8.5 8.5 0 1 1 14.8 0";
     public static final String LYRICS = "M4 6h12M4 11h16M4 16h9";
     public static final String QUEUE = "M4 6h12M4 11h12M4 16h7M15 14v6l5-3z";
-    public static final String EQUALIZER = "M4 6v12M10 3v18M16 6v12M20 5v14";
     public static final String NOTE = "M9 17V5l11-2v12" + circle(6.5f, 17, 2.5f) + circle(17.5f, 15, 2.5f);
     public static final String CLOSE = "M6 6l12 12M18 6L6 18";
 
