@@ -541,9 +541,20 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
                 startPushService();
             }
         }, 1000);
+        AndroidUtilities.runOnUIThread(ApplicationLoader::scheduleOtaCheck, 5000);
     }
 
     private static final long PUSH_TOKEN_TIMEOUT_MS = 60_000;
+
+    // ExteraDive: OTA-обновления через канал t.me/exteradive (Проверка каждые 6 часов,
+    // если выбрано не "Откл." в настройках → Обновления). Запускаем с небольшой задержкой.
+    private static void scheduleOtaCheck() {
+        try {
+            app.exteraless.updater.GitHubUpdater.check(false);
+        } catch (Throwable e) {
+            FileLog.e(e);
+        }
+    }
 
     private static void checkPushTokenTimeout() {
         final String status = SharedConfig.pushStringStatus;
