@@ -920,6 +920,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             }
             NaConfig.INSTANCE.getPushServiceType().setConfigInt(type);
             PushListenerController.reconcilePushRegistration();
+            ApplicationLoader.reinitializePushServices();
             if (type == PUSH_SERVICE_IN_APP) {
                 AndroidUtil.setPushService(false);
             } else {

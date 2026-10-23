@@ -521,6 +521,12 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         }
     }
 
+    public static void reinitializePushServices() {
+        pushProvider = null;
+        PushListenerController.clearCachedProvider();
+        initPushServices();
+    }
+
     private static void initPushServices() {
         AndroidUtilities.runOnUIThread(() -> {
             if (getPushProvider().hasServices()) {

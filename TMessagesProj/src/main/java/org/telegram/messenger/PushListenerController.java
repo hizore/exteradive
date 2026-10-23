@@ -1844,6 +1844,12 @@ public class PushListenerController {
         return instance;
     }
 
+    // Разрешает переключение типа сервиса без перезапуска приложения:
+    // сбрасывает кешированный провайдер, чтобы он пересоздался из текущего NaConfig.
+    public static void clearCachedProvider() {
+        instance = null;
+    }
+
     // UP start
     public static void sendRegistrationToServer(@PushType int pushType, String token) {
         Utilities.stageQueue.postRunnable(() -> sendRegistrationToServerInternal(pushType, token));
