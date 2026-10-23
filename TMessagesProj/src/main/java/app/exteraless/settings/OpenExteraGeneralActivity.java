@@ -77,7 +77,9 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private static final int TYPE_SLIDE = 100;
     private static final int PUSH_SERVICE_IN_APP = 0;
+    private static final int PUSH_SERVICE_FCM = 1;
     private static final int PUSH_SERVICE_UNIFIED = 2;
+    private static final int PUSH_SERVICE_MICROG = 3;
 
     /** Проверяется имя папки, а не путь. */
     private static final Pattern LASTFM_PATTERN = Pattern.compile("[a-z0-9_-]{1,32}");
@@ -896,11 +898,14 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private CharSequence[] pushServiceTypeOptions() {
         return new CharSequence[]{
-                getString(R.string.PushServiceTypeInApp),
                 getString(R.string.PushServiceTypeFCM),
-                getString(R.string.PushServiceTypeUnified),
                 getString(R.string.PushServiceTypeMicroG)};
     }
+
+    // Соответствие индекса пункта в диалоге к внутреннему типу сервиса.
+    private static final int[] PUSH_SERVICE_TYPE_VALUES = {
+            PUSH_SERVICE_FCM,
+            PUSH_SERVICE_MICROG};
 
     private void showPushServiceTypeSelector() {
         if (getParentActivity() == null) {
@@ -909,12 +914,13 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(getString(R.string.PushServiceType));
         builder.setItems(pushServiceTypeOptions(), (dialog, which) -> {
-            if (NaConfig.INSTANCE.getPushServiceType().Int() == which) {
+            final int type = PUSH_SERVICE_TYPE_VALUES[which];
+            if (NaConfig.INSTANCE.getPushServiceType().Int() == type) {
                 return;
             }
-            NaConfig.INSTANCE.getPushServiceType().setConfigInt(which);
+            NaConfig.INSTANCE.getPushServiceType().setConfigInt(type);
             PushListenerController.reconcilePushRegistration();
-            if (which == PUSH_SERVICE_IN_APP) {
+            if (type == PUSH_SERVICE_IN_APP) {
                 AndroidUtil.setPushService(false);
             } else {
                 NaConfig.INSTANCE.getPushServiceTypeInAppDialog().setConfigBool(false);
@@ -1030,7 +1036,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private String formatPushStatus() {
         final int type = NaConfig.INSTANCE.getPushServiceType().Int();
-        final String name = type == 0 ? "In-App" : type == 2 ? "UnifiedPush" : "FCM";
+        final String name = type == PUSH_SERVICE_FCM ? "FCM" : "microG";
         if (!osNotificationsEnabled()) {
             return name + " \u00b7 " + getString(R.string.OEGeneralPushStatusBlocked);
         }
