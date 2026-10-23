@@ -1053,11 +1053,17 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         text.append("push type: ").append(NaConfig.INSTANCE.getPushServiceType().Int()).append('\n');
         text.append("token: ").append(hasToken
                 ? SharedConfig.pushString.length() + " chars" : "none").append('\n');
-        if (!hasToken) {
-            text.append("token status: ").append(SharedConfig.pushStringStatus).append('\n');
-            if (GooglePushListenerServiceProvider.lastError != null) {
-                text.append("token error: ").append(GooglePushListenerServiceProvider.lastError).append('\n');
-            }
+        // exteradive: токен FCM привязан к проекту-отправителю. Telegram
+        // рассылает пуши только из своего проекта (tmessages2, 760348033671) -
+        // токен от чужого проекта сервер не принимает и доставить не может.
+        if (hasToken && SharedConfig.pushString.startsWith("1:")
+                && SharedConfig.pushString.indexOf(':', 2) > 2) {
+            text.append("token sender: ").append(SharedConfig.pushString, 2,
+                    SharedConfig.pushString.indexOf(':', 2)).append('\n');
+        }
+        text.append("token status: ").append(SharedConfig.pushStringStatus).append('\n');
+        if (!hasToken && GooglePushListenerServiceProvider.lastError != null) {
+            text.append("token error: ").append(GooglePushListenerServiceProvider.lastError).append('\n');
         }
         text.append("token fetch ms: ").append(
                 SharedConfig.pushStringGetTimeEnd - SharedConfig.pushStringGetTimeStart).append('\n');
@@ -1066,6 +1072,12 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             if (config.getClientUserId() != 0) {
                 text.append("account ").append(a).append(" registered: ")
                         .append(config.registeredForPush).append('\n');
+                // exteradive: сохранённый ответ сервера на registerDevice.
+                android.content.SharedPreferences gs = MessagesController.getGlobalMainSettings();
+                String registerResult = gs.getString("PushRegisterResult" + a, null);
+                long registerTime = gs.getLong("PushRegisterResultTime" + a, 0);
+                text.append("account ").append(a).append(" register resp: ").append(registerResult == null
+                        ? "none" : registerResult + " at " + LocaleController.formatDateTime(registerTime / 1000L, true)).append('\n');
             }
         }
         text.append("last push: ").append(SharedConfig.pushLastReceivedTime <= 0 ? "never"

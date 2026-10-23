@@ -16770,6 +16770,21 @@ public class MessagesController extends BaseController implements NotificationCe
             AndroidUtilities.runOnUIThread(() -> {
                 // exteradive: в релизной сборке FileLog молчит, а без ответа
                 // сервера понять, что не так с регистрацией, невозможно.
+                String registerResult;
+                if (response instanceof TLRPC.TL_boolTrue) {
+                    registerResult = "true";
+                } else if (response != null) {
+                    registerResult = response.toString();
+                } else {
+                    registerResult = "null";
+                }
+                if (error != null) {
+                    registerResult += " error " + error.code + " \"" + error.text + "\"";
+                }
+                getGlobalMainSettings().edit()
+                        .putString("PushRegisterResult" + currentAccount, registerResult)
+                        .putLong("PushRegisterResultTime" + currentAccount, System.currentTimeMillis())
+                        .apply();
                 android.util.Log.d("PushReg", "registerDevice account=" + currentAccount
                         + " type=" + pushType + " tokenLen=" + (regid == null ? 0 : regid.length())
                         + " response=" + response + " error=" + error
