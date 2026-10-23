@@ -182,7 +182,6 @@ import org.telegram.ui.Components.AppIconBulletinLayout;
 import org.telegram.ui.Components.AttachBotIntroTopView;
 import org.telegram.ui.Components.AudioPlayerAlert;
 import org.telegram.ui.Components.BatteryDrawable;
-import org.telegram.ui.Components.BlockingUpdateView;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.CubicBezierInterpolator;
@@ -272,7 +271,6 @@ import tw.nekomimi.nekogram.helpers.MonetHelper;
 import tw.nekomimi.nekogram.helpers.SettingsHelper;
 import tw.nekomimi.nekogram.helpers.remote.EmojiHelper;
 import tw.nekomimi.nekogram.helpers.remote.PagePreviewRulesHelper;
-import tw.nekomimi.nekogram.helpers.remote.UpdateHelper;
 import app.exteraless.chats.UserLookup;
 import app.exteraless.settings.OpenExteraSettingsActivity;
 import tw.nekomimi.nekogram.utils.AlertUtil;
@@ -340,7 +338,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private PasscodeViewDialog passcodeDialog;
     private List<PasscodeView> overlayPasscodeViews = new ArrayList<>();
     private TermsOfServiceView termsOfServiceView;
-    private BlockingUpdateView blockingUpdateView;
     public final ArrayList<Dialog> visibleDialogs = new ArrayList<>();
     private Dialog proxyErrorDialog;
     private SelectAnimatedEmojiDialog.SelectAnimatedEmojiDialogWindow selectAnimatedEmojiDialog;
@@ -1466,14 +1463,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             rightActionBarLayout.getView().setVisibility(View.GONE);
             backgroundTablet.setVisibility(!actionBarLayout.getFragmentStack().isEmpty() ? View.GONE : View.VISIBLE);
         }
-    }
-
-    private void showUpdateActivity(int account, TLRPC.TL_help_appUpdate update, boolean check) {
-        if (blockingUpdateView == null) {
-            blockingUpdateView = new BlockingUpdateView(LaunchActivity.this);
-            drawerLayoutContainer.addView(blockingUpdateView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        }
-        blockingUpdateView.show(account, update, check);
     }
 
     private void showTosActivity(int account, TLRPC.TL_help_termsOfService tos) {
@@ -6166,11 +6155,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     public void checkAppUpdate(boolean force, Browser.Progress progress, boolean updateAlways) {
         if (!tw.nekomimi.nekogram.helpers.remote.BaseRemoteHelper.hasMetadataChannel()) {
-            UpdateHelper.cleanAppUpdate();
             if (progress != null) {
                 progress.end();
             }
-            app.exteraless.updater.GitHubUpdater.check(force || progress != null);
+            // exteradive: OTA updates removed
             return;
         }
        /*if (!ApplicationLoader.isStandaloneBuild() && !ApplicationLoader.isBetaBuild()) {
@@ -6200,54 +6188,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             });
             return;
         }
-        if (!force && Math.abs(System.currentTimeMillis() - SharedConfig.lastUpdateCheckTime) < MessagesController.getInstance(0).updateCheckDelay * 1000) {
-            return;
-        }
-        final TLRPC.TL_help_getAppUpdate req = new TLRPC.TL_help_getAppUpdate();
-        try {
-            req.source = ApplicationLoader.applicationContext.getPackageManager().getInstallerPackageName(ApplicationLoader.applicationContext.getPackageName());
-        } catch (Exception ignore) {
 
-        }
-        if (req.source == null) {
-            req.source = "";
-        }
-        final int accountNum = currentAccount;
-        if (progress != null) progress.init();
-        UpdateHelper.getInstance().checkNewVersionAvailable((res, error) -> {
-            SharedConfig.lastUpdateCheckTime = System.currentTimeMillis();
-            SharedConfig.saveConfig();
-            AndroidUtilities.runOnUIThread(() -> {
-                if (res != null) {
-                    SharedConfig.setNewAppVersionAvailable(res);
-                    if (res.can_not_skip) {
-                        showUpdateActivity(accountNum, res, false);
-                    } else {
-
-                        ApplicationLoader.applicationLoaderInstance.showUpdateAppPopup(LaunchActivity.this, res, accountNum);
-                    }
-                } else {
-                    if (force) {
-                        BaseFragment fragment = getLastFragment();
-                        if (fragment != null) {
-                            if (error == null) {
-                                BulletinFactory.of(fragment).createSimpleBulletin(R.raw.done, LocaleController.getString(R.string.YourVersionIsLatestNax)).show();
-                            } else {
-                                AlertsCreator.createSimpleAlert(this, getString(R.string.ErrorOccurred) + "\n" + error).show();
-                            }
-                        }
-                    }
-                    SharedConfig.setNewAppVersionAvailable(null);
-                }
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
-                if (progress != null) {
-                    progress.end();
-                }
-            });
-        }, updateAlways);
-        if (progress != null) {
-            progress.init();
-        }
     }
 
     public Dialog showAlertDialog(AlertDialog.Builder builder) {
@@ -7267,8 +7208,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
         if (UserConfig.getInstance(UserConfig.selectedAccount).unacceptedTermsOfService != null) {
             showTosActivity(UserConfig.selectedAccount, UserConfig.getInstance(UserConfig.selectedAccount).unacceptedTermsOfService);
-        } else if (SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.can_not_skip) {
-            showUpdateActivity(UserConfig.selectedAccount, SharedConfig.pendingAppUpdate, true);
         }
         checkAppUpdate(false, null);
 
