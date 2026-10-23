@@ -30,6 +30,22 @@ public class GooglePushListenerServiceProvider implements PushListenerController
             new java.util.concurrent.atomic.AtomicInteger();
     private static final long TOKEN_FETCH_TIMEOUT_MS = 45_000;
     private static int tokenFetchRetries;
+    private static final java.util.concurrent.atomic.AtomicBoolean TOKEN_FETCH_DONE =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    // exteradive: все исходы fetch (провал / зависание / пустой токен)
+    // фиксируем в mainconfig - последняя копия статуса всегда знает,
+    // чем закончился последний запрос токена.
+    private static void rememberTokenFetchError(String what) {
+        lastError = what;
+        SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
+        try {
+            MessagesController.getGlobalMainSettings().edit()
+                    .putString("PushTokenFetchError", what)
+                    .putLong("PushTokenFetchErrorTime", System.currentTimeMillis())
+                    .apply();
+        } catch (Throwable ignore) {}
+    }
 
     @Override
     public void onRequestPushToken() {
@@ -50,6 +66,7 @@ public class GooglePushListenerServiceProvider implements PushListenerController
     // fetch, максимум 2 раза за запуск.
     private static void startTokenFetch() {
         final int gen = TOKEN_FETCH_GENERATION.incrementAndGet();
+        TOKEN_FETCH_DONE.set(false);
         try {
             SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
             FirebaseApp.initializeApp(ApplicationLoader.applicationContext);
@@ -60,31 +77,57 @@ public class GooglePushListenerServiceProvider implements PushListenerController
                             // опаздывающий ответ игнорируем
                             return;
                         }
+                        if (TOKEN_FETCH_DONE.getAndSet(true)) {
+                            return;
+                        }
                         SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
                         tokenFetchRetries = 0;
                         if (!task.isSuccessful()) {
                             Exception error = task.getException();
-                            lastError = error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage();
+                            String err = error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage();
+                            rememberTokenFetchError(err);
                             FileLog.d("Failed to get regid: " + lastError);
                             android.util.Log.d("PushReg", "getToken failed: " + lastError);
-                            SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
-                            PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, null);
+                            String cached = SharedConfig.pushString;
+                            if (!TextUtils.isEmpty(cached)) {
+                                android.util.Log.d("PushReg", "getToken failed, trying cached token");
+                                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, cached);
+                            } else {
+                                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, null);
+                            }
                             ApplicationLoader.startPushService();
                             return;
                         }
                         lastError = null;
+                        try {
+                            MessagesController.getGlobalMainSettings().edit()
+                                    .remove("PushTokenFetchError")
+                                    .remove("PushTokenFetchErrorTime")
+                                    .apply();
+                        } catch (Throwable ignore) {}
                         String token = task.getResult();
                         if (!TextUtils.isEmpty(token)) {
                             android.util.Log.d("PushReg", "getToken ok len=" + token.length()
                                     + " sender=" + (token.startsWith("1:") && token.indexOf(':', 2) > 2
                                     ? token.substring(2, token.indexOf(':', 2)) : "?"));
                             PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, token);
+                        } else {
+                            rememberTokenFetchError("empty token");
+                            String cached = SharedConfig.pushString;
+                            if (!TextUtils.isEmpty(cached)) {
+                                android.util.Log.d("PushReg", "getToken returned empty, trying cached token");
+                                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, cached);
+                            } else {
+                                PushListenerController.sendRegistrationToServer(PushListenerController.PUSH_TYPE_FIREBASE, null);
+                            }
+                            ApplicationLoader.startPushService();
                         }
                     });
         } catch (Throwable e) {
             FileLog.e(e);
-            lastError = e.getClass().getSimpleName() + ": " + e.getMessage();
-            SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
+            if (gen == TOKEN_FETCH_GENERATION.get() && !TOKEN_FETCH_DONE.getAndSet(true)) {
+                rememberTokenFetchError(e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
             return;
         }
         armTokenFetchWatchdog(gen);
@@ -95,9 +138,11 @@ public class GooglePushListenerServiceProvider implements PushListenerController
             if (gen != TOKEN_FETCH_GENERATION.get()) {
                 return;
             }
-            lastError = "token fetch hung > " + TOKEN_FETCH_TIMEOUT_MS / 1000 + " s";
+            if (TOKEN_FETCH_DONE.getAndSet(true)) {
+                return;
+            }
+            rememberTokenFetchError("token fetch hung > " + TOKEN_FETCH_TIMEOUT_MS / 1000 + " s");
             FileLog.d(lastError);
-            SharedConfig.pushStringStatus = "__FIREBASE_FAILED__";
             if (tokenFetchRetries++ < 2) {
                 // Перезапуск: новый gen обезвечивает опаздывающий ответ старого
                 Utilities.globalQueue.postRunnable(() -> startTokenFetch());
