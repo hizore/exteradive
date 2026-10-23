@@ -1291,8 +1291,10 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                     } else if (position == pushServiceTypeRow) {
                         CharSequence[] options = pushServiceTypeOptions();
                         int type = NaConfig.INSTANCE.getPushServiceType().Int();
+                        int idx = (type == PUSH_SERVICE_FCM)
+                                ? 0 : (type == PUSH_SERVICE_MICROG ? 1 : 0);
                         cell.setTextAndValue(getString(R.string.PushServiceType),
-                                options[type < 0 || type >= options.length ? 0 : type], true);
+                                options[idx], true);
                     } else if (position == pushGatewayRow) {
                         String gateway = NaConfig.INSTANCE.getPushServiceTypeUnifiedGateway().String();
                         cell.setTextAndValue(getString(R.string.PushServiceTypeUnifiedGateway),
