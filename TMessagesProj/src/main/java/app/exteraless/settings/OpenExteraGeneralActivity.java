@@ -1062,7 +1062,9 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                     SharedConfig.pushString.indexOf(':', 2)).append('\n');
         }
         text.append("token status: ").append(SharedConfig.pushStringStatus).append('\n');
-        if (!hasToken && GooglePushListenerServiceProvider.lastError != null) {
+        if (GooglePushListenerServiceProvider.lastError != null) {
+            // exteradive: показываем всегда - ошибка авторазметки токена важна
+            // даже когда в конфиге ещё остался старый токен.
             text.append("token error: ").append(GooglePushListenerServiceProvider.lastError).append('\n');
         }
         text.append("token fetch ms: ").append(
