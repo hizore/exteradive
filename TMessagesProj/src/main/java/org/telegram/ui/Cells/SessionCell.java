@@ -405,9 +405,9 @@ public class SessionCell extends FrameLayout {
             colorKey = Theme.key_avatar_backgroundCyan;
             colorKey2 = Theme.key_avatar_background2Cyan;
         } else {
-            iconId = R.drawable.device_web_other;
-            colorKey = Theme.key_avatar_backgroundPink;
-            colorKey2 = Theme.key_avatar_background2Pink;
+            iconId = R.drawable.device_phone_android;
+            colorKey = Theme.key_avatar_backgroundGreen;
+            colorKey2 = Theme.key_avatar_background2Green;
         }
         Drawable iconDrawable = ContextCompat.getDrawable(ApplicationLoader.applicationContext, iconId).mutate();
         iconDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_avatar_text), PorterDuff.Mode.SRC_IN));

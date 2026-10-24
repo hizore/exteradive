@@ -3298,7 +3298,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     AndroidUtil.toggleLogs();
                     // ApplicationLoader.applicationContext.getSharedPreferences("systemConfig", Context.MODE_PRIVATE).edit().putBoolean("logsEnabled", BuildVars.LOGS_ENABLED = true).commit();
                 } else if (open_settings == 8) {
-                    ProfileActivity.sendLogs(LaunchActivity.this, false);
+                    // экстерадив: отправка логов убрана из интерфейса
                 } else if (open_settings == 9) {
                     bulletinText = "Logs disabled.";
                     AndroidUtil.toggleLogs();

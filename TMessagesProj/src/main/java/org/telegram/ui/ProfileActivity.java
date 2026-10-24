@@ -11132,7 +11132,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     debugHeaderRow = rowCount++;
                 }
                 if (BuildVars.LOGS_ENABLED) {
-                    sendLogsRow = rowCount++;
+                    sendLogsRow = -1; rowCount++;
                     sendLastLogsRow = -1;
                     // disable send last logs
                     clearLogsRow = rowCount++;
