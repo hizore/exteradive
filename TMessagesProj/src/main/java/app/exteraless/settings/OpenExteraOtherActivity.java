@@ -588,9 +588,7 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
                 case TYPE_INFO_PRIVACY: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
                     boolean bottom = position == bottomDividerRow;
-                    if (position == googleDividerRow) {
-                        cell.setText(getString(R.string.OEGeneralCrashReportsInfo));
-                    } else if (position == glyphDividerRow) {
+                    if (position == glyphDividerRow) {
                         cell.setText(getString(R.string.OEGlyphInfo));
                     } else {
                         cell.setText(null);
