@@ -137,7 +137,7 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
         crashReportsRow = addRow("crashReports");
         crashReportsRow = -1; // экстерадив: отсылка отчётов скрыта
         contentCaptureRow = addRow("contentCapture");
-        contentCaptureRow = -1; // экстерадив: запрос системного доступа к тексту скрыт
+        // contentCaptureRow = -1; // экстерадив: запрос системного доступа к тексту скрыт
         googleDividerRow = addRow();
 
         nagramHeaderRow = addRow("nagramHeader");
