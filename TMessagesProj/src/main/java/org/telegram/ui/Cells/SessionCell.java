@@ -327,27 +327,27 @@ public class SessionCell extends FrameLayout {
         String deviceModel = session.device_model.toLowerCase();
         int iconId;
         int colorKey, colorKey2;
-        if (deviceModel.contains("safari")) {
+        if (platform.contains("web") && deviceModel.contains("safari")) {
             iconId = R.drawable.device_web_safari;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("edge")) {
+        } else if (platform.contains("web") && deviceModel.contains("edge")) {
             iconId = R.drawable.device_web_edge;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("chrome")) {
+        } else if (platform.contains("web") && deviceModel.contains("chrome")) {
             iconId = R.drawable.device_web_chrome;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("opera")) {
+        } else if (platform.contains("web") && deviceModel.contains("opera")) {
             iconId = R.drawable.device_web_opera;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("firefox")) {
+        } else if (platform.contains("web") && deviceModel.contains("firefox")) {
             iconId = R.drawable.device_web_firefox;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("vivaldi")) {
+        } else if (platform.contains("web") && deviceModel.contains("vivaldi")) {
             iconId = R.drawable.device_web_other;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;

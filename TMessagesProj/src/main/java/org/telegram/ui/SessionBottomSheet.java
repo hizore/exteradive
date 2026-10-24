@@ -318,15 +318,15 @@ public class SessionBottomSheet extends BottomSheet {
         boolean animation = true;
 
 
-        if (deviceModel.contains("safari")) {
+        if (platform.contains("web") && deviceModel.contains("safari")) {
             iconId = R.raw.safari_30;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("edge")) {
+        } else if (platform.contains("web") && deviceModel.contains("edge")) {
             iconId = R.raw.edge_30;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
-        } else if (deviceModel.contains("chrome")) {
+        } else if (platform.contains("web") && deviceModel.contains("chrome")) {
             iconId = R.raw.chrome_30;
             colorKey = Theme.key_avatar_backgroundPink;
             colorKey2 = Theme.key_avatar_background2Pink;
@@ -334,7 +334,7 @@ public class SessionBottomSheet extends BottomSheet {
             iconId = R.raw.firefox_30;
             colorKey = Theme.key_avatar_backgroundRed;
             colorKey2 = Theme.key_avatar_background2Red;
-        } else if (deviceModel.contains("opera") || deviceModel.contains("firefox") || deviceModel.contains("vivaldi")) {
+        } else if (platform.contains("web") && (deviceModel.contains("opera") || deviceModel.contains("firefox") || deviceModel.contains("vivaldi"))) {
             animation = false;
             if (deviceModel.contains("opera")) {
                 iconId = R.drawable.device_web_opera;
