@@ -134,8 +134,7 @@ public class OpenExteraOtherActivity extends BaseNekoSettingsActivity {
         // мёртвым. На его месте вход в настройки NagramX, выключенный по
         // умолчанию.
         googleHeaderRow = addRow("googleHeader");
-        crashReportsRow = addRow("crashReports");
-        crashReportsRow = -1; // экстерадив: отсылка отчётов скрыта
+        crashReportsRow = -1; // экстерадив: отсылка отчётов скрыта (целиком)
         contentCaptureRow = addRow("contentCapture");
         // contentCaptureRow = -1; // экстерадив: запрос системного доступа к тексту скрыт
         googleDividerRow = addRow();
