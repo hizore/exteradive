@@ -75,7 +75,7 @@ object GoogleTranslator : Translator {
             ).addQueryParameter("query.target_language", to)
             .addQueryParameter("query.display_language", "en-US")
             .addQueryParameter("data_types", "TRANSLATION")
-            .addQueryParameter("key", "AIzaSyDLEeFI5OtFBwYBIoK_jj5m32rZK5CkCXA")
+            .addQueryParameter("key", "YOUR_GOOGLE_TRANSLATE_API_KEY")
             .addQueryParameter("query.text", text)
         val httpUrl = urlBuilder.build()
 

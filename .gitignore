@@ -30,3 +30,6 @@ tests/local/
 
 # Собранные APK
 APK/
+
+# Firebase google-services.json (воспринятое как secret: sender id + api key)
+TMessagesProj/google-services.json

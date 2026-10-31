@@ -8,8 +8,10 @@ streak, typing location, and “Disable animations”) into a single **DiveLite*
 entry in Settings → More.
 
 API id/hash for the client:
-- `20442185` / `9481330893f68903dc4e67c1faf92795` — set in
-  `TMessagesProj/build.gradle` and `local.properties`.
+- Set in `TMessagesProj/build.gradle` and `local.properties` (`TELEGRAM_APP_ID`,
+  `TELEGRAM_APP_HASH`). **Obtain your own** from https://my.telegram.org (API
+  development tools). The defaults in this repository are intentionally blank
+  (placeholder `0` / `YOUR_TELEGRAM_APP_HASH`); do not commit real keys.
 
 ## Repository layout
 
@@ -29,8 +31,8 @@ API id/hash for the client:
 - `local.properties` at repo root with:
   ```
   sdk.dir=Q:\\\\AndroidSdk
-  TELEGRAM_APP_ID=20442185
-  TELEGRAM_APP_HASH=9481330893f68903dc4e67c1faf92795
+  TELEGRAM_APP_ID=YOUR_API_ID
+  TELEGRAM_APP_HASH=YOUR_API_HASH
   KEYSTORE_PASS=android
   ALIAS_NAME=androidkey
   ALIAS_PASS=android
@@ -59,10 +61,17 @@ Kotlin via the Chaquopy-less build.
 
 ## Push notifications
 
-ExteraDive uses its own Firebase project (`exteradive`) with sender id
-`930738329393`. For the server to accept push tokens you must upload the
-Firebase Service Account JSON [my.telegram.org](https://my.telegram.org)
-→ *API development tools* → app `20442185` → *Push notifications*.
+ExteraDive requires a dedicated Firebase project for push notifications.
+
+1. Create your own Firebase project and download `google-services.json`.
+2. Place `google-services.json` into `TMessagesProj/` (the file is gitignored).
+3. Generate a Service Account JSON from
+   *Firebase Console → Project settings → Service accounts → Generate new
+   private key* and **upload it** at [my.telegram.org](https://my.telegram.org)
+   → *API development tools* → *your app* → *Push notifications*.
+
+Do not commit `google-services.json` nor the service-account JSON into the
+repository.
 
 On first launch the client obtains an FCM token (`GooglePushListenerServiceProvider`)
 and registers it per account. Failed tokens / watchdog status are visible

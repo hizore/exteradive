@@ -123,14 +123,14 @@ android {
         }
 
         // obtain your own keys at https://core.telegram.org/api/obtaining_api_id
-        // exteradive: собственные ключи api_id/api_hash
-        def appId = '20442185'
-        def appHash = '9481330893f68903dc4e67c1faf92795'
+        // exteradive: УСТАНОВИ ТЕПЕРЬ СВОИ КЛЮЧИ в local.properties или env
+        // (TELEGRAM_APP_ID / TELEGRAM_APP_HASH). Число ниже — заглушка.
+        def appId = '0'
+        def appHash = 'YOUR_TELEGRAM_APP_HASH'
 
-        // obtain your own key at https://developers.google.com/maps/documentation/android-sdk/get-api-key
-        // Android keys are restricted by package name and signing certificate,
-        // so a key taken from another build shows an empty map.
-        def mapsKey = 'AIzaSyDE_x6GRKJCSfCY33soBYUQ2piYsgjVpVE'
+        // Obtain your own key at https://developers.google.com/maps/documentation/android-sdk/get-api-key
+        // Android keys are restricted by package name and signing certificate.
+        def mapsKey = 'YOUR_GOOGLE_MAPS_API_KEY'
 
         // Nothing Glyph SDK. «test» — отладочный ключ из Glyph Developer Kit, боевой
         // запрашивается у Nothing под package name приложения.
