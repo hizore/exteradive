@@ -1,170 +1,99 @@
-<div align="center">
+# ExteraDive
 
-<img src="assets/logo.png" width="128" alt="exteraless">
+Fork of [exteraless](https://github.com/exteraless/exteraless) — `org.divelite.messenger`
+(Android app, brand «exteradive»). The fork folds in DiveLite/DiveGram
+features (auto-reply, quick replies, weather, audio codec/bitrate,
+premium emoji, @all & split mentions, phone-number protection, badges &
+streak, typing location, and “Disable animations”) into a single **DiveLite**
+entry in Settings → More.
 
-# exteraless
+API id/hash for the client:
+- `20442185` / `9481330893f68903dc4e67c1faf92795` — set in
+  `TMessagesProj/build.gradle` and `local.properties`.
 
-Открытая версия exteraGram — с моделью разрешений для плагинов
+## Repository layout
 
-[![Канал](https://img.shields.io/badge/Telegram-@exteraless-2CA5E0?logo=telegram&logoColor=white)](https://t.me/exteraless)
+- `TMessagesProj/` — main Android application module.
+- `TMessagesProj_Modules/` — media3 / experimental modules.
+- `local.properties` — SDK path + personal keys (not committed; template in
+  `.example`).
+- `APK/` — release artifacts (`ExteraDive-arm64-v8a.apk`,
+  `ExteraDive-armeabi-v7a.apk`).
 
-</div>
+## Requirements
 
----
-
-## Что это
-
-exteraless — форк [NagramX](https://github.com/risin42/NagramX), в котором возможности
-exteraGram реализованы с открытым исходным кодом.
-
-Отдельный упор — **безопасность плагинов**. В exteraGram плагин не ограничен ни в чём;
-здесь у него есть модель разрешений: плагин объявляет, что ему нужно, это
-видно на экране установки, и получает он только заявленное.
-
-Проект **в бете**: часть возможностей exteraGram ещё не перенесена. Если заметили, что
-каких-то функций не хватает, — откройте issue или напишите в [канал](https://t.me/exteraless?direct).
-
-* Имя пакета: `com.exteraless.app`
-* Что перенесено: экраны настроек, оформление и параметры чатов, иконпаки, полоса
-  пилюль (Pill Stack), боковое меню, движок Python-плагинов
-
-### Ссылки
-
-* Канал: [@exteraless](https://t.me/exteraless)
-* Исходники: [github.com/exteraless/exteraless](https://github.com/exteraless/exteraless)
-
-### Сборка
-
-1. Склонировать репозиторий вместе с подмодулями:
-
-    ```bash
-    git clone --recursive --shallow-submodules https://github.com/exteraless/exteraless.git exteraless
-    ```
-
-    Если репозиторий уже склонирован без подмодулей:
-
-    ```bash
-    git submodule update --init --recursive --depth=1
-    ```
-
-2. Получить `TELEGRAM_APP_ID` и `TELEGRAM_APP_HASH` на [my.telegram.org](https://my.telegram.org/auth)
-   и создать `local.properties` в корне проекта:
-
-   ```properties
-   TELEGRAM_APP_ID=<ваш_app_id>
-   TELEGRAM_APP_HASH=<ваш_app_hash>
-   ```
-
-3. Для подписи APK положить свой `TMessagesProj/release.keystore` и дописать в `local.properties`:
-
-   ```properties
-   KEYSTORE_PASS=<пароль_хранилища>
-   ALIAS_NAME=<имя_ключа>
-   ALIAS_PASS=<пароль_ключа>
-   ```
-
-   Ключа в репозитории нет намеренно. Без него сборка не падает — APK подписывается
-   отладочным ключом Android.
-
-4. Для push-уведомлений положить свой `TMessagesProj/google-services.json`
-   (Firebase, имя пакета `com.exteraless.app`).
-
-5. Заменить метаданные проекта:
-
-    - ключ Google Maps в записи `com.google.android.maps.v2.API_KEY` в `TMessagesProj/src/main/AndroidManifest.xml`;
-    - `BaseRemoteHelper.CHANNEL_METADATA_ID` — числовой id вашего канала метаданных, без префикса `-100`.
-
-6. Собрать: `./gradlew :TMessagesProj:assembleDebug` или открыть проект в Android Studio.
-
-**Про ABI.** Собираются только 64-битные `arm64-v8a` и `x86_64`: Chaquopy собирает
-Python 3.12 лишь под них, и на `armeabi-v7a` конфигурация обрывается. Переменная
-`NATIVE_TARGET` задаёт цель: `arm64-v8a` (один ABI, быстрее), `universal` (оба),
-`SKIP` (без нативной части — только Java и ресурсы).
-
-### Сборка через GitHub Actions
-
-Нужны два секрета репозитория:
-
-* `LOCAL_PROPERTIES` — содержимое `local.properties` в base64:
-
-  ```bash
-  base64 -w0 local.properties
+- JDK **21** (temurin/openjdk) — sources target Java 21 + desugaring.
+- Android SDK with `compileSdk 37` (minor 2), `buildTools 36.0.0`,
+  `ndk 27.2.12479018`, command-line tools installed.
+- Gradle (use the bundled wrapper — `gradle/wrapper/gradle-wrapper.jar`).
+- `local.properties` at repo root with:
+  ```
+  sdk.dir=Q:\\\\AndroidSdk
+  TELEGRAM_APP_ID=20442185
+  TELEGRAM_APP_HASH=9481330893f68903dc4e67c1faf92795
+  KEYSTORE_PASS=android
+  ALIAS_NAME=androidkey
+  ALIAS_PASS=android
   ```
 
-* `RELEASE_KEYSTORE` — файл ключа в base64:
+## Build
 
-  ```bash
-  base64 -w0 TMessagesProj/release.keystore
-  ```
+The signing keystore is `TMessagesProj/release.keystore` (DN `CN=DiveLite`,
+alias `androidkey`, password `android`). Builds are configured to soak it
+when `KEYSTORE_PASS`/`ALIAS_NAME`/`ALIAS_PASS` are present in
+`local.properties`.
 
-Дальше запустить workflow **Release Build**. Готовый APK лежит в артефактах прогона.
+```bash
+# Windows PowerShell example
+$env:NATIVE_TARGET = "arm64-v8a"
+java -cp "gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain `
+  "-Dorg.gradle.jvmargs=-Xmx3500m -XX:MaxMetaspaceSize=768m" :TMessagesProj:assembleRelease
 
-### Авторы дизайна
+# armv7
+$env:NATIVE_TARGET = "armeabi-v7a"  # run again
+```
 
-Иконки и оформление, унаследованные от exteraGram, созданы его дизайнером —
-[@the8055u](https://t.me/the8055u) и студией [@BlueprintDsgn](https://t.me/BlueprintDsgn).
-Права на эти материалы принадлежат авторам.
+Artifacts end up in `TMessagesProj/build/outputs/apk/release/`. Copy into
+`APK/ExteraDive-<abi>.apk` for publishing. `assembleRelease` also builds
+Kotlin via the Chaquopy-less build.
 
-### Благодарности
+## Push notifications
 
-- [AyuGram](https://github.com/AyuGram/AyuGram4A)
-- [Cherrygram](https://github.com/arsLan4k1390/Cherrygram)
-- [Dr4iv3rNope](https://github.com/Dr4iv3rNope/NotSoAndroidAyuGram)
-- [exteraGram](https://github.com/exteraSquad/exteraGram)
-- [Inugram](https://github.com/teidesu/inugram)
-- [Nagram](https://github.com/NextAlone/Nagram)
-- [NagramX](https://github.com/risin42/NagramX)
-- [Nekogram](https://github.com/Nekogram/Nekogram)
-- [OctoGram](https://github.com/OctoGramApp/OctoGram)
+ExteraDive uses its own Firebase project (`exteradive`) with sender id
+`930738329393`. For the server to accept push tokens you must upload the
+Firebase Service Account JSON [my.telegram.org](https://my.telegram.org)
+→ *API development tools* → app `20442185` → *Push notifications*.
 
----
+On first launch the client obtains an FCM token (`GooglePushListenerServiceProvider`)
+and registers it per account. Failed tokens / watchdog status are visible
+in Settings → ExteraDive → General → Notifications (Copy status).
+Supported service types: **Google FCM** and **microG**.
 
-## English
+## OTA updates
 
-### What this is
+OTA fetches from the Telegram channel `@exteradive`:
+- Stable channel → posts tagged `#Release`
+- Beta channel → posts tagged `#Beta` (or `#Prerelease`)
 
-exteraless is a fork of [NagramX](https://github.com/risin42/NagramX) that implements
-exteraGram's features open-source.
+Each post **must contain the APK files named**
+`ExteraDive-arm64-v8a.apk` / `ExteraDive-armeabi-v7a.apk`. The client
+downloads from the channel's single-view CDN link and verifies abi matching.
 
-The special focus is **plugin security**. In exteraGram a plugin is not restricted in
-any way; here it comes with a permission model and isolation: a plugin declares what it
-needs, you see that on the install sheet, and it gets only what was declared.
+In the app: Settings → ExteraDive → About (tap the logo to manage the
+channel and force a check). Auto-check runs every 6 hours if channel
+selected (Settings → ExteraDive → General → *updates* flag).
 
-The project is **in beta**: some exteraGram features have not been ported yet. If you
-notice a missing feature, open an issue or write to the [channel](https://t.me/exteraless?direct).
+## Notes for contributors
 
-* Package name: `com.exteraless.app`
+- Keep the side-menu and chat list design untouched by design.
+- All DiveLite/DiveGram features are confined to a single `DiveLite` entry
+  under “Дополнительно” in “Еще”.
+- Saved-messages chat (`Избранное`) must not show DiveGram badge/streak.
+- Never mention badges in commit messages.
+- Commit style: `exteradive: <short description>` in Russian (existing history).
+- Hidden UI rows are expressed as integers `-1` (row index sentinel).
 
-### Design credits
+## License
 
-Icons and visual design inherited from exteraGram are the work of its designer,
-[@the8055u](https://t.me/the8055u), and the [@BlueprintDsgn](https://t.me/BlueprintDsgn)
-studio. Rights to those materials belong to their authors.
-
-### Building
-
-1. Clone with submodules:
-
-    ```bash
-    git clone --recursive --shallow-submodules https://github.com/exteraless/exteraless.git exteraless
-    ```
-
-2. Get `TELEGRAM_APP_ID` and `TELEGRAM_APP_HASH` from [my.telegram.org](https://my.telegram.org/auth)
-   and put them into `local.properties` in the project root.
-
-3. For release signing, drop your own `TMessagesProj/release.keystore` and add
-   `KEYSTORE_PASS`, `ALIAS_NAME`, `ALIAS_PASS` to `local.properties`. No keystore is
-   shipped with the repository; without one the build is signed with the Android debug key.
-
-4. For push notifications, replace `TMessagesProj/google-services.json` with your own
-   Firebase config for `com.exteraless.app`.
-
-5. Build with `./gradlew :TMessagesProj:assembleDebug` or from Android Studio.
-
-Only 64-bit ABIs are built (`arm64-v8a`, `x86_64`): Chaquopy ships Python 3.12 for those
-only, and `armeabi-v7a` fails at configuration time. `NATIVE_TARGET` selects the target:
-`arm64-v8a`, `universal` (both) or `SKIP` (no native part).
-
-For CI, set two repository secrets — `LOCAL_PROPERTIES` and `RELEASE_KEYSTORE`, both
-base64-encoded — and run the **Release Build** workflow. The APK ends up in the run
-artifacts.
+Telegram's open-source code is licensed under the GNU GPL v. 2 or later. This
+fork inherits those terms — publish your source accordingly.
