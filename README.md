@@ -1,108 +1,110 @@
 # ExteraDive
 
-Fork of [exteraless](https://github.com/exteraless/exteraless) — `org.divelite.messenger`
-(Android app, brand «exteradive»). The fork folds in DiveLite/DiveGram
-features (auto-reply, quick replies, weather, audio codec/bitrate,
-premium emoji, @all & split mentions, phone-number protection, badges &
-streak, typing location, and “Disable animations”) into a single **DiveLite**
-entry in Settings → More.
+Форк [exteraless](https://github.com/exteraless/exteraless) — приложение Android.
+Пакет `org.divelite.messenger`, бренд «exteradive». Добавляет функции DiveLite/DiveGram
+(автоответ, быстрые ответы, погода, аудио-код/битрейт, премиум-эмодзи, @all и
+split-mentions, защита номера телефона, значки и стрики, локация печати,
+«Отключить анимации») в одном пункте **DiveLite** в настройках «Еще» → «Дополнительно».
 
-API id/hash for the client:
-- Set in `TMessagesProj/build.gradle` and `local.properties` (`TELEGRAM_APP_ID`,
-  `TELEGRAM_APP_HASH`). **Obtain your own** from https://my.telegram.org (API
-  development tools). The defaults in this repository are intentionally blank
-  (placeholder `0` / `YOUR_TELEGRAM_APP_HASH`); do not commit real keys.
+API id/hash берутся из `local.properties` / переменных окружения
+(`TELEGRAM_APP_ID`, `TELEGRAM_APP_HASH`). Получи свои ключи на
+https://my.telegram.org (API development tools) — значение по умолчанию в этом
+репозитории оставлено пустым-заглушкой и не работает.
 
-## Repository layout
+## Структура
 
-- `TMessagesProj/` — main Android application module.
-- `TMessagesProj_Modules/` — media3 / experimental modules.
-- `local.properties` — SDK path + personal keys (not committed; template in
-  `.example`).
-- `APK/` — release artifacts (`ExteraDive-arm64-v8a.apk`,
-  `ExteraDive-armeabi-v7a.apk`).
+- `TMessagesProj/` — основной модуль Android-приложения.
+- `TMessagesProj_Modules/` — вспомогательные media3/экспериментальные модули.
+- `local.properties` — путь к SDK и личные ключи (в `.gitignore`, образец
+  приведён ниже).
+- `APK/` — релизные артефакты (`ExteraDive-arm64-v8a.apk`,
+  `ExteraDive-armeabi-v7a.apk`), игнорируются git'ом.
 
-## Requirements
+## Требования
 
-- JDK **21** (temurin/openjdk) — sources target Java 21 + desugaring.
-- Android SDK with `compileSdk 37` (minor 2), `buildTools 36.0.0`,
-  `ndk 27.2.12479018`, command-line tools installed.
-- Gradle (use the bundled wrapper — `gradle/wrapper/gradle-wrapper.jar`).
-- `local.properties` at repo root with:
+- JDK **21** (Temurin/OpenJDK).
+- Android SDK с `compileSdk 37` (minor 2), `buildTools 36.0.0`,
+  `ndk 27.2.12479018`.
+- Слушать Gradle через wrapper (`gradle/wrapper/gradle-wrapper.jar`).
+- `local.properties` в корне со строками:
   ```
-  sdk.dir=Q:\\\\AndroidSdk
+  sdk.dir=F:\\AndroidSdk
   TELEGRAM_APP_ID=YOUR_API_ID
   TELEGRAM_APP_HASH=YOUR_API_HASH
+  MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+  GLYPH_API_KEY=test
   KEYSTORE_PASS=android
   ALIAS_NAME=androidkey
   ALIAS_PASS=android
   ```
+- Подпись релиза: `TMessagesProj/release.keystore` (DN `CN=DiveLite`,
+  алиас `androidkey`, пароль `android`).
 
-## Build
+## Сборка
 
-The signing keystore is `TMessagesProj/release.keystore` (DN `CN=DiveLite`,
-alias `androidkey`, password `android`). Builds are configured to soak it
-when `KEYSTORE_PASS`/`ALIAS_NAME`/`ALIAS_PASS` are present in
-`local.properties`.
-
-```bash
-# Windows PowerShell example
+```powershell
 $env:NATIVE_TARGET = "arm64-v8a"
 java -cp "gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain `
   "-Dorg.gradle.jvmargs=-Xmx3500m -XX:MaxMetaspaceSize=768m" :TMessagesProj:assembleRelease
 
-# armv7
-$env:NATIVE_TARGET = "armeabi-v7a"  # run again
+# отдельный ABI:
+$env:NATIVE_TARGET = "armeabi-v7a"  # повторить команду выше
 ```
 
-Artifacts end up in `TMessagesProj/build/outputs/apk/release/`. Copy into
-`APK/ExteraDive-<abi>.apk` for publishing. `assembleRelease` also builds
-Kotlin via the Chaquopy-less build.
+На выходе: `TMessagesProj/build/outputs/apk/release/*.apk`. Сохрани их в
+`APK/ExteraDive-<abi>.apk`.
 
-## Push notifications
+`build.gradle` поддерживает локальные env-переменные: `BUILD_TIMESTAMP`,
+`COMMIT_ID`, `KEYSTORE_PASS`, `ALIAS_NAME`, `ALIAS_PASS`, `TELEGRAM_APP_ID`,
+`TELEGRAM_APP_HASH`, `MAPS_API_KEY`, `GLYPH_API_KEY`.
 
-ExteraDive requires a dedicated Firebase project for push notifications.
+## Пуш-уведомления
 
-1. Create your own Firebase project and download `google-services.json`.
-2. Place `google-services.json` into `TMessagesProj/` (the file is gitignored).
-3. Generate a Service Account JSON from
-   *Firebase Console → Project settings → Service accounts → Generate new
-   private key* and **upload it** at [my.telegram.org](https://my.telegram.org)
-   → *API development tools* → *your app* → *Push notifications*.
+ExteraDive использует отдельный Firebase-проект. Для работы пушей вайти:
 
-Do not commit `google-services.json` nor the service-account JSON into the
-repository.
+1. Создать свой Firebase-проект, скачать `google-services.json` и положить в
+   `TMessagesProj/`. Файл заигнорен git'ом — не коммитить.
+2. В Console: *Project settings → Service accounts → Generate new private key*, сохранить JSON.
+3. Загрузить JSON на [my.telegram.org](https://my.telegram.org) → *API development tools* → твоё приложение → *Push notifications*.
+   Без этого сервер отвечает `APP_PUSH_APIKEY_MISSING`, и пуши не дойдут.
+4. В настройках приложения: Настройки → ExteraDive → Основные → Уведомления
+   выбрать тип сервиса (Google FCM или microG), перезапустить приложение.
 
-On first launch the client obtains an FCM token (`GooglePushListenerServiceProvider`)
-and registers it per account. Failed tokens / watchdog status are visible
-in Settings → ExteraDive → General → Notifications (Copy status).
-Supported service types: **Google FCM** and **microG**.
+Оба типа — Google FCM и microG — используют один и тот же провайдер
+`GooglePushListenerServiceProvider`; настройка влияет только на обнаружение
+Google Play Services / microG.
 
-## OTA updates
+## OTA-обновления
 
-OTA fetches from the Telegram channel `@exteradive`:
-- Stable channel → posts tagged `#Release`
-- Beta channel → posts tagged `#Beta` (or `#Prerelease`)
+Клиент читает APK **из Telegram-канала** `@exteradive`
+(`https://t.me/s/exteradive`):
 
-Each post **must contain the APK files named**
-`ExteraDive-arm64-v8a.apk` / `ExteraDive-armeabi-v7a.apk`. The client
-downloads from the channel's single-view CDN link and verifies abi matching.
+- Канал Beta → посты с хэштегом `#Beta` или `#Prerelease`
+- Канал Release → посты с хэштегом `#Release`
 
-In the app: Settings → ExteraDive → About (tap the logo to manage the
-channel and force a check). Auto-check runs every 6 hours if channel
-selected (Settings → ExteraDive → General → *updates* flag).
+В посте должны быть выложены оба APK — `ExteraDive-arm64-v8a.apk` и
+`ExteraDive-armeabi-v7a.apk`; клиент выберет подходящую ABI.
 
-## Notes for contributors
+Настройки: Настройки exteradive → О приложении (логотип); раздел
+«Обновления» — Откл / Релизы / Бета (NaConfig.autoUpdateChannel). Автопроверка
+каждые 6 часов.
 
-- Keep the side-menu and chat list design untouched by design.
-- All DiveLite/DiveGram features are confined to a single `DiveLite` entry
-  under “Дополнительно” in “Еще”.
-- Saved-messages chat (`Избранное`) must not show DiveGram badge/streak.
-- Never mention badges in commit messages.
-- Commit style: `exteradive: <short description>` in Russian (existing history).
-- Hidden UI rows are expressed as integers `-1` (row index sentinel).
+Важно: сейчас UI и авто-пуш загрузок скрыта — OTA вырезана из интерфейса по
+решению пользователя (сам пакет апдейтера остаётся в коде для возможного
+включения позже).
 
-## License
+## Заметки для contribute'ров
 
-Telegram's open-source code is licensed under the GNU GPL v. 2 or later. This
-fork inherits those terms — publish your source accordingly.
+- Держать сайд-меню и дизайн списка чатов нетронутыми.
+- Все DiveLite/DiveGram-фичи должны жить в одном пункте `DiveLite` под
+  разделом «Дополнительно» в «Еще».
+- Чат «Избранное» (Saved Messages) не показывает DiveGram badge/стрик ни в
+  списке, ни в шапке, ни в пузырях сообщений.
+- Никогда не упоминайте значки (badges) в сообщениях коммита.
+- Стиль коммита: `exteradive: <краткое описание>` (используется русский).
+- Скрытые строки в настройках — индекс сентинел `-1`.
+
+## Лицензия
+
+Код Telegram распространяется под GNU GPL v. 2 и выше. Этот форк наследует
+те же условия — при публикации выкладывай и распределяй исходники.
