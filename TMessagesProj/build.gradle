@@ -194,7 +194,7 @@ android {
     // Ключ подписи в репозиторий не кладётся. Положи свой release.keystore рядом
     // с этим файлом и пропиши KEYSTORE_PASS / ALIAS_NAME / ALIAS_PASS в
     // local.properties; без него сборка подписывается отладочным ключом Android.
-    def releaseKeystore = project.file('release.keystore')
+    def releaseKeystore = project.file('config/release.keystore')
     def hasReleaseKeystore = releaseKeystore.exists() && keystorePwd != null && alias != null
 
     signingConfigs {
