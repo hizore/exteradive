@@ -1,5 +1,7 @@
 package org.telegram.tgnet.json;
 
+import org.telegram.messenger.BuildVars;
+
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -56,7 +58,7 @@ public class TLJsonBuilder {
             result2.putOpt(key, value);
         } catch (JSONException e) {
             FileLog.e(e);
-            if (BuildConfig.DEBUG) {
+            if (BuildVars.DEBUG_PRIVATE_VERSION) {
                 throw new RuntimeException(e);
             }
         }
