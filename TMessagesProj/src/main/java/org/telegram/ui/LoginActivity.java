@@ -8595,7 +8595,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         showDoneButton(true, true);
                         TLRPC.TL_auth_loginTokenMigrateTo res = (TLRPC.TL_auth_loginTokenMigrateTo) response;
 
-                        ConnectionsManager.native_moveToDatacenter(currentAccount, res.dc_id);
+                        // ConnectionsManager.native_moveToDatacenter(currentAccount, res.dc_id);
                         TLRPC.TL_auth_importLoginToken request = new TLRPC.TL_auth_importLoginToken();
                         request.token = res.token;
                         getConnectionsManager().sendRequest(request, (response1, error1) -> AndroidUtilities.runOnUIThread(() -> {
