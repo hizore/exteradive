@@ -6618,7 +6618,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
         if (req.stargift == null) {
             return;
         }
-        req.password = password;
+        req.tmp_password = null; // 13.1.1 removed SRP
         ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
             if (getContext() == null) return;
             if (error != null) {

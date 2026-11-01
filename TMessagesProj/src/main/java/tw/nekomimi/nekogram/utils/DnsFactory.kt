@@ -53,7 +53,7 @@ object DnsFactory {
     @Volatile
     private var hasIPv6: Boolean = false
 
-    private var forceIPv6 = ConnectionsManager.getInstance(UserConfig.selectedAccount).forceTryIPv6
+    private var forceIPv6 = ConnectionsManager.getInstance(UserConfig.selectedAccount).forceTryIpV6
 
     private val cache = Cache()
 

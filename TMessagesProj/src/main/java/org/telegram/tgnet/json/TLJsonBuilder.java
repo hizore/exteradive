@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.telegram.messenger.BuildConfig;
+import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLog;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class TLJsonBuilder {
             result2.putOpt(key, value);
         } catch (JSONException e) {
             FileLog.e(e);
-            if (BuildConfig.DEBUG) {
+            if (BuildVars.DEBUG_PRIVATE_VERSION) {
                 throw new RuntimeException(e);
             }
         }

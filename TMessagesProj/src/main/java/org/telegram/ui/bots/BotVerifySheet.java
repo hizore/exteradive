@@ -52,7 +52,7 @@ import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 
 public class BotVerifySheet {
 
-    public static void openVerify(int currentAccount, long botId, TL_bots.botVerifierSettings settings) {
+    public static void openVerify(int currentAccount, long botId, TL_bots.BotVerifierSettings settings) {
         BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
         if (lastFragment == null) return;
 
@@ -98,7 +98,7 @@ public class BotVerifySheet {
         lastFragment.presentFragment(fragment);
     }
 
-    public static void openSheet(Context context, int currentAccount, long botId, long dialogId, TL_bots.botVerifierSettings settings, Utilities.Callback<Boolean> whenSent) {
+    public static void openSheet(Context context, int currentAccount, long botId, long dialogId, TL_bots.BotVerifierSettings settings, Utilities.Callback<Boolean> whenSent) {
         if (context == null) {
             return;
         }
@@ -270,8 +270,8 @@ public class BotVerifySheet {
                 editTextContainer.animateSelection(editText.isFocused(), !TextUtils.isEmpty(text));
             }
         });
-        if (!TextUtils.isEmpty(settings.custom_description)) {
-            editText.setText(settings.custom_description);
+        if (settings.custom_description != null && !TextUtils.isEmpty(settings.custom_description.text)) {
+            editText.setText(settings.custom_description.text);
             if (!settings.can_modify_custom_description) {
                 editText.setEnabled(false);
                 editText.setFocusable(false);
@@ -316,11 +316,13 @@ public class BotVerifySheet {
             req.bot = MessagesController.getInstance(currentAccount).getInputUser(botId);
             req.peer = MessagesController.getInstance(currentAccount).getInputPeer(dialogId);
             if (settings.can_modify_custom_description) {
-                req.custom_description = editText.getText().toString();
+                TLRPC.TL_textWithEntities desc = new TLRPC.TL_textWithEntities();
+                desc.text = editText.getText().toString();
+                req.custom_description = desc;
             } else {
                 req.custom_description = settings.custom_description;
             }
-            if (!TextUtils.isEmpty(req.custom_description)) {
+            if (req.custom_description != null && !TextUtils.isEmpty(req.custom_description.text)) {
                 req.flags |= 4;
             }
 
@@ -340,7 +342,7 @@ public class BotVerifySheet {
         sheet.show();
     }
 
-    public static void openRemoveVerify(Context context, int currentAccount, long botId, long dialogId, TL_bots.botVerifierSettings settings, Utilities.Callback<Boolean> whenSent) {
+    public static void openRemoveVerify(Context context, int currentAccount, long botId, long dialogId, TL_bots.BotVerifierSettings settings, Utilities.Callback<Boolean> whenSent) {
         if (context == null) {
             return;
         }
