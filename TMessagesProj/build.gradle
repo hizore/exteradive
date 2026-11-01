@@ -374,7 +374,7 @@ dependencies {
     // "SERVICE_VERSION_UPDATE_REQUIRED": клиент FCM в APK старее, чем GMS
     // на устройстве, и push до приложения не доходили вообще.
     // 26.0.0 тянет свежий play-services-basement, поэтому берём его.
-    implementation 'com.google.firebase:firebase-messaging:26.0.0'
+    implementation 'com.google.firebase:firebase-messaging:22.0.0'
     // firebase-crashlytics убран: плагина com.google.firebase.crashlytics в сборке
     // нет (в google-services.json нет секции crashlytics), а FirebaseCrashlytics
     // в ApplicationLoader.postInitApplication() ронял приложение при старте.
