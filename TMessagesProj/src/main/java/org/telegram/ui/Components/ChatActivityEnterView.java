@@ -7785,6 +7785,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (messageEditText != null) {
             updateSendAsButton(parentFragment != null && parentFragment.getFragmentBeginToShow());
         }
+        // exteradive (DiveGram): заранее догружаем полный список участников,
+        // чтобы @all не ждал сеть в момент отправки.
+        app.exteraless.chats.MentionAllHelper.prime(dialog_id, currentAccount);
     }
 
     public void setChatInfo(TLRPC.ChatFull chatInfo) {
@@ -9065,6 +9068,22 @@ public class ChatActivityEnterView extends FrameLayout implements
         }
         boolean supportsNewEntities = supportsSendingNewEntities();
         int maxLength = accountInstance.getMessagesController().getMaxMessageLength();
+        // exteradive (DiveGram): для @all нужен полный список участников группы.
+        // chatFull содержит только первую страницу, поэтому при первом @all
+        // догружаем остальных и только потом отправляем — иначе упомянутыми
+        // окажутся лишь первые ~200 человек.
+        if (SharedConfig.mentionAllEnabled && editingMessageObject == null
+                && app.exteraless.chats.MentionAllHelper.isMentionAll(text)
+                && !app.exteraless.chats.MentionAllHelper.isLoaded(dialog_id)) {
+            final long targetDialog = dialog_id;
+            final CharSequence queuedText = text;
+            app.exteraless.chats.MentionAllHelper.loadAll(targetDialog, currentAccount, () -> {
+                if (dialog_id == targetDialog) {
+                    processSendingText(queuedText, notify, scheduleDate, scheduleRepeatPeriod, payStars, internalParams);
+                }
+            });
+            return true;
+        }
         if (text.length() != 0) {
             if (delegate != null && parentFragment != null && (scheduleDate != 0) == parentFragment.isInScheduleMode()) {
                 delegate.prepareMessageSending();

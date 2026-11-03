@@ -3270,6 +3270,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         dialog_id_Long = dialog_id;
+        app.exteraless.chats.MentionAllHelper.prime(dialog_id, currentAccount);
 
         transitionAnimationGlobalIndex = NotificationCenter.getGlobalInstance().setAnimationInProgress(transitionAnimationGlobalIndex, new int[0]);
 
