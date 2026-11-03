@@ -166,7 +166,12 @@ public class SnowflakesEffect {
             return;
         }
 
-        if (batchParticlesBuffer != null) {
+        boolean useBatch = batchParticlesBuffer != null;
+        if (android.os.Build.MANUFACTURER.equalsIgnoreCase(\"Huawei\") || android.os.Build.MANUFACTURER.equalsIgnoreCase(\"HUAWEI\")) {
+            useBatch = false;
+        }
+
+        if (useBatch) {
             final int count = Math.min(maxCount, particles.size());
             final int texSize = dp(TEXTURE_SIZE_DP);
 
