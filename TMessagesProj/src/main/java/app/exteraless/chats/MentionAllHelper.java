@@ -256,6 +256,18 @@ public final class MentionAllHelper {
         return result.isEmpty() ? null : result;
     }
 
+    /** Следующая порция упоминаний для уже начатой рассылки. */
+    public static Result next(long dialogId, int account, int startIndex) {
+        if (!SharedConfig.mentionAllEnabled || dialogId >= 0) {
+            return null;
+        }
+        ArrayList<ParticipantInfo> users = knownParticipants(dialogId, account);
+        if (users == null || startIndex >= users.size()) {
+            return null;
+        }
+        return build(account, users, "", "", startIndex);
+    }
+
     /** Собирает одну порцию упоминаний: [startIndex, startIndex + limit). */
     private static Result build(int account, ArrayList<ParticipantInfo> participants,
                                 String prefix, String suffix, int startIndex) {
