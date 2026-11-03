@@ -167,7 +167,7 @@ public class SnowflakesEffect {
         }
 
         boolean useBatch = batchParticlesBuffer != null;
-        if (android.os.Build.MANUFACTURER.equalsIgnoreCase(\"Huawei\") || android.os.Build.MANUFACTURER.equalsIgnoreCase(\"HUAWEI\")) {
+        if (android.os.Build.MANUFACTURER.equalsIgnoreCase("Huawei") || android.os.Build.MANUFACTURER.equalsIgnoreCase("HUAWEI")) {
             useBatch = false;
         }
 
