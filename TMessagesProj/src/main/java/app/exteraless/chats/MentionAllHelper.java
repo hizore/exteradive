@@ -177,10 +177,10 @@ public final class MentionAllHelper {
             if (res.participants != null && !res.participants.isEmpty()) {
                 pageSize = res.participants.size();
                 for (int i = 0; i < pageSize; i++) {
-                    TLRPC.ChatParticipant p = res.participants.get(i);
-                    TLRPC.User user = controller.getUser(p.user_id);
+                    TLRPC.ChannelParticipant p = res.participants.get(i);
+                    TLRPC.User user = controller.getUser(p.peer != null ? p.peer.user_id : 0);
                     if (user != null && seen.add(user.id)) {
-                        collected.add(new ParticipantInfo(user, p.input_user));
+                        collected.add(new ParticipantInfo(user, controller.getInputUser(user)));
                     }
                 }
             }
@@ -235,7 +235,7 @@ public final class MentionAllHelper {
             TLRPC.ChatParticipant p = chatFull.participants.participants.get(i);
             TLRPC.User user = MessagesController.getInstance(account).getUser(p.user_id);
             if (user != null) {
-                users.add(new ParticipantInfo(user, p.input_user));
+                users.add(new ParticipantInfo(user, MessagesController.getInstance(account).getInputUser(user)));
             }
         }
         return filterUsers(users);
