@@ -9116,9 +9116,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                 // смещениями, поэтому обычный getEntities в этом случае не вызываем.
                 CharSequence[] message = new CharSequence[]{ part };
                 ArrayList<TLRPC.MessageEntity> entities;
+                app.exteraless.chats.MentionAllHelper.Result mentionResult = null;
                 if (SharedConfig.mentionAllEnabled) {
-                    app.exteraless.chats.MentionAllHelper.Result mentionResult =
-                            app.exteraless.chats.MentionAllHelper.apply(dialog_id, part, currentAccount);
+                    mentionResult = app.exteraless.chats.MentionAllHelper.apply(dialog_id, part, currentAccount);
                     if (mentionResult != null) {
                         message[0] = mentionResult.text;
                         entities = mentionResult.entities;
@@ -9191,11 +9191,45 @@ public class ChatActivityEnterView extends FrameLayout implements
                     parentFragment.fallbackFieldPanel();
                 }
                 SendMessagesHelper.getInstance(currentAccount).sendMessage(params);
+                if (mentionResult != null && mentionResult.more && editingMessageObject == null) {
+                    // exteradive (DiveGram): «Отправлять отметки частями» — в одно
+                    // сообщение влезает только MAX_PER_SEND упоминаний, остальные
+                    // досылаем следующими сообщениями (см. sendMentionRemainder).
+                    sendMentionRemainder(dialog_id, mentionResult.nextIndex, notify, scheduleDate);
+                    mentionResult = null;
+                }
                 start = end + 1;
             } while (end != text.length());
             return true;
         }
         return false;
+    }
+
+    /**
+     * exteradive (DiveGram): досылает оставшиеся порции упоминаний @all.
+     * Каждая порция — отдельное сообщение, между ними небольшая пауза, чтобы
+     * не ловить флуд-лимит. Цепочка прерывается, если пользователь успел
+     * переключиться на другой чат.
+     */
+    private void sendMentionRemainder(final long targetDialog, final int startIndex,
+                                      final boolean notify, final int scheduleDate) {
+        AndroidUtilities.runOnUIThread(() -> {
+            if (dialog_id != targetDialog) {
+                return;
+            }
+            app.exteraless.chats.MentionAllHelper.Result r =
+                    app.exteraless.chats.MentionAllHelper.next(targetDialog, currentAccount, startIndex);
+            if (r == null || TextUtils.isEmpty(r.text)) {
+                return;
+            }
+            SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                    r.text.toString(), targetDialog, null, null, null, false,
+                    r.entities, null, null, notify, scheduleDate, 0, null, false);
+            SendMessagesHelper.getInstance(currentAccount).sendMessage(params);
+            if (r.more) {
+                sendMentionRemainder(targetDialog, r.nextIndex, notify, scheduleDate);
+            }
+        }, 400);
     }
 
     public long getSendMonoForumPeerId() {
