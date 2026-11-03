@@ -33,7 +33,7 @@
     <string name="OEAiClearHistoryInfo">Clear the whole conversation history with the assistant?</string>
     <string name="OEAiGenerationInfo">Lower temperature gives steadier answers, higher gives more varied ones.</string>
     <string name="OEAiAsk">Ask AI</string>
-    <string name="OEAiThinking">Thinking…</string>
+    <string name="OEAiThinking">ThinkingтАж</string>
     <string name="OEAiNotConfigured">Set the endpoint, model and API key first</string>
     <string name="OEAiStop">Stop</string>
     <string name="OEAiCopy">Copy</string>
@@ -50,4 +50,10 @@
     <string name="OEAiDetails">Details</string>
     <string name="OEAiDisableTools">Disable tools</string>
     <string name="OEAiDisableToolsInfo">Plugin review sends the code in one request, as before: only the first 48 KB, embedded data is not decoded</string>
+    <string name="OEAiTelegramHeader">Telegram AI</string>
+    <string name="OEAiReplaceEditor">AI Editor</string>
+    <string name="OEAiReplaceEditorInfo">Translate, restyle and proofread drafts</string>
+    <string name="OEAiReplaceSummaries">Summaries</string>
+    <string name="OEAiReplaceSummariesInfo">Summarize long messages and posts</string>
+    <string name="OEAiTelegramInfo">Selected features use your AI service instead of Telegram servers, without Premium limits.</string>
 </resources>

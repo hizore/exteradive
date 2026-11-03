@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Строки экрана «Chats» раздела exteradive. -->
+<!-- ╨б╤В╤А╨╛╨║╨╕ ╤Н╨║╤А╨░╨╜╨░ ┬лChats┬╗ ╤А╨░╨╖╨┤╨╡╨╗╨░ exteradive. -->
 <resources>
     <string name="OEChatsStickerTime">Time on Stickers</string>
     <string name="OEChatsStickerTimeSide">On the Side</string>
@@ -53,17 +53,20 @@
     <string name="OEChatsUnlimitedGifs">GIFs</string>
     <string name="OEChatsAdminShortcuts">Quick Admin Shortcuts</string>
     <string name="OEChatsDisableGreetingSticker">Disable Greeting Sticker</string>
-    <string name="OEChatsHideSendAsPeer">Hide \"Send as…\" Button</string>
-    <string name="OEChatsHideSendAsPeerInfo">You can still access the \"Send as…\" menu by long pressing the Emojis/Stickers/GIFs button.</string>
+    <string name="OEChatsHideSendAsPeer">Hide \"Send asтАж\" Button</string>
+    <string name="OEChatsHideSendAsPeerInfo">You can still access the \"Send asтАж\" menu by long pressing the Emojis/Stickers/GIFs button.</string>
     <string name="OEChatsDisableGlobalSearch">Disable Global Search</string>
     <string name="OEChatsTapToSwitchRecord">Tap to Switch Voice and Video</string>
     <string name="OEChatsKeepAttachButton">Keep the Attach Button While Typing</string>
     <string name="OEChatsRemoveMessageTail">Remove Message Tail</string>
+    <string name="OEChatsUnreadCapsule">Compact unread messages label</string>
     <string name="OEChatsReplaceEditedWithIcon">Replace \"%1$s\" with an Icon</string>
     <string name="OEChatsShowOnlineStatus">Show Online Indicator</string>
     <string name="OEChatsHideShareButton">Hide Side \"%1$s\" Button</string>
     <string name="OEChatsHideGiftButton">Hide Gift Button in Channels</string>
     <string name="OEChatsHideSearchButton">Hide Search Button in Channels</string>
+    <string name="OEChatsHideCallButton">Hide Call Button</string>
+    <string name="OEChatsHideMoneyButton">Hide \"%1$s\" in Attach Menu</string>
     <string name="OEChatsShowResultsBeforeVoting">Show Results Before Voting</string>
     <string name="OEChatsShowResultsBeforeVotingInfo">Results of public polls will be visible without casting a vote.</string>
     <string name="OEChatsHideReactions">Hide Reactions</string>
@@ -115,7 +118,7 @@
     <string name="OEDetailsDuration">Duration</string>
     <string name="OEDetailsDatacenter">Datacenter</string>
     <string name="ReplyToDeletedAsQuote">Reply to deleted as a quote</string>
-    <string name="ReplyToDeletedAsQuoteInfo">When the message you reply to is already deleted, its text goes into your message as a quote — the server would drop the reply.</string>
+    <string name="ReplyToDeletedAsQuoteInfo">When the message you reply to is already deleted, its text goes into your message as a quote тАФ the server would drop the reply.</string>
     <string name="SaveDeletedInPrivateChats">Save deleted in private chats</string>
     <string name="SaveDeletedInGroups">Save deleted in groups</string>
     <string name="SaveDeletedInChannels">Save deleted in channels</string>
@@ -151,9 +154,9 @@
     <string name="OEChatsTranslateInSheet">Telegram Translation Window</string>
     <string name="OEChatsTranslateInSheetInfo">Translate opens the sheet from the official app with a provider switch</string>
     <string name="OEChatsInlineMath">Inline math results</string>
-    <string name="OEChatsInlineMathInfo">Type an expression and “=” to see the result, press Space to insert it.</string>
+    <string name="OEChatsInlineMathInfo">Type an expression and тАЬ=тАЭ to see the result, press Space to insert it.</string>
     <string name="OEChatsInlineMathCurrency">Currencies via @calcmulabot</string>
-    <string name="OEChatsInlineMathCurrencyInfo">Expressions with currencies like “10 usd to rub =” are sent to @calcmulabot to get the rate.</string>
+    <string name="OEChatsInlineMathCurrencyInfo">Expressions with currencies like тАЬ10 usd to rub =тАЭ are sent to @calcmulabot to get the rate.</string>
     <string name="OEChatsInlineMathAnnouncement">Result: %1$s</string>
     <string name="OELocalPremiumInfo">Premium emoji are sent as links that exteradive and other clients that support this show as the real emoji. Other Premium features work only on this device.</string>
     <string name="OELocalPremiumEmojiHint">You don\'t have **Telegram Premium**, so this emoji is sent as a link: only users of **exteradive** and clients that support this will see it.</string>
@@ -167,4 +170,6 @@
     <string name="OEChatsMenusHeader">Menus</string>
     <string name="OEChatsPlaybackHeader">Playback</string>
     <string name="OEChatsVoiceHeader">Voice Messages</string>
+    <string name="OEDoubleTapSaveToDevice">Save to device</string>
+    <string name="OESendAfterSlowMode">Send when slow mode ends</string>
 </resources>

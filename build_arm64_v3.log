@@ -1,0 +1,1689 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :buildSrc:compileKotlin UP-TO-DATE
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:pluginDescriptors UP-TO-DATE
+> Task :buildSrc:processResources UP-TO-DATE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+WARNING: We recommend using a newer Android Gradle plugin to use compile SDK version 37.2
+
+This Android Gradle plugin (9.3.1) was tested up to compile SDK version 37.1.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compile SDK version 37.2.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compile SDK version 37.2 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=37.2
+to this project's gradle.properties.
+> Task :TMessagesProj:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj:preStagingBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-common:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-container:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-database:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:preBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:mergeReleaseNativeLibs NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-session:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:prepareReleaseArtProfile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-common:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-container:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-database:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:compileReleaseAidl UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:generateReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:packageReleaseResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:processReleaseNavigationResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:parseReleaseLocalResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:generateReleaseRFile UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:compileReleaseKotlin NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-session:javaPreCompileRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:writeReleaseAarMetadata UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:extractDeepLinksRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:processReleaseManifest UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:compileReleaseLibraryResources UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-container:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-database:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-session:processReleaseJavaRes NO-SOURCE
+> Task :TMessagesProj_Modules:media3:media-lib-common:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-common:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-container:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-database:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-datasource:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-dash:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-exoplayer-hls:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-extractor:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:generateReleaseAssets UP-TO-DATE
+> Task :TMessagesProj_Modules:media3:media-lib-session:mergeReleaseAssets UP-TO-DATE
+> Task :TMessagesProj:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: ninja: Entering directory `F:\exteraless\TMessagesProj\.cxx\RelWithDebInfo\2b443p6y\arm64-v8a'
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/modules/utility/source/jvm_android.cc:82:10: warning: unused variable 'ret' [-Wunused-variable]
+C/C++:    82 |     jint ret = jvm->AttachCurrentThread(&env, nullptr);
+C/C++:       |          ^~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/modules/utility/source/jvm_android.cc:78:11: warning: unused variable 'jni' [-Wunused-variable]
+C/C++:    78 |   JNIEnv* jni = GetEnv(jvm);
+C/C++:       |           ^~~
+C/C++: 2 warnings generated.
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/call/call.cc:72:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: declaration does not declare anything [-Wmissing-declarations]
+C/C++:   393 |       RTC_GUARDED_BY(packet_sequence_checker_);
+C/C++:       |       ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:27: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                           ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:23:46: note: expanded from macro 'RTC_THREAD_ANNOTATION_ATTRIBUTE__'
+C/C++:    23 | #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+C/C++:       |                                              ^
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/call/call.cc:72:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: attribute guarded_by ignored, because it is not attached to a declaration [-Wignored-attributes]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:71: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                                                                       ^
+C/C++: 2 warnings generated.
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_source_sink_controller.cc:40:55: warning: format specifies type 'long' but the argument has type 'rtc::VideoSourceInterface<VideoFrame> *' [-Wformat]
+C/C++:    40 |     DEBUG_D("$%d: SetSource(): new source as %ld", a, source_);
+C/C++:       |                                              ~~~      ^~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_source_sink_controller.cc:67:60: warning: format specifies type 'long' but the argument has type 'rtc::VideoSourceInterface<VideoFrame> *' [-Wformat]
+C/C++:    67 |     DEBUG_D("$%d: PushSourceSinkSettings(): 2 src=%ld", a, source_);
+C/C++:       |                                                   ~~~      ^~~~~~~
+C/C++: 2 warnings generated.
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_quality_observer2.cc:21:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: declaration does not declare anything [-Wmissing-declarations]
+C/C++:   393 |       RTC_GUARDED_BY(packet_sequence_checker_);
+C/C++:       |       ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:27: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                           ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:23:46: note: expanded from macro 'RTC_THREAD_ANNOTATION_ATTRIBUTE__'
+C/C++:    23 | #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+C/C++:       |                                              ^
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_quality_observer2.cc:21:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: attribute guarded_by ignored, because it is not attached to a declaration [-Wignored-attributes]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:71: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                                                                       ^
+C/C++: 2 warnings generated.
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.cc:11:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: declaration does not declare anything [-Wmissing-declarations]
+C/C++:   393 |       RTC_GUARDED_BY(packet_sequence_checker_);
+C/C++:       |       ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:27: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                           ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:23:46: note: expanded from macro 'RTC_THREAD_ANNOTATION_ATTRIBUTE__'
+C/C++:    23 | #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+C/C++:       |                                              ^
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.cc:11:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: attribute guarded_by ignored, because it is not attached to a declaration [-Wignored-attributes]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:71: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                                                                       ^
+C/C++: 2 warnings generated.
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/receive_statistics_proxy.cc:25:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: declaration does not declare anything [-Wmissing-declarations]
+C/C++:   393 |       RTC_GUARDED_BY(packet_sequence_checker_);
+C/C++:       |       ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:27: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                           ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:23:46: note: expanded from macro 'RTC_THREAD_ANNOTATION_ATTRIBUTE__'
+C/C++:    23 | #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+C/C++:       |                                              ^
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/receive_statistics_proxy.cc:25:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/video_receive_stream2.h:38:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: attribute guarded_by ignored, because it is not attached to a declaration [-Wignored-attributes]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:71: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                                                                       ^
+C/C++: 2 warnings generated.
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.cc:11:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: declaration does not declare anything [-Wmissing-declarations]
+C/C++:   393 |       RTC_GUARDED_BY(packet_sequence_checker_);
+C/C++:       |       ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:27: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                           ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:23:46: note: expanded from macro 'RTC_THREAD_ANNOTATION_ATTRIBUTE__'
+C/C++:    23 | #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+C/C++:       |                                              ^
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.cc:11:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/video/rtp_video_stream_receiver2.h:393:7: warning: attribute guarded_by ignored, because it is not attached to a declaration [-Wignored-attributes]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/webrtc/rtc_base/thread_annotations.h:31:71: note: expanded from macro 'RTC_GUARDED_BY'
+C/C++:    31 | #define RTC_GUARDED_BY(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
+C/C++:       |                                                                       ^
+C/C++: 2 warnings generated.
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:368:88: warning: adding 'jint' (aka 'int') to a string does not append to the string [-Wstring-plus-int]
+C/C++:   368 |             throwNewJavaIllegalArgumentException(env, "Unknown data saving constant: " + dataSaving);
+C/C++:       |                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:368:88: note: use array indexing to silence this warning
+C/C++:   368 |             throwNewJavaIllegalArgumentException(env, "Unknown data saving constant: " + dataSaving);
+C/C++:       |                                                                                        ^           
+C/C++:       |                                                       &                                [           ]
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:518:34: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   518 |                     jint intFill[size];
+C/C++:       |                                  ^~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:518:34: note: read of non-const variable 'size' is not allowed in a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:513:34: note: declared here
+C/C++:   513 |                     unsigned int size = update.updates.size();
+C/C++:       |                                  ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:519:38: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   519 |                     jfloat floatFill[size];
+C/C++:       |                                      ^~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:519:38: note: read of non-const variable 'size' is not allowed in a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:513:34: note: declared here
+C/C++:   513 |                     unsigned int size = update.updates.size();
+C/C++:       |                                  ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:520:39: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   520 |                     jboolean boolFill[size];
+C/C++:       |                                       ^~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:520:39: note: read of non-const variable 'size' is not allowed in a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:513:34: note: declared here
+C/C++:   513 |                     unsigned int size = update.updates.size();
+C/C++:       |                                  ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:542:41: warning: ISO C++ requires field designators to be specified in declaration order; field 'isConference' will be initialized after field 'outgoingAudioBitrateKbit' [-Wreorder-init-list]
+C/C++:   542 |             .outgoingAudioBitrateKbit = customBitrate,
+C/C++:       |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:541:29: note: previous initialization for field 'isConference' is here
+C/C++:   541 |             .isConference = (bool) conference,
+C/C++:       |                             ^~~~~~~~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:570:30: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   570 |                 jint intFill[size];
+C/C++:       |                              ^~~~
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:570:30: note: read of non-const variable 'size' is not allowed in a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:567:30: note: declared here
+C/C++:   567 |                 unsigned int size = ssrcs.size();
+C/C++:       |                              ^
+C/C++: F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:1353:39: warning: format specifies type 'int' but the argument has type 'jlong' (aka 'long') [-Wformat]
+C/C++:  1353 |     DEBUG_D("setConferenceCallId %d", call_id);
+C/C++:       |                                  ~~   ^~~~~~~
+C/C++:       |                                  %ld
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/org_telegram_messenger_voip_Instance.cpp:21:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/tgcalls/legacy/InstanceImplLegacy.h:6:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/libtgvoip/VoIPController.h:24:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/libtgvoip/video/VideoSource.h:12:
+C/C++: In file included from F:/exteraless/TMessagesProj/jni/voip/libtgvoip/video/../Buffers.h:19:
+C/C++: F:/exteraless/TMessagesProj/jni/voip/libtgvoip/video/../threading.h:110:8: warning: private field 'maxPriority' is not used [-Wunused-private-field]
+C/C++:   110 |                 bool maxPriority=false;
+C/C++:       |                      ^
+C/C++: 8 warnings generated.
+C/C++: F:/exteraless/TMessagesProj/jni/exoplayer/ffmpeg_jni.cc:31:9: warning: '__STDC_CONSTANT_MACROS' macro redefined [-Wmacro-redefined]
+C/C++:    31 | #define __STDC_CONSTANT_MACROS
+C/C++:       |         ^
+C/C++: <command line>:51:9: note: previous definition is here
+C/C++:    51 | #define __STDC_CONSTANT_MACROS 1
+C/C++:       |         ^
+C/C++: 1 warning generated.
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:50:1: warning: typedef requires a name [-Wmissing-declarations]
+C/C++:    50 | typedef struct VideoInfo {
+C/C++:       | ^~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:143:10: warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+C/C++:   143 |     LOGE(line);
+C/C++:       |          ^~~~
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:11:67: note: expanded from macro 'LOGE'
+C/C++:    11 | #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+C/C++:       |                                                                   ^~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:143:10: note: treat the string as an argument to avoid this
+C/C++:   143 |     LOGE(line);
+C/C++:       |          ^
+C/C++:       |          "%s", 
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:11:67: note: expanded from macro 'LOGE'
+C/C++:    11 | #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+C/C++:       |                                                                   ^
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:152:37: warning: format specifies type 'int' but the argument has type 'const enum AVPixelFormat *' [-Wformat]
+C/C++:   152 |         LOGE("available format %d", p);
+C/C++:       |                                ~~   ^
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:11:67: note: expanded from macro 'LOGE'
+C/C++:    11 | #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+C/C++:       |                                                                   ^~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:416:86: warning: format specifies type 'long long' but the argument has type 'jlong' (aka 'long') [-Wformat]
+C/C++:   416 |             LOGE("can't open source file at offset %s (offset=%lld), %s", info->src, fileOffset, av_err2str(ret));
+C/C++:       |                                                               ~~~~                   ^~~~~~~~~~
+C/C++:       |                                                               %ld
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:11:67: note: expanded from macro 'LOGE'
+C/C++:    11 | #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+C/C++:       |                                                                   ^~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:643:13: warning: comparison between NULL and non-pointer ('jlong' (aka 'long') and NULL) [-Wnull-arithmetic]
+C/C++:   643 |     if (ptr == NULL) {
+C/C++:       |         ~~~ ^  ~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:668:13: warning: comparison between NULL and non-pointer ('jlong' (aka 'long') and NULL) [-Wnull-arithmetic]
+C/C++:   668 |     if (ptr == NULL) {
+C/C++:       |         ~~~ ^  ~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:676:13: warning: comparison between NULL and non-pointer ('jlong' (aka 'long') and NULL) [-Wnull-arithmetic]
+C/C++:   676 |     if (ptr == NULL) {
+C/C++:       |         ~~~ ^  ~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:768:39: warning: '&&' within '||' [-Wlogical-op-parentheses]
+C/C++:   768 |     if (!(wantedWidth == frame->width && wantedHeight == frame->height || wantedWidth == frame->height && wantedHeight == frame->width)) {
+C/C++:       |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:768:39: note: place parentheses around the '&&' expression to silence this warning
+C/C++:   768 |     if (!(wantedWidth == frame->width && wantedHeight == frame->height || wantedWidth == frame->height && wantedHeight == frame->width)) {
+C/C++:       |                                       ^
+C/C++:       |           (                                                           )
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:768:104: warning: '&&' within '||' [-Wlogical-op-parentheses]
+C/C++:   768 |     if (!(wantedWidth == frame->width && wantedHeight == frame->height || wantedWidth == frame->height && wantedHeight == frame->width)) {
+C/C++:       |                                                                        ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:768:104: note: place parentheses around the '&&' expression to silence this warning
+C/C++:   768 |     if (!(wantedWidth == frame->width && wantedHeight == frame->height || wantedWidth == frame->height && wantedHeight == frame->width)) {
+C/C++:       |                                                                                                        ^                              
+C/C++:       |                                                                           (                                                           )
+C/C++: F:/exteraless/TMessagesProj/jni/gifvideo.cpp:146:27: warning: unused function 'get_format' [-Wunused-function]
+C/C++:   146 | static enum AVPixelFormat get_format(AVCodecContext *ctx,
+C/C++:       |                           ^~~~~~~~~~
+C/C++: 10 warnings generated.
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:652:15: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   652 |     int stack[div * 4];
+C/C++:       |               ^~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:652:15: note: initializer of 'div' is not a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:647:15: note: declared here
+C/C++:   647 |     const int div = radius + radius + 1;
+C/C++:       |               ^
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:655:14: warning: variable length arrays in C++ are a Clang extension [-Wvla-cxx-extension]
+C/C++:   655 |     int vmin[MAX(w, h)];
+C/C++:       |              ^~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:21:19: note: expanded from macro 'MAX'
+C/C++:    21 | #define MAX(x, y) ((x) > (y)) ? (x) : (y)
+C/C++:       |                   ^~~~~~~~~~~~~~~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:655:14: note: read of non-const variable 'w' is not allowed in a constant expression
+C/C++: F:/exteraless/TMessagesProj/jni/c_utils.h:21:20: note: expanded from macro 'MAX'
+C/C++:    21 | #define MAX(x, y) ((x) > (y)) ? (x) : (y)
+C/C++:       |                    ^
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:633:9: note: declared here
+C/C++:   633 |     int w = info.width;
+C/C++:       |         ^
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:685:9: warning: variable 'yw' set but not used [-Wunused-but-set-variable]
+C/C++:   685 |     int yw = 0, yi = 0;
+C/C++:       |         ^
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:923:49: warning: implicit conversion from 'int' to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]
+C/C++:   923 |             noise = (rand() - rand()) / 255.F / RAND_MAX;
+C/C++:       |                                               ~ ^~~~~~~~
+C/C++: F:/AndroidSdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/stdlib.h:132:18: note: expanded from macro 'RAND_MAX'
+C/C++:   132 | #define RAND_MAX 0x7fffffff
+C/C++:       |                  ^~~~~~~~~~
+C/C++: F:/exteraless/TMessagesProj/jni/image.cpp:1075:38: warning: 'gatherPositions' has C-linkage specified, but returns incomplete type 'std::vector<std::pair<float, float>>' which could be incompatible with C [-Wreturn-type-c-linkage]
+C/C++:  1075 | std::vector<std::pair<float, float>> gatherPositions(std::vector<std::pair<float, float>> list, int phase) {
+C/C++:       |                                      ^
+C/C++: 5 warnings generated.
+
+> Task :TMessagesProj:preReleaseBuild UP-TO-DATE
+> Task :TMessagesProj:mergeReleaseJniLibFolders
+> Task :TMessagesProj:mergeReleaseNativeLibs
+> Task :TMessagesProj:mergeReleaseArtProfile
+> Task :TMessagesProj:expandReleaseL8ArtProfileWildcards FROM-CACHE
+
+> Task :TMessagesProj:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libjnidispatch.so. Run with --info option to learn more.
+
+> Task :TMessagesProj:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :TMessagesProj:checkReleaseDuplicateClasses
+> Task :TMessagesProj:generateReleaseBuildConfig FROM-CACHE
+> Task :TMessagesProj:processReleaseGoogleServices FROM-CACHE
+> Task :TMessagesProj:mergeReleaseNativeDebugMetadata
+> Task :TMessagesProj:generateReleaseLottieMeta
+> Task :TMessagesProj:generateReleaseResources
+> Task :TMessagesProj:packageReleaseResources
+> Task :TMessagesProj:processReleaseNavigationResources
+> Task :TMessagesProj:javaPreCompileRelease FROM-CACHE
+> Task :TMessagesProj:parseReleaseLocalResources
+> Task :TMessagesProj:checkReleaseAarMetadata
+> Task :TMessagesProj:mapReleaseSourceSetPaths
+> Task :TMessagesProj:compileReleaseNavigationResources FROM-CACHE
+> Task :TMessagesProj:generateReleaseRFile
+> Task :TMessagesProj:mergeReleaseResources
+F:\exteraless\TMessagesProj\src\main\res\values\strings_neko.xml:156:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10471:4: Multiple substitutions specified in non-positional format of string resource string/Gift2ActiveAuctionsActiveBidActive. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10466:4: Multiple substitutions specified in non-positional format of string resource string/Gift2ActiveAuctionsActiveRound. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8938:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfo2_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8939:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfo2_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8936:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfoLearnMore2_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8933:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfoLearnMore2_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8934:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfo_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:8955:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionInfo_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10472:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AuctionsChangeRecipient2. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:11621:4: Multiple substitutions specified in non-positional format of string resource string/Gift2AveragePriceHint. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9109:4: Multiple substitutions specified in non-positional format of string resource string/Gift2InfoOutConverted_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9110:4: Multiple substitutions specified in non-positional format of string resource string/Gift2InfoOutConverted_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10322:4: Multiple substitutions specified in non-positional format of string resource string/GiftAuctionInfo1Text_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10323:4: Multiple substitutions specified in non-positional format of string resource string/GiftAuctionInfo1Text_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10545:4: Multiple substitutions specified in non-positional format of string resource string/GiftOfferPayMulti. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:5997:4: Multiple substitutions specified in non-positional format of string resource string/NotificationTopicExceptionsDesctription_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:1806:4: Multiple substitutions specified in non-positional format of string resource string/NotificationTopicExceptionsDesctription_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10195:4: Multiple substitutions specified in non-positional format of string resource string/StarRatingDescription1. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10197:4: Multiple substitutions specified in non-positional format of string resource string/StarRatingDescription2. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:10184:4: Multiple substitutions specified in non-positional format of string resource string/StarRatingDescription3. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:6668:4: Multiple substitutions specified in non-positional format of string resource string/StoryAddedToAlbumTitle_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:6688:4: Multiple substitutions specified in non-positional format of string resource string/StoryAddedToAlbumTitle_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:6670:4: Multiple substitutions specified in non-positional format of string resource string/StoryRemovedFromAlbumTitle_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:6689:4: Multiple substitutions specified in non-positional format of string resource string/StoryRemovedFromAlbumTitle_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9963:4: Multiple substitutions specified in non-positional format of string resource string/SuggestAPostBelowSubtitleStarsAndTime. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9973:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin1. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9972:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin1PastSimple. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9978:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin2. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9983:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin3Stars. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9980:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin3TON. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9985:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin4Stars. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9968:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedAdmin4TON. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9970:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser1. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9969:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser1PastSimple. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9982:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser3Stars. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9979:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser3TON. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9984:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser4Stars. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:9922:4: Multiple substitutions specified in non-positional format of string resource string/SuggestionAgreementReachedUser4TON. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:7351:4: Multiple substitutions specified in non-positional format of string resource string/UnconfirmedAuthMultipleFrom_one. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values\strings.xml:7348:4: Multiple substitutions specified in non-positional format of string resource string/UnconfirmedAuthMultipleFrom_other. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-fa-rIR\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-vi-rVN\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-pl-rPL\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-es-rES\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-it-rIT\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-tr-rTR\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-in-rID\strings_neko.xml:156:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-ko\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-uk-rUA\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-pt-rBR\strings_neko.xml:156:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-ru-rRU\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-zh-rTW\strings_neko.xml:155:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+F:\exteraless\TMessagesProj\src\main\res\values-zh-rCN\strings_neko.xml:156:4: Multiple substitutions specified in non-positional format of string resource string/CloudConfigSyncDate. Did you mean to add the formatted="false" attribute?
+
+> Task :TMessagesProj:compileReleaseKotlin
+w: file:///F:/exteraless/TMessagesProj/src/main/java/tw/nekomimi/nekogram/translate/Translator.kt:37:13 'constructor(p0: String!): Locale' is deprecated. Deprecated in Java.
+w: file:///F:/exteraless/TMessagesProj/src/main/java/tw/nekomimi/nekogram/translate/Translator.kt:39:13 'constructor(p0: String!, p1: String!): Locale' is deprecated. Deprecated in Java.
+
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\ai\TelegramAiReplacement.java:33: error: cannot find symbol
+        return AiConfig.getReplaceTelegramEditor(account) && AiController.canUseAI();
+                       ^
+  symbol:   method getReplaceTelegramEditor(int)
+  location: class AiConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\ai\TelegramAiReplacement.java:37: error: cannot find symbol
+        return AiConfig.getReplaceTelegramSummaries(account) && AiController.canUseAI();
+                       ^
+  symbol:   method getReplaceTelegramSummaries(int)
+  location: class AiConfig
+> Task :TMessagesProj:compileReleaseJavaWithJavac
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:60: error: cannot find symbol
+        int value = item(AppearanceConfig.playerCoverStyle).Int();
+                                         ^
+  symbol:   variable playerCoverStyle
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:65: error: cannot find symbol
+        int value = item(AppearanceConfig.playerCoverSize).Int();
+                                         ^
+  symbol:   variable playerCoverSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:70: error: cannot find symbol
+        int value = item(AppearanceConfig.playerCoverRadius).Int();
+                                         ^
+  symbol:   variable playerCoverRadius
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:75: error: cannot find symbol
+        return item(AppearanceConfig.playerDiscSpin).Bool();
+                                    ^
+  symbol:   variable playerDiscSpin
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:79: error: cannot find symbol
+        return item(AppearanceConfig.playerCoverSwipe).Bool();
+                                    ^
+  symbol:   variable playerCoverSwipe
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:83: error: cannot find symbol
+        return item(AppearanceConfig.playerCoverExtend).Bool();
+                                    ^
+  symbol:   variable playerCoverExtend
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:87: error: cannot find symbol
+        return item(AppearanceConfig.playerTitleAlign).Int() == 1;
+                                    ^
+  symbol:   variable playerTitleAlign
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:91: error: cannot find symbol
+        int value = item(AppearanceConfig.playerTitleSize).Int();
+                                         ^
+  symbol:   variable playerTitleSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:97: error: cannot find symbol
+        return (style == COVER_CARD || style == COVER_DISC) && item(AppearanceConfig.playerTitleAbove).Bool();
+                                                                                    ^
+  symbol:   variable playerTitleAbove
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:101: error: cannot find symbol
+        String raw = item(AppearanceConfig.playerOrder).String();
+                                          ^
+  symbol:   variable playerOrder
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:136: error: cannot find symbol
+        item(AppearanceConfig.playerOrder).setConfigString("0,1,2".equals(value) ? "" : value);
+                             ^
+  symbol:   variable playerOrder
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:140: error: cannot find symbol
+        return item(AppearanceConfig.playerShowActions).Bool();
+                                    ^
+  symbol:   variable playerShowActions
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:144: error: cannot find symbol
+        return item(AppearanceConfig.playerActionsStyle).Int() == ACTIONS_ISLAND;
+                                    ^
+  symbol:   variable playerActionsStyle
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:148: error: cannot find symbol
+        return item(AppearanceConfig.playerShowModes).Bool();
+                                    ^
+  symbol:   variable playerShowModes
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:152: error: cannot find symbol
+        return item(AppearanceConfig.playerShowLike).Bool();
+                                    ^
+  symbol:   variable playerShowLike
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:156: error: cannot find symbol
+        return item(AppearanceConfig.playerShowSource).Bool();
+                                    ^
+  symbol:   variable playerShowSource
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:160: error: cannot find symbol
+        return item(AppearanceConfig.playerWavy).Bool();
+                                    ^
+  symbol:   variable playerWavy
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:164: error: cannot find symbol
+        switch (item(AppearanceConfig.playerControlsSize).Int()) {
+                                     ^
+  symbol:   variable playerControlsSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:175: error: cannot find symbol
+        return item(AppearanceConfig.playerColors).Int() == COLORS_THEME;
+                                    ^
+  symbol:   variable playerColors
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:179: error: cannot find symbol
+        int value = item(AppearanceConfig.playerBackground).Int();
+                                         ^
+  symbol:   variable playerBackground
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:189: error: cannot find symbol
+        return choice(AppearanceConfig.playerMiniCover, MINI_COVER_HIDDEN);
+                                      ^
+  symbol:   variable playerMiniCover
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:193: error: cannot find symbol
+        return choice(AppearanceConfig.playerMiniShape, MINI_SHAPE_SQUARE);
+                                      ^
+  symbol:   variable playerMiniShape
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:197: error: cannot find symbol
+        return choice(AppearanceConfig.playerMiniProgress, MINI_PROGRESS_BORDER);
+                                      ^
+  symbol:   variable playerMiniProgress
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:201: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniColors).Int() != COLORS_COVER;
+                                    ^
+  symbol:   variable playerMiniColors
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:205: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniCompact).Bool();
+                                    ^
+  symbol:   variable playerMiniCompact
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:209: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniArtist).Bool();
+                                    ^
+  symbol:   variable playerMiniArtist
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:213: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniPrevious).Bool();
+                                    ^
+  symbol:   variable playerMiniPrevious
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:217: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniNext).Bool();
+                                    ^
+  symbol:   variable playerMiniNext
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:221: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniClose).Bool();
+                                    ^
+  symbol:   variable playerMiniClose
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:225: error: cannot find symbol
+        return item(AppearanceConfig.playerMiniTop).Bool();
+                                    ^
+  symbol:   variable playerMiniTop
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:229: error: cannot find symbol
+        for (ConfigItem item : AppearanceConfig.playerStyleItems()) {
+                                               ^
+  symbol:   method playerStyleItems()
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                  ^
+  symbol:   variable OEPlayerStyleCover
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                                                          ^
+  symbol:   variable OEPlayerStyleElements
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                                                                                                     ^
+  symbol:   variable OEPlayerStyleMini
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:98: error: cannot find symbol
+                getString(R.string.OEPlayerCoverCard), getString(R.string.OEPlayerCoverWide),
+                                  ^
+  symbol:   variable OEPlayerCoverCard
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:98: error: cannot find symbol
+                getString(R.string.OEPlayerCoverCard), getString(R.string.OEPlayerCoverWide),
+                                                                         ^
+  symbol:   variable OEPlayerCoverWide
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:99: error: cannot find symbol
+                getString(R.string.OEPlayerCoverFull), getString(R.string.OEPlayerCoverDisc)
+                                  ^
+  symbol:   variable OEPlayerCoverFull
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:99: error: cannot find symbol
+                getString(R.string.OEPlayerCoverFull), getString(R.string.OEPlayerCoverDisc)
+                                                                         ^
+  symbol:   variable OEPlayerCoverDisc
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:100: error: cannot find symbol
+        }, PlayerStyle::coverStyle, value -> AppearanceConfig.playerCoverStyle.setConfigInt(value));
+                                                             ^
+  symbol:   variable playerCoverStyle
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:101: error: cannot find symbol
+        sizeRow = addSlider(R.string.OEPlayerCoverSize, PlayerStyle.COVER_SIZE_MIN, PlayerStyle.COVER_SIZE_MAX, 5, "%",
+                                    ^
+  symbol:   variable OEPlayerCoverSize
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:102: error: cannot find symbol
+                () -> Math.round(PlayerStyle.coverSize() * 100), value -> AppearanceConfig.playerCoverSize.setConfigInt(value));
+                                                                                          ^
+  symbol:   variable playerCoverSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:103: error: cannot find symbol
+        radiusRow = addSlider(R.string.OEPlayerCoverRadius, 0, PlayerStyle.COVER_RADIUS_MAX, 2, "",
+                                      ^
+  symbol:   variable OEPlayerCoverRadius
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:104: error: cannot find symbol
+                PlayerStyle::coverRadiusDp, value -> AppearanceConfig.playerCoverRadius.setConfigInt(value));
+                                                                     ^
+  symbol:   variable playerCoverRadius
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:106: error: cannot find symbol
+        spinRow = addChip(coverChips, R.string.OEPlayerDiscSpin, AppearanceConfig.playerDiscSpin);
+                                              ^
+  symbol:   variable OEPlayerDiscSpin
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:106: error: cannot find symbol
+        spinRow = addChip(coverChips, R.string.OEPlayerDiscSpin, AppearanceConfig.playerDiscSpin);
+                                                                                 ^
+  symbol:   variable playerDiscSpin
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:107: error: cannot find symbol
+        swipeRow = addChip(coverChips, R.string.OEPlayerCoverSwipe, AppearanceConfig.playerCoverSwipe);
+                                               ^
+  symbol:   variable OEPlayerCoverSwipe
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:107: error: cannot find symbol
+        swipeRow = addChip(coverChips, R.string.OEPlayerCoverSwipe, AppearanceConfig.playerCoverSwipe);
+                                                                                    ^
+  symbol:   variable playerCoverSwipe
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:108: error: cannot find symbol
+        extendRow = addChip(coverChips, R.string.OEPlayerCoverExtend, AppearanceConfig.playerCoverExtend);
+                                                ^
+  symbol:   variable OEPlayerCoverExtend
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:108: error: cannot find symbol
+        extendRow = addChip(coverChips, R.string.OEPlayerCoverExtend, AppearanceConfig.playerCoverExtend);
+                                                                                      ^
+  symbol:   variable playerCoverExtend
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:109: error: cannot find symbol
+        addHeader(R.string.OEPlayerStyleColors);
+                          ^
+  symbol:   variable OEPlayerStyleColors
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:110: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerColorsCover), getString(R.string.OEPlayerColorsTheme)},
+                                                    ^
+  symbol:   variable OEPlayerColorsCover
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:110: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerColorsCover), getString(R.string.OEPlayerColorsTheme)},
+                                                                                             ^
+  symbol:   variable OEPlayerColorsTheme
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:111: error: cannot find symbol
+                () -> PlayerStyle.themeColors() ? 1 : 0, value -> AppearanceConfig.playerColors.setConfigInt(value));
+                                                                                  ^
+  symbol:   variable playerColors
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                  ^
+  symbol:   variable OEPlayerBackgroundSolid
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                                                               ^
+  symbol:   variable OEPlayerBackgroundGradient
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                                                                                                               ^
+  symbol:   variable OEPlayerBackgroundBlur
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:114: error: cannot find symbol
+        }, PlayerStyle::background, value -> AppearanceConfig.playerBackground.setConfigInt(value));
+                                                             ^
+  symbol:   variable playerBackground
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:117: error: cannot find symbol
+        addInfo(R.string.OEPlayerEditorTapHint);
+                        ^
+  symbol:   variable OEPlayerEditorTapHint
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:118: error: cannot find symbol
+        titleCard = new ElementCard(context, TARGET_TITLE, getString(R.string.OEPlayerStyleTitleSection), null, false);
+                                                                             ^
+  symbol:   variable OEPlayerStyleTitleSection
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:121: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerAlignStart), getString(R.string.OEPlayerAlignCenter)},
+                                                    ^
+  symbol:   variable OEPlayerAlignStart
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:121: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerAlignStart), getString(R.string.OEPlayerAlignCenter)},
+                                                                                            ^
+  symbol:   variable OEPlayerAlignCenter
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:122: error: cannot find symbol
+                () -> PlayerStyle.titleCentered() ? 1 : 0, value -> AppearanceConfig.playerTitleAlign.setConfigInt(value));
+                                                                                    ^
+  symbol:   variable playerTitleAlign
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                  ^
+  symbol:   variable OEPlayerSizeSmall
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                                                         ^
+  symbol:   variable OEPlayerSizeMedium
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                                                                                                 ^
+  symbol:   variable OEPlayerSizeLarge
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:125: error: cannot find symbol
+        }, PlayerStyle::titleSize, value -> AppearanceConfig.playerTitleSize.setConfigInt(value));
+                                                            ^
+  symbol:   variable playerTitleSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:126: error: cannot find symbol
+        positionGroup = addSegmented(new String[]{getString(R.string.OEPlayerTitleBelow), getString(R.string.OEPlayerTitleAboveCover)},
+                                                                    ^
+  symbol:   variable OEPlayerTitleBelow
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:126: error: cannot find symbol
+        positionGroup = addSegmented(new String[]{getString(R.string.OEPlayerTitleBelow), getString(R.string.OEPlayerTitleAboveCover)},
+                                                                                                            ^
+  symbol:   variable OEPlayerTitleAboveCover
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:127: error: cannot find symbol
+                () -> AppearanceConfig.playerTitleAbove.Bool() ? 1 : 0, value -> AppearanceConfig.playerTitleAbove.setConfigBool(value == 1));
+                                      ^
+  symbol:   variable playerTitleAbove
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:127: error: cannot find symbol
+                () -> AppearanceConfig.playerTitleAbove.Bool() ? 1 : 0, value -> AppearanceConfig.playerTitleAbove.setConfigBool(value == 1));
+                                                                                                 ^
+  symbol:   variable playerTitleAbove
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:129: error: cannot find symbol
+        addChip(titleChips, R.string.OEPlayerShowLike, AppearanceConfig.playerShowLike);
+                                    ^
+  symbol:   variable OEPlayerShowLike
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:129: error: cannot find symbol
+        addChip(titleChips, R.string.OEPlayerShowLike, AppearanceConfig.playerShowLike);
+                                                                       ^
+  symbol:   variable playerShowLike
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:130: error: cannot find symbol
+        addChip(titleChips, R.string.OEPlayerShowSource, AppearanceConfig.playerShowSource);
+                                    ^
+  symbol:   variable OEPlayerShowSource
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:130: error: cannot find symbol
+        addChip(titleChips, R.string.OEPlayerShowSource, AppearanceConfig.playerShowSource);
+                                                                         ^
+  symbol:   variable playerShowSource
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:136: error: cannot find symbol
+        blockCard[PlayerStyle.BLOCK_PROGRESS] = new ElementCard(context, TARGET_PROGRESS, getString(R.string.OEPlayerBlockProgress), null, true);
+                                                                                                            ^
+  symbol:   variable OEPlayerBlockProgress
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:139: error: cannot find symbol
+        addChip(progressChips, R.string.OEPlayerShowWave, AppearanceConfig.playerWavy);
+                                       ^
+  symbol:   variable OEPlayerShowWave
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:139: error: cannot find symbol
+        addChip(progressChips, R.string.OEPlayerShowWave, AppearanceConfig.playerWavy);
+                                                                          ^
+  symbol:   variable playerWavy
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:141: error: cannot find symbol
+        blockCard[PlayerStyle.BLOCK_CONTROLS] = new ElementCard(context, TARGET_CONTROLS, getString(R.string.OEPlayerBlockControls), null, true);
+                                                                                                            ^
+  symbol:   variable OEPlayerBlockControls
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                  ^
+  symbol:   variable OEPlayerControlsCompact
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                                                               ^
+  symbol:   variable OEPlayerControlsNormal
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                                                                                                           ^
+  symbol:   variable OEPlayerControlsLarge
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:146: error: cannot find symbol
+            int value = AppearanceConfig.playerControlsSize.Int();
+                                        ^
+  symbol:   variable playerControlsSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:148: error: cannot find symbol
+        }, value -> AppearanceConfig.playerControlsSize.setConfigInt(value));
+                                    ^
+  symbol:   variable playerControlsSize
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:150: error: cannot find symbol
+        addChip(controlChips, R.string.OEPlayerShowModes, AppearanceConfig.playerShowModes);
+                                      ^
+  symbol:   variable OEPlayerShowModes
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:150: error: cannot find symbol
+        addChip(controlChips, R.string.OEPlayerShowModes, AppearanceConfig.playerShowModes);
+                                                                          ^
+  symbol:   variable playerShowModes
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:153: error: cannot find symbol
+                AppearanceConfig.playerShowActions, true);
+                                ^
+  symbol:   variable playerShowActions
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:152: error: cannot find symbol
+        blockCard[PlayerStyle.BLOCK_ACTIONS] = new ElementCard(context, TARGET_ACTIONS, getString(R.string.OEPlayerBlockActions),
+                                                                                                          ^
+  symbol:   variable OEPlayerBlockActions
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:155: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerActionsButtons), getString(R.string.OEPlayerActionsIsland)},
+                                                    ^
+  symbol:   variable OEPlayerActionsButtons
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:155: error: cannot find symbol
+        addSegmented(new String[]{getString(R.string.OEPlayerActionsButtons), getString(R.string.OEPlayerActionsIsland)},
+                                                                                                ^
+  symbol:   variable OEPlayerActionsIsland
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:156: error: cannot find symbol
+                () -> PlayerStyle.actionsIsland() ? 1 : 0, value -> AppearanceConfig.playerActionsStyle.setConfigInt(value));
+                                                                                    ^
+  symbol:   variable playerActionsStyle
+  location: class AppearanceConfig
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:160: error: cannot find symbol
+        addInfo(R.string.OEPlayerLayoutInfo);
+                        ^
+  symbol:   variable OEPlayerLayoutInfo
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:163: error: cannot find symbol
+        miniPreview = PlayerMiniView.preview(context);
+                                    ^
+  symbol:   method preview(Context)
+  location: class PlayerMiniView
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:165: error: cannot find symbol
+        addInfo(R.string.OEPlayerMiniMoveHint);
+                        ^
+  symbol:   variable OEPlayerMiniMoveHint
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:166: error: cannot find symbol
+        addInfo(R.string.OEPlayerStyleCover);
+                        ^
+  symbol:   variable OEPlayerStyleCover
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                  ^
+  symbol:   variable OEPlayerMiniCoverRounded
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                                                                ^
+  symbol:   variable OEPlayerMiniCoverRound
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                                                                                                            ^
+  symbol:   variable OEPlayerMiniCoverHidden
+  location: class string
+F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:169: error: cannot find symbol
+        }, PlayerStyle::miniCover, value -> AppearanceConfig.playerMiniCover.setConfigInt(value));
+                                                            ^
+  symbol:   variable playerMiniCover
+  location: class AppearanceConfig
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+100 errors
+
+> Task :TMessagesProj:compileReleaseJavaWithJavac FAILED
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':TMessagesProj:compileReleaseJavaWithJavac' (registered by plugin 'com.android.internal.application').
+> Compilation failed; see the compiler output below.
+  Note: Recompile with -Xlint:deprecation for details.
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:60: error: cannot find symbol
+          int value = item(AppearanceConfig.playerCoverStyle).Int();
+                                           ^
+    symbol:   variable playerCoverStyle
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:65: error: cannot find symbol
+          int value = item(AppearanceConfig.playerCoverSize).Int();
+                                           ^
+    symbol:   variable playerCoverSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:70: error: cannot find symbol
+          int value = item(AppearanceConfig.playerCoverRadius).Int();
+                                           ^
+    symbol:   variable playerCoverRadius
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:75: error: cannot find symbol
+[Incubating] Problems report is available at: file:///F:/exteraless/build/reports/problems/problems-report.html
+          return item(AppearanceConfig.playerDiscSpin).Bool();
+                                      ^
+    symbol:   variable playerDiscSpin
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:79: error: cannot find symbol
+          return item(AppearanceConfig.playerCoverSwipe).Bool();
+                                      ^
+    symbol:   variable playerCoverSwipe
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:83: error: cannot find symbol
+          return item(AppearanceConfig.playerCoverExtend).Bool();
+                                      ^
+    symbol:   variable playerCoverExtend
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:87: error: cannot find symbol
+          return item(AppearanceConfig.playerTitleAlign).Int() == 1;
+                                      ^
+    symbol:   variable playerTitleAlign
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:91: error: cannot find symbol
+          int value = item(AppearanceConfig.playerTitleSize).Int();
+                                           ^
+    symbol:   variable playerTitleSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:97: error: cannot find symbol
+          return (style == COVER_CARD || style == COVER_DISC) && item(AppearanceConfig.playerTitleAbove).Bool();
+                                                                                      ^
+    symbol:   variable playerTitleAbove
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:101: error: cannot find symbol
+          String raw = item(AppearanceConfig.playerOrder).String();
+                                            ^
+    symbol:   variable playerOrder
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:136: error: cannot find symbol
+          item(AppearanceConfig.playerOrder).setConfigString("0,1,2".equals(value) ? "" : value);
+                               ^
+    symbol:   variable playerOrder
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:140: error: cannot find symbol
+          return item(AppearanceConfig.playerShowActions).Bool();
+                                      ^
+    symbol:   variable playerShowActions
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:144: error: cannot find symbol
+          return item(AppearanceConfig.playerActionsStyle).Int() == ACTIONS_ISLAND;
+                                      ^
+    symbol:   variable playerActionsStyle
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:148: error: cannot find symbol
+          return item(AppearanceConfig.playerShowModes).Bool();
+                                      ^
+    symbol:   variable playerShowModes
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:152: error: cannot find symbol
+          return item(AppearanceConfig.playerShowLike).Bool();
+                                      ^
+    symbol:   variable playerShowLike
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:156: error: cannot find symbol
+          return item(AppearanceConfig.playerShowSource).Bool();
+                                      ^
+    symbol:   variable playerShowSource
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:160: error: cannot find symbol
+          return item(AppearanceConfig.playerWavy).Bool();
+                                      ^
+    symbol:   variable playerWavy
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:164: error: cannot find symbol
+          switch (item(AppearanceConfig.playerControlsSize).Int()) {
+                                       ^
+    symbol:   variable playerControlsSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:175: error: cannot find symbol
+          return item(AppearanceConfig.playerColors).Int() == COLORS_THEME;
+                                      ^
+    symbol:   variable playerColors
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:179: error: cannot find symbol
+          int value = item(AppearanceConfig.playerBackground).Int();
+                                           ^
+    symbol:   variable playerBackground
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:189: error: cannot find symbol
+          return choice(AppearanceConfig.playerMiniCover, MINI_COVER_HIDDEN);
+                                        ^
+    symbol:   variable playerMiniCover
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:193: error: cannot find symbol
+          return choice(AppearanceConfig.playerMiniShape, MINI_SHAPE_SQUARE);
+                                        ^
+    symbol:   variable playerMiniShape
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:197: error: cannot find symbol
+          return choice(AppearanceConfig.playerMiniProgress, MINI_PROGRESS_BORDER);
+                                        ^
+    symbol:   variable playerMiniProgress
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:201: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniColors).Int() != COLORS_COVER;
+                                      ^
+    symbol:   variable playerMiniColors
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:205: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniCompact).Bool();
+                                      ^
+    symbol:   variable playerMiniCompact
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:209: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniArtist).Bool();
+                                      ^
+    symbol:   variable playerMiniArtist
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:213: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniPrevious).Bool();
+                                      ^
+    symbol:   variable playerMiniPrevious
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:217: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniNext).Bool();
+                                      ^
+    symbol:   variable playerMiniNext
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:221: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniClose).Bool();
+                                      ^
+    symbol:   variable playerMiniClose
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:225: error: cannot find symbol
+          return item(AppearanceConfig.playerMiniTop).Bool();
+                                      ^
+    symbol:   variable playerMiniTop
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                  getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                    ^
+    symbol:   variable OEPlayerStyleCover
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                  getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                                                            ^
+    symbol:   variable OEPlayerStyleElements
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:86: error: cannot find symbol
+                  getString(R.string.OEPlayerStyleCover), getString(R.string.OEPlayerStyleElements), getString(R.string.OEPlayerStyleMini)
+                                                                                                                       ^
+    symbol:   variable OEPlayerStyleMini
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:98: error: cannot find symbol
+                  getString(R.string.OEPlayerCoverCard), getString(R.string.OEPlayerCoverWide),
+                                    ^
+    symbol:   variable OEPlayerCoverCard
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:98: error: cannot find symbol
+                  getString(R.string.OEPlayerCoverCard), getString(R.string.OEPlayerCoverWide),
+                                                                           ^
+    symbol:   variable OEPlayerCoverWide
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:99: error: cannot find symbol
+                  getString(R.string.OEPlayerCoverFull), getString(R.string.OEPlayerCoverDisc)
+                                    ^
+    symbol:   variable OEPlayerCoverFull
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:99: error: cannot find symbol
+                  getString(R.string.OEPlayerCoverFull), getString(R.string.OEPlayerCoverDisc)
+                                                                           ^
+    symbol:   variable OEPlayerCoverDisc
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:100: error: cannot find symbol
+          }, PlayerStyle::coverStyle, value -> AppearanceConfig.playerCoverStyle.setConfigInt(value));
+                                                               ^
+    symbol:   variable playerCoverStyle
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:101: error: cannot find symbol
+          sizeRow = addSlider(R.string.OEPlayerCoverSize, PlayerStyle.COVER_SIZE_MIN, PlayerStyle.COVER_SIZE_MAX, 5, "%",
+                                      ^
+    symbol:   variable OEPlayerCoverSize
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:102: error: cannot find symbol
+                  () -> Math.round(PlayerStyle.coverSize() * 100), value -> AppearanceConfig.playerCoverSize.setConfigInt(value));
+                                                                                            ^
+    symbol:   variable playerCoverSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:103: error: cannot find symbol
+          radiusRow = addSlider(R.string.OEPlayerCoverRadius, 0, PlayerStyle.COVER_RADIUS_MAX, 2, "",
+                                        ^
+    symbol:   variable OEPlayerCoverRadius
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:104: error: cannot find symbol
+                  PlayerStyle::coverRadiusDp, value -> AppearanceConfig.playerCoverRadius.setConfigInt(value));
+                                                                       ^
+    symbol:   variable playerCoverRadius
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:106: error: cannot find symbol
+          spinRow = addChip(coverChips, R.string.OEPlayerDiscSpin, AppearanceConfig.playerDiscSpin);
+                                                ^
+    symbol:   variable OEPlayerDiscSpin
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:106: error: cannot find symbol
+          spinRow = addChip(coverChips, R.string.OEPlayerDiscSpin, AppearanceConfig.playerDiscSpin);
+                                                                                   ^
+    symbol:   variable playerDiscSpin
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:107: error: cannot find symbol
+          swipeRow = addChip(coverChips, R.string.OEPlayerCoverSwipe, AppearanceConfig.playerCoverSwipe);
+                                                 ^
+    symbol:   variable OEPlayerCoverSwipe
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:107: error: cannot find symbol
+          swipeRow = addChip(coverChips, R.string.OEPlayerCoverSwipe, AppearanceConfig.playerCoverSwipe);
+                                                                                      ^
+    symbol:   variable playerCoverSwipe
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:108: error: cannot find symbol
+          extendRow = addChip(coverChips, R.string.OEPlayerCoverExtend, AppearanceConfig.playerCoverExtend);
+                                                  ^
+    symbol:   variable OEPlayerCoverExtend
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:108: error: cannot find symbol
+          extendRow = addChip(coverChips, R.string.OEPlayerCoverExtend, AppearanceConfig.playerCoverExtend);
+                                                                                        ^
+    symbol:   variable playerCoverExtend
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:109: error: cannot find symbol
+          addHeader(R.string.OEPlayerStyleColors);
+                            ^
+    symbol:   variable OEPlayerStyleColors
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:110: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerColorsCover), getString(R.string.OEPlayerColorsTheme)},
+                                                      ^
+    symbol:   variable OEPlayerColorsCover
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:110: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerColorsCover), getString(R.string.OEPlayerColorsTheme)},
+                                                                                               ^
+    symbol:   variable OEPlayerColorsTheme
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:111: error: cannot find symbol
+                  () -> PlayerStyle.themeColors() ? 1 : 0, value -> AppearanceConfig.playerColors.setConfigInt(value));
+                                                                                    ^
+    symbol:   variable playerColors
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                  getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                    ^
+    symbol:   variable OEPlayerBackgroundSolid
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                  getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                                                                 ^
+    symbol:   variable OEPlayerBackgroundGradient
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:113: error: cannot find symbol
+                  getString(R.string.OEPlayerBackgroundSolid), getString(R.string.OEPlayerBackgroundGradient), getString(R.string.OEPlayerBackgroundBlur)
+                                                                                                                                 ^
+    symbol:   variable OEPlayerBackgroundBlur
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:114: error: cannot find symbol
+          }, PlayerStyle::background, value -> AppearanceConfig.playerBackground.setConfigInt(value));
+                                                               ^
+    symbol:   variable playerBackground
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:117: error: cannot find symbol
+          addInfo(R.string.OEPlayerEditorTapHint);
+                          ^
+    symbol:   variable OEPlayerEditorTapHint
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:118: error: cannot find symbol
+          titleCard = new ElementCard(context, TARGET_TITLE, getString(R.string.OEPlayerStyleTitleSection), null, false);
+                                                                               ^
+    symbol:   variable OEPlayerStyleTitleSection
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:121: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerAlignStart), getString(R.string.OEPlayerAlignCenter)},
+                                                      ^
+    symbol:   variable OEPlayerAlignStart
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:121: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerAlignStart), getString(R.string.OEPlayerAlignCenter)},
+                                                                                              ^
+    symbol:   variable OEPlayerAlignCenter
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:122: error: cannot find symbol
+                  () -> PlayerStyle.titleCentered() ? 1 : 0, value -> AppearanceConfig.playerTitleAlign.setConfigInt(value));
+                                                                                      ^
+    symbol:   variable playerTitleAlign
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                  getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                    ^
+    symbol:   variable OEPlayerSizeSmall
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                  getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                                                           ^
+    symbol:   variable OEPlayerSizeMedium
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:124: error: cannot find symbol
+                  getString(R.string.OEPlayerSizeSmall), getString(R.string.OEPlayerSizeMedium), getString(R.string.OEPlayerSizeLarge)
+                                                                                                                   ^
+    symbol:   variable OEPlayerSizeLarge
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:125: error: cannot find symbol
+          }, PlayerStyle::titleSize, value -> AppearanceConfig.playerTitleSize.setConfigInt(value));
+                                                              ^
+    symbol:   variable playerTitleSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:126: error: cannot find symbol
+          positionGroup = addSegmented(new String[]{getString(R.string.OEPlayerTitleBelow), getString(R.string.OEPlayerTitleAboveCover)},
+                                                                      ^
+    symbol:   variable OEPlayerTitleBelow
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:126: error: cannot find symbol
+          positionGroup = addSegmented(new String[]{getString(R.string.OEPlayerTitleBelow), getString(R.string.OEPlayerTitleAboveCover)},
+                                                                                                              ^
+    symbol:   variable OEPlayerTitleAboveCover
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:127: error: cannot find symbol
+                  () -> AppearanceConfig.playerTitleAbove.Bool() ? 1 : 0, value -> AppearanceConfig.playerTitleAbove.setConfigBool(value == 1));
+                                        ^
+    symbol:   variable playerTitleAbove
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:127: error: cannot find symbol
+                  () -> AppearanceConfig.playerTitleAbove.Bool() ? 1 : 0, value -> AppearanceConfig.playerTitleAbove.setConfigBool(value == 1));
+                                                                                                   ^
+    symbol:   variable playerTitleAbove
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:129: error: cannot find symbol
+          addChip(titleChips, R.string.OEPlayerShowLike, AppearanceConfig.playerShowLike);
+                                      ^
+    symbol:   variable OEPlayerShowLike
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:129: error: cannot find symbol
+          addChip(titleChips, R.string.OEPlayerShowLike, AppearanceConfig.playerShowLike);
+                                                                         ^
+    symbol:   variable playerShowLike
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:130: error: cannot find symbol
+          addChip(titleChips, R.string.OEPlayerShowSource, AppearanceConfig.playerShowSource);
+                                      ^
+    symbol:   variable OEPlayerShowSource
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:130: error: cannot find symbol
+          addChip(titleChips, R.string.OEPlayerShowSource, AppearanceConfig.playerShowSource);
+                                                                           ^
+    symbol:   variable playerShowSource
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:136: error: cannot find symbol
+          blockCard[PlayerStyle.BLOCK_PROGRESS] = new ElementCard(context, TARGET_PROGRESS, getString(R.string.OEPlayerBlockProgress), null, true);
+                                                                                                              ^
+    symbol:   variable OEPlayerBlockProgress
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:139: error: cannot find symbol
+          addChip(progressChips, R.string.OEPlayerShowWave, AppearanceConfig.playerWavy);
+                                         ^
+    symbol:   variable OEPlayerShowWave
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:139: error: cannot find symbol
+          addChip(progressChips, R.string.OEPlayerShowWave, AppearanceConfig.playerWavy);
+                                                                            ^
+    symbol:   variable playerWavy
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:141: error: cannot find symbol
+          blockCard[PlayerStyle.BLOCK_CONTROLS] = new ElementCard(context, TARGET_CONTROLS, getString(R.string.OEPlayerBlockControls), null, true);
+                                                                                                              ^
+    symbol:   variable OEPlayerBlockControls
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                  getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                    ^
+    symbol:   variable OEPlayerControlsCompact
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                  getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                                                                 ^
+    symbol:   variable OEPlayerControlsNormal
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:144: error: cannot find symbol
+                  getString(R.string.OEPlayerControlsCompact), getString(R.string.OEPlayerControlsNormal), getString(R.string.OEPlayerControlsLarge)
+                                                                                                                             ^
+    symbol:   variable OEPlayerControlsLarge
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:146: error: cannot find symbol
+              int value = AppearanceConfig.playerControlsSize.Int();
+                                          ^
+    symbol:   variable playerControlsSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:148: error: cannot find symbol
+          }, value -> AppearanceConfig.playerControlsSize.setConfigInt(value));
+                                      ^
+    symbol:   variable playerControlsSize
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:150: error: cannot find symbol
+          addChip(controlChips, R.string.OEPlayerShowModes, AppearanceConfig.playerShowModes);
+                                        ^
+    symbol:   variable OEPlayerShowModes
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:150: error: cannot find symbol
+          addChip(controlChips, R.string.OEPlayerShowModes, AppearanceConfig.playerShowModes);
+                                                                            ^
+    symbol:   variable playerShowModes
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:153: error: cannot find symbol
+                  AppearanceConfig.playerShowActions, true);
+                                  ^
+    symbol:   variable playerShowActions
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:152: error: cannot find symbol
+          blockCard[PlayerStyle.BLOCK_ACTIONS] = new ElementCard(context, TARGET_ACTIONS, getString(R.string.OEPlayerBlockActions),
+                                                                                                            ^
+    symbol:   variable OEPlayerBlockActions
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:155: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerActionsButtons), getString(R.string.OEPlayerActionsIsland)},
+                                                      ^
+    symbol:   variable OEPlayerActionsButtons
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:155: error: cannot find symbol
+          addSegmented(new String[]{getString(R.string.OEPlayerActionsButtons), getString(R.string.OEPlayerActionsIsland)},
+                                                                                                  ^
+    symbol:   variable OEPlayerActionsIsland
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:156: error: cannot find symbol
+                  () -> PlayerStyle.actionsIsland() ? 1 : 0, value -> AppearanceConfig.playerActionsStyle.setConfigInt(value));
+                                                                                      ^
+    symbol:   variable playerActionsStyle
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:160: error: cannot find symbol
+          addInfo(R.string.OEPlayerLayoutInfo);
+                          ^
+    symbol:   variable OEPlayerLayoutInfo
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:165: error: cannot find symbol
+          addInfo(R.string.OEPlayerMiniMoveHint);
+                          ^
+    symbol:   variable OEPlayerMiniMoveHint
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:166: error: cannot find symbol
+          addInfo(R.string.OEPlayerStyleCover);
+                          ^
+    symbol:   variable OEPlayerStyleCover
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                  getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                    ^
+    symbol:   variable OEPlayerMiniCoverRounded
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                  getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                                                                  ^
+    symbol:   variable OEPlayerMiniCoverRound
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:168: error: cannot find symbol
+                  getString(R.string.OEPlayerMiniCoverRounded), getString(R.string.OEPlayerMiniCoverRound), getString(R.string.OEPlayerMiniCoverHidden)
+                                                                                                                              ^
+    symbol:   variable OEPlayerMiniCoverHidden
+    location: class string
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:169: error: cannot find symbol
+          }, PlayerStyle::miniCover, value -> AppearanceConfig.playerMiniCover.setConfigInt(value));
+                                                              ^
+    symbol:   variable playerMiniCover
+    location: class AppearanceConfig
+  Note: Recompile with -Xlint:unchecked for details.
+  Note: Some input files use or override a deprecated API.
+  Note: Some input files use unchecked or unsafe operations.
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\ai\TelegramAiReplacement.java:33: error: cannot find symbol
+          return AiConfig.getReplaceTelegramEditor(account) && AiController.canUseAI();
+                         ^
+    symbol:   method getReplaceTelegramEditor(int)
+    location: class AiConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\ai\TelegramAiReplacement.java:37: error: cannot find symbol
+          return AiConfig.getReplaceTelegramSummaries(account) && AiController.canUseAI();
+                         ^
+    symbol:   method getReplaceTelegramSummaries(int)
+    location: class AiConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyle.java:229: error: cannot find symbol
+          for (ConfigItem item : AppearanceConfig.playerStyleItems()) {
+                                                 ^
+    symbol:   method playerStyleItems()
+    location: class AppearanceConfig
+  F:\exteraless\TMessagesProj\src\main\java\app\exteraless\player\PlayerStyleEditor.java:163: error: cannot find symbol
+          miniPreview = PlayerMiniView.preview(context);
+                                      ^
+    symbol:   method preview(Context)
+    location: class PlayerMiniView
+  100 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 10m 47s
+250 actionable tasks: 19 executed, 6 from cache, 225 up-to-date

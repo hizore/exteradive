@@ -15,10 +15,14 @@ https://my.telegram.org (API development tools) — значение по умо
 
 - `TMessagesProj/` — основной модуль Android-приложения.
 - `TMessagesProj_Modules/` — вспомогательные media3/экспериментальные модули.
-- `local.properties` — путь к SDK и личные ключи (в `.gitignore`, образец
-  приведён ниже).
+- `local.properties` — путь к SDK и личные ключи (образец приведён ниже).
+  В репозитории файла нет и он не коммитится.
 - `APK/` — релизные артефакты (`ExteraDive-arm64-v8a.apk`,
-  `ExteraDive-armeabi-v7a.apk`), игнорируются git'ом.
+  `ExteraDive-armeabi-v7a.apk`), в репозиторий не попадают.
+
+В репозитории намеренно нет `.gitignore`, `.gitmodules` и `.github/`: локальные
+исключения держим в `.git/info/exclude`, сабмодули подключены обычными
+каталогами, CI не используется.
 
 ## Требования
 
@@ -37,8 +41,8 @@ https://my.telegram.org (API development tools) — значение по умо
   ALIAS_NAME=androidkey
   ALIAS_PASS=android
   ```
-- Подпись релиза: `TMessagesProj/release.keystore` (DN `CN=DiveLite`,
-  алиас `androidkey`, пароль `android`).
+- Подпись релиза: `TMessagesProj/config/release.keystore` (DN `CN=DiveLite`,
+  алиас `androidkey`, пароль `android`). Файл в репозиторий не коммитится.
 
 ## Сборка
 
@@ -63,7 +67,7 @@ $env:NATIVE_TARGET = "armeabi-v7a"  # повторить команду выше
 ExteraDive использует отдельный Firebase-проект. Для работы пушей вайти:
 
 1. Создать свой Firebase-проект, скачать `google-services.json` и положить в
-   `TMessagesProj/`. Файл заигнорен git'ом — не коммитить.
+   `TMessagesProj/`. Файл не коммитить.
 2. В Console: *Project settings → Service accounts → Generate new private key*, сохранить JSON.
 3. Загрузить JSON на [my.telegram.org](https://my.telegram.org) → *API development tools* → твоё приложение → *Push notifications*.
    Без этого сервер отвечает `APP_PUSH_APIKEY_MISSING`, и пуши не дойдут.

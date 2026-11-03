@@ -119,6 +119,9 @@ public abstract class BaseFragment {
 
         public boolean onAttachedBackPressed();
         public boolean showDialog(Dialog dialog);
+        default boolean showDialog(Dialog dialog, Dialog.OnDismissListener onDismissListener) {
+            return showDialog(dialog);
+        }
 
         public void setKeyboardHeightFromParent(int keyboardHeight);
 

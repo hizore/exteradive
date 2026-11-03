@@ -1,5 +1,6 @@
 package org.telegram.utils.recorder.audio;
 
+import xyz.nextalone.nagram.helper.AudioEnhance;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -149,6 +150,7 @@ final class AudioCapture {
             if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                 throw new IllegalStateException("Unable to initialize AudioRecord");
             }
+            AudioEnhance.INSTANCE.initVoiceEnhance(audioRecord);
             audioRecord.startRecording();
             if (audioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
                 throw new IllegalStateException("Unable to start AudioRecord");
@@ -217,6 +219,7 @@ final class AudioCapture {
             } catch (Throwable error) {
                 if (failure == null) failure = asException(error);
             } finally {
+                AudioEnhance.INSTANCE.releaseVoiceEnhance();
                 audioRecord.release();
                 audioRecord = null;
             }

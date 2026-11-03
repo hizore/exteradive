@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Строки фич, перенесённых из exteraGram. -->
+<!-- ╨б╤В╤А╨╛╨║╨╕ ╤Д╨╕╤З, ╨┐╨╡╤А╨╡╨╜╨╡╤Б╤С╨╜╨╜╤Л╤Е ╨╕╨╖ exteraGram. -->
 <resources>
     <string name="OpenExtera" translatable="false">exteradive</string>
     <string name="OpenExteraInfo">Make the client truly yours</string>
@@ -24,7 +24,8 @@
     <string name="QrWifiCopyPassword">Copy password</string>
     <string name="QrWifiPasswordCopied">Password copied</string>
     <string name="QrWifiUnknownNetwork">Network name is missing from the code</string>
-    <string name="QrLoginHint">This code logs into an account. Use Settings → Devices → Link Desktop Device — that screen checks the code and protects your account.</string>
+    <string name="QrLoginHint">This code logs into an account. Use Settings тЖТ Devices тЖТ Link Desktop Device тАФ that screen checks the code and protects your account.</string>
+    <string name="QrLoginConfirm">This code signs a new device into your account. Allow only if you are logging in on your own device.</string>
     <string name="AppIconExteraless" translatable="false">exteradive</string>
     <string name="AppIconBlueprint" translatable="false">Blueprint</string>
     <string name="AppIconRed" translatable="false">Red</string>
@@ -38,23 +39,23 @@
     <string name="AppIconPlus" translatable="false">Plus</string>
     <string name="AppIconsSelect">Select</string>
     <string name="AppIconsKeep">Keep this one</string>
-    <string name="AppIconInfoExteraless"><!-- сюда подпись --></string>
-    <string name="AppIconInfoBlueprint"><!-- сюда подпись --></string>
-    <string name="AppIconInfoRed"><!-- сюда подпись --></string>
-    <string name="AppIconInfoNya"><!-- сюда подпись --></string>
-    <string name="AppIconInfoAyu"><!-- сюда подпись --></string>
-    <string name="AppIconInfoQuack"><!-- сюда подпись --></string>
-    <string name="AppIconInfoGo"><!-- сюда подпись --></string>
-    <string name="AppIconInfoHand"><!-- сюда подпись --></string>
-    <string name="AppIconInfoMono"><!-- сюда подпись --></string>
-    <string name="AppIconInfoNothing"><!-- сюда подпись --></string>
-    <string name="AppIconInfoPlus"><!-- сюда подпись --></string>
-    <string name="AppIconInfoTelegram"><!-- сюда подпись --></string>
-    <string name="AppIconInfoVintage"><!-- сюда подпись --></string>
-    <string name="AppIconInfoAqua"><!-- сюда подпись --></string>
-    <string name="AppIconInfoPremium"><!-- сюда подпись --></string>
-    <string name="AppIconInfoTurbo"><!-- сюда подпись --></string>
-    <string name="AppIconInfoNox"><!-- сюда подпись --></string>
+    <string name="AppIconInfoExteraless"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoBlueprint"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoRed"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoNya"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoAyu"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoQuack"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoGo"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoHand"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoMono"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoNothing"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoPlus"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoTelegram"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoVintage"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoAqua"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoPremium"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoTurbo"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
+    <string name="AppIconInfoNox"><!-- ╤Б╤О╨┤╨░ ╨┐╨╛╨┤╨┐╨╕╤Б╤М --></string>
     <string name="OpenExteraPreferences">exteradive Preferences</string>
     <string name="OpenExteraDesignSection">Design</string>
     <string name="OpenExteraDesigner">Icons and design</string>
@@ -74,7 +75,6 @@
     <string name="ProxyDisableOnVpn" translatable="false">VPN</string>
     <string name="ProxyDisableOnMobileData">Mobile data</string>
     <string name="ProxyDisableOnWiFi" translatable="false">Wi-Fi</string>
-    <string name="OENowPlayingScrobbling">Scrobbling now</string>
     <string name="MainTabsHideCallsSettings">Hide Calls tab</string>
     <string name="MainTabsHideProfile">Hide Profile tab</string>
     <string name="OEBotWebViewUpdate">Update WebView</string>
@@ -94,4 +94,6 @@
     <string name="OEProfileJoinedChannel">You subscribed to **%1$s** on %2$s</string>
     <string name="OEProfileChatCreated">**%1$s** was created on %2$s</string>
     <string name="OEProfileJoinDateUnknown">Join date is unavailable</string>
+
+    <string name="OENowPlayingScrobbling">Scrobbling now</string>
 </resources>

@@ -2998,6 +2998,70 @@ public class MediaDataController extends BaseController {
         }
     }
 
+    public void importFaveStickers(ArrayList<TLRPC.Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            return;
+        }
+        getMessagesStorage().getStorageQueue().postRunnable(() -> {
+            final ArrayList<TLRPC.Document> added = new ArrayList<>();
+            SQLiteDatabase database = getMessagesStorage().getDatabase();
+            try {
+                HashSet<String> known = new HashSet<>();
+                int date = Integer.MAX_VALUE;
+                SQLiteCursor cursor = database.queryFinalized("SELECT id, date FROM web_recent_v3 WHERE type = 5");
+                while (cursor.next()) {
+                    known.add(cursor.stringValue(0));
+                    date = Math.min(date, cursor.intValue(1));
+                }
+                cursor.dispose();
+                date = date == Integer.MAX_VALUE ? documents.size() : date - 1;
+                database.beginTransaction();
+                SQLitePreparedStatement state = database.executeFast("REPLACE INTO web_recent_v3 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                for (TLRPC.Document document : documents) {
+                    if (!(document instanceof TLRPC.TL_document) || !known.add("" + document.id)) {
+                        continue;
+                    }
+                    state.requery();
+                    state.bindString(1, "" + document.id);
+                    state.bindInteger(2, 5);
+                    state.bindString(3, "");
+                    state.bindString(4, "");
+                    state.bindString(5, "");
+                    state.bindInteger(6, 0);
+                    state.bindInteger(7, 0);
+                    state.bindInteger(8, 0);
+                    state.bindInteger(9, date--);
+                    NativeByteBuffer data = new NativeByteBuffer(document.getObjectSize());
+                    document.serializeToStream(data);
+                    state.bindByteBuffer(10, data);
+                    state.step();
+                    data.reuse();
+                    added.add(document);
+                }
+                state.dispose();
+                database.commitTransaction();
+            } catch (Exception e) {
+                FileLog.e(e);
+                database.commitTransaction();
+            }
+            if (added.isEmpty()) {
+                return;
+            }
+            AndroidUtilities.runOnUIThread(() -> {
+                HashSet<Long> present = new HashSet<>();
+                for (TLRPC.Document document : recentStickers[TYPE_FAVE]) {
+                    present.add(document.id);
+                }
+                for (TLRPC.Document document : added) {
+                    if (present.add(document.id)) {
+                        recentStickers[TYPE_FAVE].add(document);
+                    }
+                }
+                getNotificationCenter().postNotificationName(NotificationCenter.recentDocumentsDidLoad, false, TYPE_FAVE);
+            });
+        });
+    }
+
     public void loadStickers(int type, boolean cache, boolean useHash) {
         loadStickers(type, cache, useHash, false, null);
     }

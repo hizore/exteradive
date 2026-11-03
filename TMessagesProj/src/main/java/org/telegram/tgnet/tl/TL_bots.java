@@ -1103,7 +1103,35 @@ public class TL_bots {
             stream.writeInt64(icon);
             description.serializeToStream(stream);
         }
+
+        public TLRPC.TL_textWithEntities getDescription() {
+            return description;
+        }
     }
+
+    public static botVerification_plain botVerification() {
+        return new botVerification_plain();
+    }
+
+    public static class botVerification_plain extends botVerification_layer229 {
+        public String description;
+
+        @Override
+        public TLRPC.TL_textWithEntities getDescription() {
+            TLRPC.TL_textWithEntities result = new TLRPC.TL_textWithEntities();
+            result.text = description == null ? "" : description;
+            return result;
+        }
+
+        @Override
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(botVerification_layer229.constructor);
+            stream.writeInt64(bot_id);
+            stream.writeInt64(icon);
+            stream.writeString(description == null ? "" : description);
+        }
+    }
+
     public static class botVerification_layer229 extends BotVerification {
         public static final int constructor = 0xf93cd45c;
 

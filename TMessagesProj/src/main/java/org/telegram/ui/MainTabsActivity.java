@@ -1057,7 +1057,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         if (fragment instanceof TabFragmentDelegate) {
             ((TabFragmentDelegate) fragment).setParentTabsGlassInvalidationCallback(this::invalidateTabsGlass);
             if (miniPlayer != null) {
-                ((TabFragmentDelegate) fragment).setMiniPlayerInset(miniPlayer.getVisibleOffset(), miniPlayer.getTargetOffset());
+                ((TabFragmentDelegate) fragment).setMiniPlayerInset(miniPlayer.getVisibleOffset(), miniPlayer.getTargetOffset(false));
             }
         }
         return fragment;
@@ -1287,7 +1287,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
             return;
         }
         final float inset = miniPlayer.getVisibleOffset();
-        final int padding = miniPlayer.getTargetOffset();
+        final int padding = miniPlayer.getTargetOffset(false);
         for (int a = 0, N = fragmentsArr.size(); a < N; a++) {
             final BaseFragment fragment = fragmentsArr.valueAt(a).fragment;
             if (fragment instanceof TabFragmentDelegate) {
