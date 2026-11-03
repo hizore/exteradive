@@ -174,7 +174,7 @@ public class SnowflakesEffect {
         if (useBatch) {
             final int count = Math.min(maxCount, particles.size());
             final int texSize = dp(TEXTURE_SIZE_DP);
-
+            
             for (int a = 0; a < count; a++) {
                 Particle particle = particles.get(a);
                 final float x = particle.x, y = particle.y;
@@ -190,7 +190,19 @@ public class SnowflakesEffect {
             final int count = particles.size();
             for (int a = 0; a < count; a++) {
                 Particle particle = particles.get(a);
-                particle.draw(canvas);
+                if (particle.type == 0) {
+                    particlePaint.setAlpha((int) (255 * particle.alpha));
+                    canvas.drawCircle(particle.x, particle.y, dp(0.75f), particlePaint);
+                } else {
+                    if (particleBitmap == null) {
+                        particleBitmap = createParticlesBitmap(false);
+                    }
+                    bitmapPaint.setAlpha((int) (255 * particle.alpha));
+                    canvas.save();
+                    canvas.scale(particle.scale, particle.scale, particle.x, particle.y);
+                    canvas.drawBitmap(particleBitmap, particle.x, particle.y, bitmapPaint);
+                    canvas.restore();
+                }
             }
         }
 
