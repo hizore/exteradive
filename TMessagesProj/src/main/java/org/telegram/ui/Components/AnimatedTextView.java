@@ -438,11 +438,6 @@ public class AnimatedTextView extends View {
         }
 
         public void setText(CharSequence text, boolean animated, boolean moveDown) {
-            // exteradive: переключатель "Отключить анимации" действует на все
-            // AnimatedTextView в приложении - текст меняется сразу.
-            if (!org.telegram.messenger.SharedConfig.animationsEnabled()) {
-                animated = false;
-            }
             if (this.currentText == null || text == null) {
                 animated = false;
             }
@@ -664,7 +659,7 @@ public class AnimatedTextView extends View {
 
         private StaticLayout makeLayout(CharSequence textPart, int width) {
             if (width <= 0) {
-                width = Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
+                width = Math.max(1, Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y));
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 return StaticLayout.Builder.obtain(textPart, 0, textPart.length(), textPaint, width)

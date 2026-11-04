@@ -2818,7 +2818,7 @@ public class ChatActivity extends BaseFragment implements
             if (instantCameraView instanceof InstantCameraView) {
                 ((InstantCameraView) instantCameraView).setUseFrontCamera(front);
             } else if (instantCameraView != null) {
-                SharedSettings.roundVideoLastCamera.set(front ? RoundVideoSession.CameraFacing.FRONT : RoundVideoSession.CameraFacing.BACK);
+                SharedSettings.roundVideoLastCamera.set(front ? org.telegram.utils.recorder.round.RoundVideoSession.CameraFacing.FRONT : org.telegram.utils.recorder.round.RoundVideoSession.CameraFacing.BACK);
             }
         }
 

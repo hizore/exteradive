@@ -130,7 +130,7 @@ public final class EtgBackup {
     }
 
     public static String generateBackupName() {
-        return "exteradive-" + Utilities.generateRandomString(4) + EXTENSION;
+        return "exteraless-" + Utilities.generateRandomString(4) + EXTENSION;
     }
 
     /** Файл похож на бэкап exteraGram: расширение на месте и внутри есть хоть один знакомый ключ. */
@@ -295,7 +295,6 @@ public final class EtgBackup {
     private static SharedPreferences mainPreferences() {
         return ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
     }
-
 
     // ---- Таблица соответствий ----
 
@@ -475,8 +474,8 @@ public final class EtgBackup {
                 () -> new JsonPrimitive(NaConfig.INSTANCE.getSliderStyle().Int() == 2),
                 value -> NaConfig.INSTANCE.getSliderStyle().setConfigInt(value.getAsBoolean() ? 2 : 0)));
         list.add(new Entry(SECTION_EXTERA, "newSwitchStyle", KIND_BOOL, 0, 0, null,
-                () -> new JsonPrimitive(NaConfig.INSTANCE.getSwitchStyle().Int() == 2),
-                value -> NaConfig.INSTANCE.getSwitchStyle().setConfigInt(value.getAsBoolean() ? 2 : 0)));
+                () -> new JsonPrimitive(NaConfig.INSTANCE.getSwitchStyle().Int() >= 2),
+                value -> NaConfig.INSTANCE.getSwitchStyle().setConfigInt(value.getAsBoolean() ? 3 : 0)));
 
         // Разделители: 0 скрыт, 1 линия, 2 сегменты. Ноль дублируется в рабочий ключ NagramX.
         list.add(new Entry(SECTION_EXTERA, "dividerStyle", KIND_INT, 0, 2, null,
@@ -552,7 +551,6 @@ public final class EtgBackup {
                 () -> new JsonPrimitive(GSON.toJson(MainMenuLayout.getHiddenItems())),
                 value -> MainMenuLayout.save(MainMenuLayout.getLayout(), parseIds(value.getAsString()))));
     }
-
 
     /**
      * mainconfig — настройки самого Telegram. Пишем в тот же файл, что и SharedConfig,
@@ -647,7 +645,6 @@ public final class EtgBackup {
                 () -> new JsonPrimitive(item.String()),
                 value -> item.setConfigString(value.getAsString())));
     }
-
 
     // ---- Проверки строковых значений ----
 

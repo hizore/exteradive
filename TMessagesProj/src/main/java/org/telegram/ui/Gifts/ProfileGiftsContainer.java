@@ -60,7 +60,6 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.DiveGramNfts;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -415,23 +414,16 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
             NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.starUserGiftsLoaded);
-            // exteradive: удалённые NFT-подарки подмешиваются к обычным (DiveLite)
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.DiveGramNftsChanged);
         }
 
         @Override
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starUserGiftsLoaded);
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.DiveGramNftsChanged);
         }
 
         @Override
         public void didReceivedNotification(int id, int account, Object... args) {
-            if (id == NotificationCenter.DiveGramNftsChanged) {
-                update(true);
-                return;
-            }
             if (id == NotificationCenter.starUserGiftsLoaded) {
                 if (args[1] != list)
                     return;
@@ -630,30 +622,6 @@ public class ProfileGiftsContainer extends FrameLayout implements NotificationCe
                     spanCountLeft--;
                     if (spanCountLeft == 0) {
                         spanCountLeft = 3;
-                    }
-                }
-                // exteradive: NFT-подарки, которых нет в ответе Telegram.
-                // Кладём в конец, чтобы не мешать закреплённым и порядку
-                // серверного списка - это дополнение, а не замена.
-                if (list == parent.list && !DiveGramNfts.getRemoteGiftsForDialog(parent.dialogId).isEmpty()) {
-                    HashSet<Long> shown = new HashSet<>();
-                    for (TL_stars.SavedStarGift userGift : list.gifts) {
-                        if (userGift.gift != null) {
-                            shown.add(userGift.gift.id);
-                        }
-                    }
-                    for (TL_stars.TL_starGiftUnique remote : DiveGramNfts.getRemoteGiftsForDialog(parent.dialogId)) {
-                        if (remote == null || !shown.add(remote.id)) {
-                            continue;
-                        }
-                        TL_stars.TL_savedStarGift saved = new TL_stars.TL_savedStarGift();
-                        saved.gift = remote;
-                        saved.date = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
-                        saved.pinned_to_top = DiveGramNfts.isRemotePinned(parent.dialogId, remote.id);
-                        items.add(
-                            GiftSheet.GiftCell.Factory.asStarGift(0, saved, true, false, isCollection)
-                                .setReordering(false)
-                        );
                     }
                 }
                 if (list.loading || !list.endReached) {

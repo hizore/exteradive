@@ -8592,20 +8592,21 @@ public class Theme {
         }
 
         if (chat_msgInDrawable != null && !fontsOnly) {
+            final boolean gradientService = serviceBitmapShader != null;
             chat_gamePaint.setColor(getColor(key_chat_previewGameText));
             chat_durationPaint.setColor(getColor(key_chat_previewDurationText));
-            chat_botButtonPaint.setColor(getColor(key_chat_botButtonText));
+            chat_botButtonPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_botButtonText));
             chat_urlPaint.setColor(getColor(key_chat_linkSelectBackground));
             chat_outUrlPaint.setColor(getColor(key_chat_outLinkSelectBackground));
             chat_textSearchSelectionPaint.setColor(getColor(key_chat_textSelectBackground));
             chat_msgErrorPaint.setColor(getColor(key_chat_sentError));
             chat_statusPaint.setColor(getColor(key_chat_status));
             chat_statusRecordPaint.setColor(getColor(key_chat_status));
-            chat_actionTextPaint.setColor(getColor(key_chat_serviceText));
-            chat_actionTextPaint2.setColor(getColor(key_chat_serviceText));
-            chat_actionTextPaint3.setColor(getColor(key_chat_serviceText));
-            chat_actionTextPaint.linkColor = getColor(key_chat_serviceLink);
-            chat_unlockExtendedMediaTextPaint.setColor(getColor(key_chat_serviceText));
+            chat_actionTextPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
+            chat_actionTextPaint2.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
+            chat_actionTextPaint3.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
+            chat_actionTextPaint.linkColor = gradientService ? 0xffffffff : getColor(key_chat_serviceLink);
+            chat_unlockExtendedMediaTextPaint.setColor(gradientService ? 0xffffffff : getColor(key_chat_serviceText));
             chat_contextResult_titleTextPaint.setColor(getColor(key_windowBackgroundWhiteBlackText));
             chat_composeBackgroundPaint.setColor(getColor(key_chat_messagePanelBackground));
             chat_timeBackgroundPaint.setColor(getColor(key_chat_mediaTimeBackground));

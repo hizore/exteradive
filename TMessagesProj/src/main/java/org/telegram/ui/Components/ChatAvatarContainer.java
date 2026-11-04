@@ -56,7 +56,6 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
@@ -1232,44 +1231,6 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             titleTextView.setRightDrawable(null);
             rightDrawableContentDescription = null;
         }
-        // exteradive (DiveGram): значок в шапке чата. Справа два слота - верхний
-        // отдан премиуму и эмодзи-статусу, нижний верификации и скэму. Значок
-        // ставим в первый свободный, иначе - в левый слот, чтобы он был виден
-        // всегда, даже когда у владельца есть премиум.
-        TLRPC.User dgHeaderUser = parentFragment != null ? parentFragment.getCurrentUser() : null;
-        // exteradive: в чате "Избранное" значка нет - там вы сами.
-        final boolean dgSavedMessages = dgHeaderUser != null && parentFragment != null
-                && dgHeaderUser.id == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId()
-                && parentFragment.getDialogId() == dgHeaderUser.id;
-        org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = !dgSavedMessages && dgHeaderUser != null
-                ? org.telegram.messenger.DiveGramBadge.getBadge(dgHeaderUser.id) : null;
-        if (dgBadgeObj != null) {
-            Drawable dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createDiveGramBadge(
-                    dgBadgeObj, getThemedColor(Theme.key_profile_verifiedBackground), dp(18));
-            titleTextView.setRightDrawableOnClick(null);
-            titleTextView.setRightDrawable2OnClick(null);
-            titleTextView.setLeftDrawableOnClick(null);
-            if (titleTextView.getRightDrawable() == null) {
-                titleTextView.setRightDrawable2(null);
-                titleTextView.setRightDrawable(dgBadgeDrawable);
-                titleTextView.setRightDrawableOnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
-            } else if (titleTextView.getRightDrawable2() == null) {
-                titleTextView.setRightDrawable2(dgBadgeDrawable);
-                titleTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
-            } else if (titleTextView.getLeftDrawable() == null) {
-                // справа всё занято (премиум + верификация) - вешаем значок слева
-                titleTextView.setLeftDrawableOutside(true);
-                titleTextView.setLeftDrawable(dgBadgeDrawable);
-                titleTextView.setLeftDrawableOnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
-            } else {
-                titleTextView.setRightDrawable2(dgBadgeDrawable);
-                titleTextView.setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), dgHeaderUser.id));
-            }
-        } else {
-            titleTextView.setRightDrawableOnClick(null);
-            titleTextView.setRightDrawable2OnClick(null);
-            titleTextView.setLeftDrawableOnClick(null);
-        }
         checkActionBar(animated);
     }
 
@@ -1407,19 +1368,6 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
 
         subtitleIsThinkingBot = false;
         CharSequence printString = MessagesController.getInstance(currentAccount).getPrintingString(parentFragment.getDialogId(), parentFragment.getThreadId(), false);
-        // exteradive (DiveGram): собеседник печатает не здесь, а в другом чате -
-        // показываем это в шапке под именем.
-        if (printString == null && SharedConfig.showTypingLocation && user != null
-                && parentFragment.getDialogId() == user.id) {
-            MessagesController.ElsewhereTyping elsewhere =
-                    MessagesController.getInstance(currentAccount).elsewhereTypingUsers.get(user.id);
-            if (elsewhere != null) {
-                TLRPC.Chat typingChat = MessagesController.getInstance(currentAccount).getChat(-elsewhere.dialogId);
-                if (typingChat != null && !TextUtils.isEmpty(typingChat.title)) {
-                    printString = LocaleController.formatString("TypingInChat", R.string.TypingInChat, typingChat.title);
-                }
-            }
-        }
         if (printString == null && UserObject.isBotForum(user)) {
             //if (BotForumHelper.getInstance(currentAccount).isThinking(user.id, (int) parentFragment.getTopicId())) {
             //    printString = "thinking";
@@ -1537,7 +1485,7 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
                 } else if (user.bot && user.bot_active_users != 0) {
                     newStatus = LocaleController.formatPluralStringComma("BotUsers", user.bot_active_users, ',');
                 } else if (user.bot) {
-                    newStatus = getString(R.string.Bot);
+                    newStatus = UserObject.getBotStatus(user);
                 } else {
                     isOnline[0] = false;
                     newStatus = LocaleController.formatUserStatus(currentAccount, user, isOnline, allowShorterStatus ? statusMadeShorter : null, new boolean[1]);

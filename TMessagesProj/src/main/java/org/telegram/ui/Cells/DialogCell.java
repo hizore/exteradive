@@ -658,26 +658,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     private boolean drawVerified;
     private boolean drawBotVerified;
     private boolean drawPremium;
-    // exteradive (DiveGram): бейдж и огонёк серии (DiveLite)
-    private static final int DG_BADGE_SIZE = 18;
-    private static final int DG_STREAK_SIZE = 16;
-    private static final int DG_BADGE_GAP = 4;
-    private Drawable dgBadgeDrawable;
-    private String dgBadgeDrawableId;
-    private final android.graphics.Rect dgBadgeBounds = new android.graphics.Rect();
-    private boolean dgBadgePressPending;
-    private float dgBadgePressX, dgBadgePressY;
-    private final org.telegram.messenger.DiveGramStreak.FireDrawable dgStreakFire = new org.telegram.messenger.DiveGramStreak.FireDrawable();
-    private final android.graphics.Rect dgStreakBounds = new android.graphics.Rect();
-    private TextPaint dgStreakTextPaint;
-    /** Значок DiveGram для текущего чата и серия - считаются в buildLayout. */
-    private org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj;
-    private org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo;
-    private boolean dgStreakVisible;
-    /** Ширина, забронированная в строке имени под бейдж и огонёк. */
-    private int dgReservedWidth;
-    /** Флаг, что уже просим перестроить layout из-за приехавшего значка. */
-    private boolean dgLayoutFixRequested;
     private final View emojiStatusView;
     private final View botVerificationView;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emojiStatus;
@@ -1718,7 +1698,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                     } else {
                         CharSequence mess;
                         if (draftMessage != null && draftMessage.rich_message != null) {
-                            mess = MessageObject.formatRichMessage(draftMessage.rich_message, false, false, 150);
+                            mess = AnimatedEmojiSpan.cloneSpans(MessageObject.formatRichMessage(draftMessage.rich_message, false, false, 150), -1, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt());
                         } else if (draftVoice) {
                             mess = getString(R.string.AttachAudio);
                         } else if (draftMessage != null) {
@@ -2481,41 +2461,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         if (drawBotVerified) {
             nameWidth -= dp(21);
         }
-        // exteradive (DiveGram): бейдж и огонёк серии - тоже элементы строки
-        // имени. Резервируем под них место, иначе они наезжают на префиксы и
-        // на само имя. Имя при этом ужимается (эллипсис), а вся строка
-        // остаётся в прежних границах.
-        // В чате "Избранное" значков нет - это чат с самим собой.
-        final boolean dgSavedMessages = currentDialogId > 0
-                && currentDialogId == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId();
-        dgBadgeObj = !dgSavedMessages && currentDialogId > 0 && DialogObject.isUserDialog(currentDialogId)
-                ? org.telegram.messenger.DiveGramBadge.getBadge(currentDialogId) : null;
-        org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = dgSavedMessages ? null :
-                org.telegram.messenger.DiveGramStreak.getStreak(currentDialogId, currentAccount);
-        this.dgStreakInfo = dgStreakInfo;
-        dgStreakVisible = dgStreakInfo != null
-                && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
-        dgReservedWidth = 0;
-        if (dgBadgeObj != null) {
-            dgReservedWidth += dp(DG_BADGE_SIZE + DG_BADGE_GAP);
-        }
-        if (dgStreakVisible) {
-            dgReservedWidth += dp(DG_STREAK_SIZE + DG_BADGE_GAP);
-            // exteradive: рядом с огоньком рисуется ещё и число дней. Оно тоже
-            // занимает место в строке - без резерва строка вылезала за границы
-            // и цифра наезжала на то, что справа (дата, аватар в RTL).
-            if (dgStreakTextPaint == null) {
-                dgStreakTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-                dgStreakTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-            }
-            dgStreakTextPaint.setTextSize(dp(13));
-            dgReservedWidth += (int) dgStreakTextPaint.measureText(String.valueOf(dgStreakInfo.days)) + dp(3);
-        }
-        nameWidth -= dgReservedWidth;
-        nameAdditionalsForChannelSubscriber += dgReservedWidth;
-        if (LocaleController.isRTL) {
-            nameLeft += dgReservedWidth;
-        }
         if (namePaddingEnd > 0) {
             nameWidth -= namePaddingEnd;
             if (LocaleController.isRTL) {
@@ -2982,7 +2927,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 } else {
                     nameMuteLeft = (int) (nameLeft + (nameWidth - widthpx) - dp(6) - Theme.dialogs_muteDrawable.getIntrinsicWidth());
                 }
-
                 if (left == 0) {
                     if (widthpx < nameWidth) {
                         nameLeft += (nameWidth - widthpx);
@@ -3437,13 +3381,13 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             boolean blocked = false;
                             boolean replyBlocked = false;
                             boolean needsReplyTargetCheck = false;
-                            if (NekoConfig.ignoreBlocked.Bool() && ChatObject.isMegagroup(MessagesController.getInstance(currentAccount).getChat(-dialog.id))) {
-                                blocked = MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(message.getFromChatId()) >= 0;
+                            if (AyuFilter.shouldHideSenders() && ChatObject.isMegagroup(MessagesController.getInstance(currentAccount).getChat(-dialog.id))) {
+                                blocked = NekoConfig.ignoreBlocked.Bool() && MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(message.getFromChatId()) >= 0;
                                 blocked = blocked || AyuFilter.isCustomFilteredPeer(message.getFromChatId());
                                 blocked = blocked || AyuFilter.isBlockedChannel(message.getFromChatId());
                                 if (message.replyMessageObject != null) {
                                     long fromId = message.replyMessageObject.getFromChatId();
-                                    replyBlocked = MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(fromId) >= 0;
+                                    replyBlocked = NekoConfig.ignoreBlocked.Bool() && MessagesController.getInstance(currentAccount).blockePeers.indexOfKey(fromId) >= 0;
                                     replyBlocked = replyBlocked || AyuFilter.isCustomFilteredPeer(fromId);
                                     replyBlocked = replyBlocked || AyuFilter.isBlockedChannel(fromId);
                                 } else if (message.getReplyMsgId() != 0) {
@@ -3885,7 +3829,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             }
                         }
 
-                        int countOldWidth = Math.max(dp(BADGE_TEXT_MIN_WIDTH), (int) Math.ceil(Theme.dialogs_countTextPaint2.measureText(oldStr)));
+                        int countOldWidth = Math.max(dp(BADGE_TEXT_MIN_WIDTH), (int) Math.ceil(Math.max(Theme.dialogs_countTextPaint2.measureText(oldStr), Theme.dialogs_countTextPaint2.measureText(newStr))));
                         countOldLayout = new StaticLayout(oldSpannableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                         countAnimationStableLayout = new StaticLayout(stableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
                         countAnimationInLayout = new StaticLayout(newSpannableStr, Theme.dialogs_countTextPaint2, countOldWidth, Layout.Alignment.ALIGN_CENTER, 1.0f, 0.0f, false);
@@ -4777,124 +4721,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 }
                 setDrawableBounds((drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable), nameMuteLeft, y);
                 (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).draw(canvas);
-            }
-
-            // exteradive (DiveGram): бейдж и огонёк серии - элементы строки имени.
-            // Рисуются после всех префиксов, с их стороны, а место под них
-            // заранее забронировано в buildLayout, поэтому ничего не перекрывается.
-            // TODO: если рядом окажется элемент, который рисуется мимо nameWidth
-            // (пилюля статуса, например), он может заехать на бейдж - тогда
-            // сдвигать надо и его.
-            if (dgBadgeObj != null || dgStreakVisible) {
-                if (dgReservedWidth == 0) {
-                    // Значок приехал уже после построения layout - места под него
-                    // нет, и он наехал бы на префиксы. Не рисуем его, а просим
-                    // перестроить ячейку: тогда всё встанет в ряд.
-                    if (!dgLayoutFixRequested) {
-                        dgLayoutFixRequested = true;
-                        post(() -> {
-                            dgLayoutFixRequested = false;
-                            buildLayout();
-                            invalidate();
-                        });
-                    }
-                    if (dgBadgeDrawable != null) {
-                        dgBadgeDrawable.setCallback(null);
-                        dgBadgeDrawable = null;
-                        dgBadgeDrawableId = null;
-                    }
-                } else {
-                int iconLeft = Integer.MAX_VALUE;
-                int iconRight = Integer.MIN_VALUE;
-                if (drawVerified) {
-                    iconLeft = Math.min(iconLeft, Theme.dialogs_verifiedDrawable.getBounds().left);
-                    iconRight = Math.max(iconRight, Theme.dialogs_verifiedDrawable.getBounds().right);
-                }
-                if (drawPremium) {
-                    if (emojiStatus != null) {
-                        iconLeft = Math.min(iconLeft, nameMuteLeft);
-                        iconRight = Math.max(iconRight, nameMuteLeft + dp(20));
-                    } else {
-                        iconLeft = Math.min(iconLeft, PremiumGradient.getInstance().premiumStarDrawableMini.getBounds().left);
-                        iconRight = Math.max(iconRight, PremiumGradient.getInstance().premiumStarDrawableMini.getBounds().right);
-                    }
-                }
-                if (drawScam != 0) {
-                    iconLeft = Math.min(iconLeft, (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).getBounds().left);
-                    iconRight = Math.max(iconRight, (drawScam == 1 ? Theme.dialogs_scamDrawable : Theme.dialogs_fakeDrawable).getBounds().right);
-                }
-                if (dialogsType != 2 && (drawUnmute || dialogMuted || isHiddenInCommunity || dialogMutedProgress > 0) && !drawVerified && drawScam == 0) {
-                    iconLeft = Math.min(iconLeft, Theme.dialogs_muteDrawable.getBounds().left);
-                    iconRight = Math.max(iconRight, Theme.dialogs_muteDrawable.getBounds().right);
-                }
-                if (iconLeft == Integer.MAX_VALUE) {
-                    // префиксов нет - бейдж встаёт сразу за именем
-                    iconLeft = nameMuteLeft;
-                    iconRight = nameMuteLeft;
-                }
-
-                int y = dp(useForceThreeLines || SharedConfig.useThreeLinesLayout ? 12 : 15);
-                if ((!(useForceThreeLines || SharedConfig.useThreeLinesLayout) || isForumCell()) && hasTags()) {
-                    y -= dp(9);
-                }
-                int cursor = LocaleController.isRTL
-                        ? iconLeft - dp(DG_BADGE_GAP)
-                        : iconRight + dp(DG_BADGE_GAP);
-
-                if (dgBadgeObj != null) {
-                    if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
-                        if (dgBadgeDrawable != null) {
-                            dgBadgeDrawable.setCallback(null);
-                        }
-                        dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
-                                dgBadgeObj, Theme.getColor(Theme.key_chats_verifiedBackground, resourcesProvider), dp(DG_BADGE_SIZE), dp(40));
-                        dgBadgeDrawable.setCallback(this);
-                        dgBadgeDrawableId = dgBadgeObj.id;
-                    }
-                    int bs = dp(DG_BADGE_SIZE);
-                    int left = LocaleController.isRTL ? cursor - bs : cursor;
-                    dgBadgeBounds.set(left, y - dp(1), left + bs, y - dp(1) + bs);
-                    dgBadgeDrawable.setBounds(dgBadgeBounds);
-                    dgBadgeDrawable.draw(canvas);
-                    invalidate();
-                    cursor = LocaleController.isRTL
-                            ? dgBadgeBounds.left - dp(DG_BADGE_GAP)
-                            : dgBadgeBounds.right + dp(DG_BADGE_GAP);
-                } else if (dgBadgeDrawable != null) {
-                    dgBadgeDrawable.setCallback(null);
-                    dgBadgeDrawable = null;
-                    dgBadgeDrawableId = null;
-                }
-
-                if (dgStreakVisible) {
-                    int flameSize = dp(DG_STREAK_SIZE);
-                    int flameX = LocaleController.isRTL ? cursor - flameSize : cursor;
-                    int flameY = y - dp(2);
-                    int streakColor = dgStreakInfo.pending
-                            ? org.telegram.messenger.DiveGramStreak.getGrayColor()
-                            : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days);
-                    dgStreakBounds.set(flameX, flameY, flameX + flameSize, flameY + flameSize);
-                    dgStreakFire.setColor(streakColor);
-                    dgStreakFire.setBounds(dgStreakBounds);
-                    dgStreakFire.draw(canvas);
-                    if (dgStreakTextPaint == null) {
-                        dgStreakTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-                        dgStreakTextPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                    }
-                    dgStreakTextPaint.setTextSize(dp(13));
-                    dgStreakTextPaint.setColor(streakColor);
-                    String dgStreakText = String.valueOf(dgStreakInfo.days);
-                    if (LocaleController.isRTL) {
-                        canvas.drawText(dgStreakText,
-                                dgStreakBounds.left - dgStreakTextPaint.measureText(dgStreakText) - dp(2),
-                                flameY + flameSize - dp(3), dgStreakTextPaint);
-                    } else {
-                        canvas.drawText(dgStreakText, dgStreakBounds.right + dp(2),
-                                flameY + flameSize - dp(3), dgStreakTextPaint);
-                    }
-                    invalidate();
-                }
-                }
             }
 
             if (drawReorder || reorderIconProgress != 0) {
@@ -6369,7 +6195,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                 final TL_iv.PageBlock block = message.messageOwner.rich_message.blocks.get(0);
                 accentColor = MessageObject.isBlueBlock(block);
             }
-            stringBuilder = formatInternal(messageFormatType, message.messageText, messageNameString);
+            stringBuilder = formatInternal(messageFormatType, AnimatedEmojiSpan.cloneSpans(message.messageText, -1, Theme.dialogs_messagePaint[paintIndex].getFontMetricsInt()), messageNameString);
             if (accentColor && !isForumCell()) {
                 try {
                     stringBuilder.setSpan(new ForegroundColorSpanThemable(Theme.key_chats_actionMessage, resourcesProvider), hasNameInMessage ? messageNameString.length() + 2 : 0, stringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -6505,22 +6331,6 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
     public boolean onTouchEvent(MotionEvent event) {
         if (rightFragmentOpenedProgress == 0 && !isTopic && !isShareToStoryCell && storyParams.checkOnTouchEvent(event, this)) {
             return true;
-        }
-        // exteradive (DiveGram): тап по бейджу в списке чатов
-        if (event.getAction() == MotionEvent.ACTION_DOWN && dgBadgeDrawable != null && !dgBadgeBounds.isEmpty() && dgBadgeBounds.contains((int) event.getX(), (int) event.getY())) {
-            dgBadgePressPending = true;
-            dgBadgePressX = event.getX();
-            dgBadgePressY = event.getY();
-            return true;
-        }
-        if (dgBadgePressPending && event.getAction() == MotionEvent.ACTION_UP) {
-            if (Math.abs(event.getX() - dgBadgePressX) < AndroidUtilities.touchSlop && Math.abs(event.getY() - dgBadgePressY) < AndroidUtilities.touchSlop) {
-                org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentDialogId);
-            }
-            dgBadgePressPending = false;
-        }
-        if (dgBadgePressPending && event.getAction() == MotionEvent.ACTION_CANCEL) {
-            dgBadgePressPending = false;
         }
         if (delegate == null || delegate.canClickButtonInside()) {
             if (openBot) {

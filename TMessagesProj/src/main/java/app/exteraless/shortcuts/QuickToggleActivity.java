@@ -14,6 +14,7 @@ import tw.nekomimi.nekogram.NekoConfig;
 public class QuickToggleActivity extends Activity {
 
     public static final String ACTION_GHOST_MODE = "app.exteraless.action.TOGGLE_GHOST_MODE";
+    public static final String ACTION_SAFE_MODE = "app.exteraless.action.TOGGLE_SAFE_MODE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,5 +45,4 @@ public class QuickToggleActivity extends Activity {
                 ? R.string.GhostModeEnabled
                 : R.string.GhostModeDisabled);
     }
-
 }

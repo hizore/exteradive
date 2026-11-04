@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.Set;
 
 import app.exteraless.ai.ui.AiSettingsActivity;
+import app.exteraless.icons.IconPacksActivity;
+import app.exteraless.pillstack.pills.weather.WeatherSettingsActivity;
+import app.exteraless.settings.OpenExteraCloudActivity;
+import app.exteraless.settings.OpenExteraGlyphActivity;
 import app.exteraless.pillstack.PillStackSettingsActivity;
 import app.exteraless.settings.OpenExteraAppNavigationActivity;
 import app.exteraless.settings.OpenExteraAppearanceActivity;
@@ -48,7 +52,9 @@ public class SettingsHelper {
     private static final Map<String, String> MOVED_ROWS = new HashMap<>();
 
     static {
-        SEARCH_TITLE_ALIASES.put("OEGeneral:lastfm", "OEGeneralLastFm");
+        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyAlwaysAsk", "OEBotPrivacyAlwaysAsk");
+        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyEnabled", "OEBotPrivacyEnabled");
+        SEARCH_TITLE_ALIASES.put("OEGeneral:botPrivacyAccount", "OEBotPrivacyAccount");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuGhost", "GhostMode");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuDisableAll", "OEGeneralAyuMomentsDisableAll");
         SEARCH_TITLE_ALIASES.put("OEAyu:ayuClearDatabase", "ClearMessageDatabase");
@@ -137,7 +143,7 @@ public class SettingsHelper {
     }
 
     private static final Set<String> EXTERALESS_SCREENS = new HashSet<>(Arrays.asList(
-            "settings", "general", "appearance", "chats", "plugins", "pillstack", "other",
+            "settings", "general", "appearance", "chats", "pillstack", "other",
             "ayumoments", "navigation", "menus", "media", "hiding"));
 
     public static boolean isDeepLink(String path) {
@@ -317,6 +323,21 @@ public class SettingsHelper {
                     break;
                 case "pillstack":
                     fragment = neko_fragment = new PillStackSettingsActivity();
+                    break;
+                case "pillstackweather":
+                    fragment = neko_fragment = new WeatherSettingsActivity();
+                    break;
+                case "iconpacks":
+                    fragment = neko_fragment = new IconPacksActivity();
+                    break;
+                case "exteraless_ai":
+                    fragment = neko_fragment = new AiSettingsActivity();
+                    break;
+                case "exteraless_cloud":
+                    fragment = neko_fragment = new OpenExteraCloudActivity();
+                    break;
+                case "exteraless_glyph":
+                    fragment = neko_fragment = new OpenExteraGlyphActivity();
                     break;
                 case "send_logs":
                     sendLogs(activity, false);

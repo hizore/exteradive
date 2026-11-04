@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import tw.nekomimi.nekogram.config.ConfigItem;
+import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 
 @SuppressLint("ApplySharedPref")
 @SuppressWarnings("unused")
@@ -129,7 +130,7 @@ public class NekoConfig {
     public static ConfigItem cachePath = addConfig("cache_path", configTypeString, "");
     // Имя форка, а не «Nagram»: значение видно в настройках («Save Path») и в пути
     // Downloads/<папка>, куда уходят сохранённые файлы.
-    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "exteradive");
+    public static ConfigItem customSavePath = addConfig("customSavePath", configTypeString, "exteraless");
 
     public static ConfigItem translationProvider = addConfig("translationProvider", configTypeInt, 1);
     public static ConfigItem translateToLang = addConfig("TransToLang", configTypeString, ""); // "" -> translate to current language (MessageTrans.kt & Translator.kt)
@@ -161,7 +162,7 @@ public class NekoConfig {
     public static ConfigItem disableTrending = addConfig("DisableTrending", configTypeBool, true);
     public static ConfigItem dontSendGreetingSticker = addConfig("DontSendGreetingSticker", configTypeBool, true);
     public static ConfigItem hideTimeForSticker = addConfig("HideTimeForSticker", configTypeBool, false);
-    public static ConfigItem takeGIFasVideo = addConfig("TakeGIFasVideo", configTypeBool, true);
+    public static ConfigItem takeGIFasVideo = addConfig("TakeGIFasVideo", configTypeBool, false);
     public static ConfigItem maxRecentStickerCount = addConfig("maxRecentStickerCount", configTypeInt, 20);
     public static ConfigItem disableSwipeToNext = addConfig("disableSwipeToNextChannel", configTypeBool, false);
     public static ConfigItem disableSwipeToNextTopic = addConfig("disableSwipeToNextTopic", configTypeBool, false);
@@ -280,16 +281,8 @@ public class NekoConfig {
                     getPreferences().edit().remove(o.key).apply();
                 }
             }
-            // exteradive: папка сохранений раньше называлась "exteraless".
-            // Уже установленным приложениям старое значение заменяем на новое,
-            // иначе папка так и останется прежней.
-            if ("exteraless".equals(customSavePath.value)) {
-                customSavePath.setConfigString("exteradive");
-            }
-            if (!configLoaded) {
-                // Синхронизации настроек с облаком больше нет — слушатель был заведён
-                // ради CloudSettingsHelper и сам по себе только тратил ресурсы.
-            }
+            if (!configLoaded)
+                getPreferences().registerOnSharedPreferenceChangeListener(CloudSettingsHelper.listener);
             for (int a = 1; a <= 5; a++) {
                 datacenterInfos.add(new DatacenterInfo(a));
             }

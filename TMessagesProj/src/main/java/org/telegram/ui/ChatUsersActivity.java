@@ -629,9 +629,6 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
         super.onFragmentCreate();
         getNotificationCenter().addObserver(this, NotificationCenter.chatInfoDidLoad);
         getNotificationCenter().addObserver(this, NotificationCenter.dialogDeleted);
-        // exteradive (DiveGram): значки приезжают из сети - обновляем список
-        getNotificationCenter().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
         loadChatParticipants(0, 200);
         return true;
     }
@@ -2088,12 +2085,7 @@ public class ChatUsersActivity extends BaseFragment implements NotificationCente
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.DiveGramBadgesChanged) {
-            // exteradive (DiveGram): значки приезжают из сети - перерисовываем ячейки
-            if (listViewAdapter != null) {
-                listViewAdapter.notifyDataSetChanged();
-            }
-        } else if (id == NotificationCenter.chatInfoDidLoad) {
+        if (id == NotificationCenter.chatInfoDidLoad) {
             TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
             boolean byChannelUsers = (Boolean) args[2];
             if (chatFull.id == chatId && (!byChannelUsers || !ChatObject.isChannel(currentChat))) {

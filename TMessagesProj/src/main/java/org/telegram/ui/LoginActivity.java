@@ -2049,24 +2049,26 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         private void showDebugMenu() {
             new AlertDialog.Builder(getContext())
                 .setTitle(LocaleController.getString(R.string.SettingsDebug))
-               .setItems(new String[] {
-                    BuildVars.LOGS_ENABLED ? LocaleController.getString(R.string.DebugMenuDisableLogs) : LocaleController.getString(R.string.DebugMenuEnableLogs)
-                // экстерадив: отправка логов скрыта
-            }, (di, b) -> {
-                if (b == 0) {
-                    BuildVars.LOGS_ENABLED = !BuildVars.LOGS_ENABLED;
-                    ApplicationLoader.applicationContext.getSharedPreferences("systemConfig", Context.MODE_PRIVATE).edit().putBoolean("logsEnabled", BuildVars.LOGS_ENABLED).commit();
-                    BulletinFactory.of(LoginActivity.this).createSimpleBulletin(R.raw.chats_infotip, BuildVars.LOGS_ENABLED ? "Logs enabled." : "Logs disabled.").show();
-                    if (BuildVars.LOGS_ENABLED) {
-                        FileLog.d("app start time = " + ApplicationLoader.startTime);
-                        try {
-                            FileLog.d("buildVersion = " + ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0).versionCode);
-                        } catch (Exception e) {
-                            FileLog.e(e);
+                .setItems(new String[] {
+                    BuildVars.LOGS_ENABLED ? LocaleController.getString(R.string.DebugMenuDisableLogs) : LocaleController.getString(R.string.DebugMenuEnableLogs),
+                    LocaleController.getString(R.string.DebugSendLogs)
+                }, (di, b) -> {
+                    if (b == 0) {
+                        BuildVars.LOGS_ENABLED = !BuildVars.LOGS_ENABLED;
+                        ApplicationLoader.applicationContext.getSharedPreferences("systemConfig", Context.MODE_PRIVATE).edit().putBoolean("logsEnabled", BuildVars.LOGS_ENABLED).commit();
+                        BulletinFactory.of(LoginActivity.this).createSimpleBulletin(R.raw.chats_infotip, BuildVars.LOGS_ENABLED ? "Logs enabled." : "Logs disabled.").show();
+                        if (BuildVars.LOGS_ENABLED) {
+                            FileLog.d("app start time = " + ApplicationLoader.startTime);
+                            try {
+                                FileLog.d("buildVersion = " + ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0).versionCode);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                            }
                         }
+                    } else {
+                        ProfileActivity.sendLogs(getParentActivity(), false);
                     }
-                }
-            })
+                })
                 .show();
         }
 
@@ -7051,6 +7053,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         } else if (error.text.contains("CODE_EMPTY") || error.text.contains("CODE_INVALID") || error.text.contains("EMAIL_CODE_INVALID") || error.text.contains("PHONE_CODE_INVALID")) {
                             shakeWrongCode();
                             isWrongCode = true;
+                        } else if (error.text.contains("EMAIL_NOT_ALLOWED")) {
+                            needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString(R.string.EmailNotAllowed));
                         } else if (error.text.contains("EMAIL_TOKEN_INVALID")) {
                             needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString(R.string.EmailTokenInvalid));
                         } else if (error.text.contains("EMAIL_VERIFY_EXPIRED")) {

@@ -197,7 +197,7 @@ public class UserInfoCell extends View implements NotificationCenter.Notificatio
                     final SpannableStringBuilder sb = new SpannableStringBuilder("i  ");
                     footer = new Text(sb, 12);
                     sb.setSpan(new AnimatedEmojiSpan(verification.icon, footer.getFontMetricsInt()), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    sb.append(MessageObject.formatTextWithEntities(verification.description));
+                    sb.append(MessageObject.formatTextWithEntities(verification.getDescription()));
                     footer = new Text(sb, 12).align(Layout.Alignment.ALIGN_CENTER).multiline(5).setMaxWidth(Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y) * .5f).supportAnimatedEmojis(this);
                     height += dp(12) + footer.getHeight() + dp(15.33f);
                 } else {

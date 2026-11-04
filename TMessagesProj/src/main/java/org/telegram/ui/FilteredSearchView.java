@@ -1162,6 +1162,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                         return;
                     }
                     // exteraless plugins: установить плагин, а не открывать его в просмотрщике.
+
                     AndroidUtilities.openDocument(message, parentActivity, parentFragment);
                 } else if (!cell.isLoading()) {
                     MessageObject messageObject = cell.getMessage();

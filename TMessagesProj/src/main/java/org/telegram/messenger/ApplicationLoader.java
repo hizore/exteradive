@@ -102,8 +102,7 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
     private static PushListenerController.IPushListenerServiceProvider pushProvider;
     private static IMapsProvider mapsProvider;
     private static ILocationServiceProvider locationServiceProvider;
-    private static Thread.UncaughtExceptionHandler systemUncaughtExceptionHandler;
-    private static boolean crashReportFilterInstalled;
+    private Thread.UncaughtExceptionHandler systemUncaughtExceptionHandler;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -232,11 +231,6 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             return;
         }
         applicationInited = true;
-        // Обработчик ставим здесь, а не в onCreate(): этот метод зовут ресиверы,
-        // провайдеры виджетов и сам onCreate, то есть он выполняется раньше него.
-        // Раньше падение в инициализации конфигов ниже происходило до установки
-        // обработчика — приложение умирало молча, без диалога и без записи.
-        installCrashReportFilter();
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
 
         try {
@@ -311,14 +305,7 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
             app.exteraless.debug.EnergyProfiler.resumeIfEnabled(applicationContext);
         }
         SharedPrefsHelper.init(applicationContext);
-        // exteradive: функции DiveLite — значки, серии и NFT подгружаются с сервера
-        try {
-            DiveGramBadge.fetch();
-            DiveGramStreak.init();
-            DiveGramNfts.fetch();
-        } catch (Throwable t) {
-            FileLog.e(t);
-        }
+        Utilities.globalQueue.postRunnable(app.exteraless.crash.CrashLog::reportOutOfMemory);
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
             UserConfig.getInstance(a).loadConfig();
             MessagesController.getInstance(a);
@@ -519,12 +506,6 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static void reinitializePushServices() {
-        pushProvider = null;
-        PushListenerController.clearCachedProvider();
-        initPushServices();
     }
 
     private static void initPushServices() {
@@ -915,27 +896,12 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         return null;
     }
 
-    private static void installCrashReportFilter() {
-        if (crashReportFilterInstalled) {
-            return;
-        }
-        crashReportFilterInstalled = true;
-        Thread.UncaughtExceptionHandler crashlyticsHandler = Thread.getDefaultUncaughtExceptionHandler();
+    private void installCrashReportFilter() {
+        Thread.UncaughtExceptionHandler systemUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
-            // Своя запись ломается вместе с приложением — падение в обработчике
-            // не должно приводить к «приложение зависло и не закрывается».
-            try {
-                app.exteraless.crash.CrashLog.record(thread, error);
-            } catch (Throwable ignore) {
-            }
-            if (AndroidUtil.shouldReportCrashToCrashlytics(error)) {
-                if (crashlyticsHandler != null) {
-                    crashlyticsHandler.uncaughtException(thread, error);
-                    return;
-                }
-            } else if (systemUncaughtExceptionHandler != null) {
+            app.exteraless.crash.CrashLog.record(thread, error);
+            if (systemUncaughtExceptionHandler != null) {
                 systemUncaughtExceptionHandler.uncaughtException(thread, error);
-                return;
             }
             Process.killProcess(Process.myPid());
             System.exit(10);

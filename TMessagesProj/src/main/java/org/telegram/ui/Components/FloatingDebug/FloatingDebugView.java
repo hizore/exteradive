@@ -538,8 +538,7 @@ public class FloatingDebugView extends FrameLayout implements NotificationCenter
                 NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, finalThemeInfo, true, null, -1);
             }, 200);
         }));
-        // items.add(new FloatingDebugController.DebugItem(LocaleController.getString(R.string.DebugSendLogs), () -> ProfileActivity.sendLogs((Activity) getContext(), false)));
-        // экстерадив: отсылка логов скрыта
+        items.add(new FloatingDebugController.DebugItem(LocaleController.getString(R.string.DebugSendLogs), () -> ProfileActivity.sendLogs((Activity) getContext(), false)));
         return items;
     }
 

@@ -5,13 +5,14 @@ import android.content.SharedPreferences;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.ui.Components.Paint.PersistColorPalette;
 
+import tw.nekomimi.nekogram.helpers.CloudStorageHelper;
 import tw.nekomimi.nekogram.helpers.UserHelper;
 import tw.nekomimi.nekogram.helpers.MessageHelper;
 
 public class AccountInstance {
 
     private int currentAccount;
-    private static volatile AccountInstance[] Instance = new AccountInstance[UserConfig.MAX_ACCOUNT_COUNT];
+    private static volatile AccountInstance[] Instance = new AccountInstance[UserConfig.MAX_INSTANCE_COUNT];
     public static AccountInstance getInstance(int num) {
         AccountInstance localInstance = Instance[num];
         if (localInstance == null) {
@@ -107,6 +108,10 @@ public class AccountInstance {
 
     public UserHelper getUserHelper() {
         return UserHelper.getInstance(currentAccount);
+    }
+
+    public CloudStorageHelper getCloudStorageHelper() {
+        return CloudStorageHelper.getInstance(currentAccount);
     }
 
     public MemberRequestsController getMemberRequestsController() {

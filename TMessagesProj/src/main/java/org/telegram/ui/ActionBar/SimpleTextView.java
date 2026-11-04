@@ -131,13 +131,8 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private boolean rightDrawableHidden;
     private OnClickListener rightDrawableOnClickListener;
     private OnClickListener rightDrawable2OnClickListener;
-    // exteradive: клик по левому drawable - нужен, чтобы значок DiveGram
-    // помещался в шапке чата, когда справа уже занят премиумом и верификацией.
-    private OnClickListener leftDrawableOnClickListener;
     private boolean maybeClick2;
     private boolean maybeClick;
-    // exteradive: клик по левому drawable
-    private boolean maybeClick3;
     private float touchDownX, touchDownY;
 
     private AnimatedEmojiSpan.EmojiGroupedSpans emojiStack;
@@ -1352,41 +1347,8 @@ public class SimpleTextView extends View implements Drawable.Callback {
         rightDrawable2OnClickListener = onClickListener;
     }
 
-    // exteradive: клик по левому drawable
-    public void setLeftDrawableOnClick(OnClickListener onClickListener) {
-        leftDrawableOnClickListener = onClickListener;
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (leftDrawableOnClickListener != null && leftDrawable != null) {
-            // exteradive: клик по левому drawable (значок DiveGram в шапке чата)
-            android.graphics.Rect bounds = leftDrawable.getBounds();
-            int lw = (int) (leftDrawable.getIntrinsicWidth() * rightDrawableScale);
-            int lh = (int) (leftDrawable.getIntrinsicHeight() * rightDrawableScale);
-            if (bounds.isEmpty()) {
-                bounds.set(0, 0, lw, lh);
-            }
-            AndroidUtilities.rectTmp.set(bounds.left - dp(8), bounds.top - dp(8), bounds.right + dp(8), bounds.bottom + dp(8));
-            if (event.getAction() == MotionEvent.ACTION_DOWN && !maybeClick && !maybeClick2
-                    && AndroidUtilities.rectTmp.contains((int) event.getX(), (int) event.getY())) {
-                maybeClick3 = true;
-                touchDownX = event.getX();
-                touchDownY = event.getY();
-                getParent().requestDisallowInterceptTouchEvent(true);
-            } else if (event.getAction() == MotionEvent.ACTION_MOVE && maybeClick3) {
-                if (Math.abs(event.getX() - touchDownX) >= AndroidUtilities.touchSlop || Math.abs(event.getY() - touchDownY) >= AndroidUtilities.touchSlop) {
-                    maybeClick3 = false;
-                    getParent().requestDisallowInterceptTouchEvent(false);
-                }
-            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-                if (maybeClick3 && event.getAction() == MotionEvent.ACTION_UP) {
-                    leftDrawableOnClickListener.onClick(this);
-                }
-                maybeClick3 = false;
-                getParent().requestDisallowInterceptTouchEvent(false);
-            }
-        }
         if (rightDrawableOnClickListener != null && rightDrawable != null) {
             AndroidUtilities.rectTmp.set(rightDrawableX - dp(16), rightDrawableY - dp(16), rightDrawableX + dp(16), rightDrawableY + dp(16));
             if (event.getAction() == MotionEvent.ACTION_DOWN && AndroidUtilities.rectTmp.contains((int) event.getX(), (int) event.getY())) {
@@ -1436,7 +1398,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 getParent().requestDisallowInterceptTouchEvent(false);
             }
         }
-        return super.onTouchEvent(event) || maybeClick || maybeClick2 || maybeClick3;
+        return super.onTouchEvent(event) || maybeClick || maybeClick2;
     }
 
     public static interface PressableDrawable {

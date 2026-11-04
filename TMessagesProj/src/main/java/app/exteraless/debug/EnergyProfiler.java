@@ -46,9 +46,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-
 public final class EnergyProfiler {
 
     private static final String PREFS = "exteraless_energy_profiler";
@@ -265,10 +262,8 @@ public final class EnergyProfiler {
     private volatile boolean stopped;
     private final BroadcastReceiver screenReceiver;
     private final Application.ActivityLifecycleCallbacks lifecycleCallbacks;
-    private boolean ownHookStats;
     private String wakelockStatus = "not tracked";
     private boolean wakelocksWaiting;
-    private final ArrayList<XC_MethodHook.Unhook> unhooks = new ArrayList<>();
     private final IdentityHashMap<Object, HeldLock> heldLocks = new IdentityHashMap<>();
     private final Runnable tick = this::tick;
 
@@ -564,30 +559,7 @@ public final class EnergyProfiler {
             wakelockStatus = "not tracked: hooking wake locks killed the process earlier";
             return;
         }
-        wakelocksWaiting = false;
-        prefs.edit().putBoolean(KEY_WAKELOCK_PENDING, true).commit();
-        try {
-            final XC_MethodHook acquire = new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    onAcquired(param.thisObject);
-                }
-            };
-            final XC_MethodHook release = new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    onReleased(param.thisObject);
-                }
-            };
-            unhooks.addAll(XposedBridge.hookAllMethods(PowerManager.WakeLock.class, "acquire", acquire));
-            unhooks.addAll(XposedBridge.hookAllMethods(PowerManager.WakeLock.class, "release", release));
-            wakelockStatus = "tracked";
-        } catch (Throwable t) {
-            wakelockStatus = "not tracked: " + t;
-            FileLog.e(t);
-        } finally {
-            prefs.edit().remove(KEY_WAKELOCK_PENDING).commit();
-        }
+        wakelockStatus = "not tracked";
     }
 
     private static String wakelockTag(Object lock) {
@@ -710,13 +682,6 @@ public final class EnergyProfiler {
     private void shutdown() {
         stopped = true;
         handler.removeCallbacks(tick);
-        for (XC_MethodHook.Unhook unhook : unhooks) {
-            try {
-                unhook.unhook();
-            } catch (Throwable ignored) {
-            }
-        }
-        unhooks.clear();
         try {
             context.unregisterReceiver(screenReceiver);
         } catch (Throwable ignored) {
@@ -799,7 +764,6 @@ public final class EnergyProfiler {
         if (!anyLock) {
             out.append("none recorded\n");
         }
-
 
         final File file = new File(AndroidUtilities.getLogsDir(), REPORT_PREFIX
                 + new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date()) + ".txt");

@@ -6,8 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -56,9 +55,10 @@ public final class CrashReportDialog {
         final ScrollView scrollView = new ScrollView(context);
         scrollView.addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        final FrameLayout container = new FrameLayout(context);
-        container.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT,
-                (int) (AndroidUtilities.displaySize.y * 0.4f / AndroidUtilities.density), Gravity.TOP));
+        final LinearLayout container = new LinearLayout(context);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.addView(scrollView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT,
+                (int) (AndroidUtilities.displaySize.y * 0.4f / AndroidUtilities.density)));
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(LocaleController.getString(R.string.OECrashTitle));
@@ -75,7 +75,7 @@ public final class CrashReportDialog {
         try {
             final ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard != null) {
-                clipboard.setPrimaryClip(ClipData.newPlainText("exteradive crash", report));
+                clipboard.setPrimaryClip(ClipData.newPlainText("exteraless crash", report));
             }
         } catch (Throwable ignore) {
             return;

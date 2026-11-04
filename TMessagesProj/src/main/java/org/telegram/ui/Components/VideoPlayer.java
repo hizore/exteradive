@@ -1843,21 +1843,14 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
     }
 
     public void setStreamType(int type) {
-        // exteradive (DiveGram): content type зависит от выбранного кодека —
-        // при AAC/LDAC плеер просит MUSIC, что позволяет системе выбрать кодек.
-        int contentType = type == AudioManager.STREAM_VOICE_CALL
-                ? C.AUDIO_CONTENT_TYPE_SPEECH
-                : org.telegram.messenger.AudioCodecs.getExoContentType();
         if (player != null) {
             player.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(type == AudioManager.STREAM_VOICE_CALL ? C.USAGE_VOICE_COMMUNICATION : C.USAGE_MEDIA)
-                .setContentType(contentType)
                 .build(), handleAudioFocus);
         }
         if (audioPlayer != null) {
             audioPlayer.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(type == AudioManager.STREAM_VOICE_CALL ? C.USAGE_VOICE_COMMUNICATION : C.USAGE_MEDIA)
-                .setContentType(contentType)
                 .build(), true);
         }
     }

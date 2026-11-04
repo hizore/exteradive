@@ -290,7 +290,7 @@ public class ConnectionsManager extends BaseController {
         if (getUserConfig().getCurrentUser() != null) {
             userPremium = getUserConfig().getCurrentUser().premium;
         }
-        init(SharedConfig.buildVersion(), TLRPC.LAYER, NekoXConfig.currentAppId(), deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, FileLog.getNetworkLogPath(), pushString, fingerprint, timezoneOffset, getUserConfig().getClientUserId(), userPremium, enablePushConnection);
+        init(java.util.Objects.hash(SharedConfig.buildVersion(), TLRPC.LAYER, appVersion), TLRPC.LAYER, NekoXConfig.currentAppId(), deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, FileLog.getNetworkLogPath(), pushString, fingerprint, timezoneOffset, getUserConfig().getClientUserId(), userPremium, enablePushConnection);
     }
 
     private String getRegId() {
@@ -438,12 +438,8 @@ public class ConnectionsManager extends BaseController {
         final var onComplete = interceptResult.effectiveOnComplete();
         // --- Ghost Mode ---
 
-        // --- exteraless plugins: pre_request_hook (CANCEL = запрос не уходит) ---
-        TLObject pluginRequest = object;
-        // --- exteraless plugins ---
-
         try {
-            final TLObject normalizedObject = FeedRequestNormalizer.normalize(currentAccount, pluginRequest);
+            final TLObject normalizedObject = FeedRequestNormalizer.normalize(currentAccount, object);
             NativeByteBuffer buffer = new NativeByteBuffer(normalizedObject.getObjectSize());
             normalizedObject.serializeToStream(buffer);
             normalizedObject.freeResources();
@@ -508,8 +504,7 @@ public class ConnectionsManager extends BaseController {
                     final TLObject finalResponse = resp;
                     final TLRPC.TL_error finalError = error;
                     Utilities.stageQueue.postRunnable(() -> {
-                        TLObject pluginResponse = finalResponse;
-                        // exteraless plugins: post_request_hook
+                        final TLObject pluginResponse = finalResponse;
                         if (onComplete != null) {
                             onComplete.run(pluginResponse, finalError);
                         } else if (onCompleteTimestamp != null) {

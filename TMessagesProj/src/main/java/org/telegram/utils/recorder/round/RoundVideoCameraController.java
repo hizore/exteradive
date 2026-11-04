@@ -191,7 +191,7 @@ final class RoundVideoCameraController {
     private boolean backConfigurationLogged;
     private boolean frameRateFallbackAttempted;
     private boolean frameRatePolicyResolved;
-    private boolean force30Fps;
+    private RoundVideoSession.FrameRate pipelineFrameRate;
     private CameraSelection frontSelection;
     private CameraSelection backSelection;
     private boolean warmSwitchSupported;
@@ -559,6 +559,7 @@ final class RoundVideoCameraController {
 
     private void createRecordingPipeline() throws IOException {
         glPreviewEnabled = dualActiveMode;
+        pipelineFrameRate = activeFrameRate;
         recorder = new RoundVideoCodecRecorder(
                 writer,
                 timelineOffsetUs,
@@ -1667,6 +1668,9 @@ final class RoundVideoCameraController {
                         + ", active=" + activeControls);
             }
         }
+        if (app.exteraless.chats.ChatsConfig.cameraStabilization.Bool()) {
+            applyStabilization(builder, selection.characteristics);
+        }
         if (activeControls) {
             applyZoom(builder);
             applyTorch(builder);
@@ -1985,7 +1989,7 @@ final class RoundVideoCameraController {
                         )) {
                     fallbackCandidate = cameraCandidate;
                 }
-                if (requestedFrameRate == RoundVideoSession.FrameRate.FPS_30
+                if (effectiveRequestedFrameRate() == RoundVideoSession.FrameRate.FPS_30
                         || frameRatePlan.frameRate == requestedFrameRate) {
                     if (selectedCandidate == null
                             || isPreferredCameraCandidate(
@@ -2166,10 +2170,16 @@ final class RoundVideoCameraController {
         if (requestedFrameRate != RoundVideoSession.FrameRate.FPS_60) return;
         boolean front = supports60FpsForFacing(RoundVideoSession.CameraFacing.FRONT);
         boolean back = supports60FpsForFacing(RoundVideoSession.CameraFacing.BACK);
-        force30Fps = !front || !back;
         diagnostics.log("60 fps session capability: front=" + front
                 + ", back=" + back
-                + ", selected=" + (force30Fps ? 30 : 60));
+                + ", selected=per camera");
+    }
+
+    private RoundVideoSession.FrameRate effectiveRequestedFrameRate() {
+        if (pipelineFrameRate == RoundVideoSession.FrameRate.FPS_30) {
+            return RoundVideoSession.FrameRate.FPS_30;
+        }
+        return requestedFrameRate;
     }
 
     private boolean supports60FpsForFacing(@NonNull RoundVideoSession.CameraFacing facing)
@@ -2252,6 +2262,24 @@ final class RoundVideoCameraController {
         );
     }
 
+    private static void applyStabilization(
+            @NonNull CaptureRequest.Builder builder,
+            @Nullable CameraCharacteristics cameraCharacteristics
+    ) {
+        if (cameraCharacteristics == null) return;
+        int[] ois = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION);
+        if (contains(ois, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)) {
+            builder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON);
+            builder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_OFF);
+            return;
+        }
+        int[] eis = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
+        if (contains(eis, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON)) {
+            builder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
+            builder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF);
+        }
+    }
+
     private void setContinuousVideoAf(@NonNull CaptureRequest.Builder builder) {
         setContinuousVideoAf(builder, characteristics);
     }
@@ -2279,12 +2307,12 @@ final class RoundVideoCameraController {
         Range<Integer>[] ranges = cameraCharacteristics.get(
                 CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES
         );
-        if (requestedFrameRate == RoundVideoSession.FrameRate.FPS_30 || force30Fps) {
+        if (effectiveRequestedFrameRate() == RoundVideoSession.FrameRate.FPS_30) {
             Range<Integer> range = findBestFpsRange(ranges, 30);
             diagnostics.log("fps selection: id=" + id
                     + ", requested=" + requestedFrameRate.getValue()
                     + ", mode=REGULAR, range=" + range
-                    + (force30Fps ? ", reason=session-wide fallback" : ""));
+                    + (requestedFrameRate != RoundVideoSession.FrameRate.FPS_30 ? ", reason=recording started at 30 fps" : ""));
             return new FrameRatePlan(
                     RoundVideoSession.FrameRate.FPS_30,
                     range,

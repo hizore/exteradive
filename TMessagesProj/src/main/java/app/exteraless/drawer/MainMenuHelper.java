@@ -3,6 +3,7 @@ package app.exteraless.drawer;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Process;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -42,6 +43,7 @@ import org.telegram.ui.GroupCreateActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.SettingsActivity;
+import app.exteraless.settings.OpenExteraSettingsActivity;
 
 import org.telegram.ui.Wallet.WalletActivity;
 import org.telegram.ui.WebAppDisclaimerAlert;
@@ -145,7 +147,6 @@ public final class MainMenuHelper {
         bindLongClick(io, info.onLongClick());
         return true;
     }
-
 
     private static boolean addAttachMenuBotMenuItems(ItemOptions io, MenuContext ctx) {
         final List<AttachMenuBotInfo> bots = getAttachMenuBotItems(ctx);
@@ -259,6 +260,8 @@ public final class MainMenuHelper {
             case BROWSER:
                 return new MenuItemInfo(R.drawable.msg2_language, LocaleController.getString(R.string.BrowserSettingsTitle),
                         () -> openBrowserHomepage(fragment), null);
+            case PLUGINS:
+                return null;
             case QR:
                 return new MenuItemInfo(R.drawable.msg_qrcode, LocaleController.getString(R.string.AuthAnotherClient),
                         () -> openQrScanner(fragment), null);
@@ -275,9 +278,26 @@ public final class MainMenuHelper {
                 }
                 return new MenuItemInfo(R.drawable.ic_gram, LocaleController.getString(R.string.WalletTitle),
                         () -> fragment.presentFragment(new WalletActivity()), null);
+            case EXTERALESS_SETTINGS:
+                return new MenuItemInfo(R.drawable.exteraless_icon_tile, LocaleController.getString(R.string.OpenExteraPreferences),
+                        () -> fragment.presentFragment(new OpenExteraSettingsActivity()), null);
+            case KILL_APP:
+                return new MenuItemInfo(R.drawable.msg_leave, LocaleController.getString(R.string.OEKillApp),
+                        () -> killApplication(fragment), null);
             default:
                 return null;
         }
+    }
+
+    private static void killApplication(BaseFragment fragment) {
+        final Activity activity = fragment.getParentActivity();
+        if (activity == null) {
+            return;
+        }
+        AndroidUtilities.runOnUIThread(() -> {
+            activity.finishAndRemoveTask();
+            Process.killProcess(Process.myPid());
+        }, 200);
     }
 
     public static boolean isWalletAvailable(int currentAccount) {
@@ -401,12 +421,15 @@ public final class MainMenuHelper {
             case FEED -> new MenuItemInfo(R.drawable.ic_feed, LocaleController.getString(R.string.Feed), null, null);
             case SETTINGS -> new MenuItemInfo(R.drawable.msg_settings, LocaleController.getString(R.string.Settings), null, null);
             case BROWSER -> new MenuItemInfo(R.drawable.msg2_language, LocaleController.getString(R.string.BrowserSettingsTitle), null, null);
+            case PLUGINS -> null;
             case QR -> new MenuItemInfo(R.drawable.msg_qrcode, LocaleController.getString(R.string.AuthAnotherClient), null, null);
             case GHOST_MODE -> new MenuItemInfo(R.drawable.ayu_ghost, ghostModeTitle(), null, null);
             case RECENT_CHATS -> new MenuItemInfo(R.drawable.menu_recent, LocaleController.getString(R.string.RecentChats), null, null);
             case WALLET -> isWalletAvailable(UserConfig.selectedAccount)
                     ? new MenuItemInfo(R.drawable.ic_gram, LocaleController.getString(R.string.WalletTitle), null, null)
                     : null;
+            case EXTERALESS_SETTINGS -> new MenuItemInfo(R.drawable.exteraless_icon_tile, LocaleController.getString(R.string.OpenExteraPreferences), null, null);
+            case KILL_APP -> new MenuItemInfo(R.drawable.msg_leave, LocaleController.getString(R.string.OEKillApp), null, null);
             default -> null;
         };
     }

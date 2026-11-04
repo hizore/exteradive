@@ -111,7 +111,6 @@ public class DrawerMenuView extends ScrollView {
             }
             hasAnyItem = true;
         }
-        // exteraless plugins: пункты плагинов (DRAWER_MENU) в конце шторки.
     }
 
     public void updateColors() {

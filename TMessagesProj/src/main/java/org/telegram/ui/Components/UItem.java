@@ -48,7 +48,6 @@ public class UItem extends AdapterWithDiffUtils.Item implements Cloneable {
     public int spanCount = MAX_SPAN_COUNT;
     public int parentSpanCount;
 
-
     public boolean include;
     public long dialogId;
     public String chatType;
@@ -282,6 +281,17 @@ public class UItem extends AdapterWithDiffUtils.Item implements Cloneable {
         i.iconResId = iconResId;
         i.text = text;
         i.textValue = value;
+        return i;
+    }
+
+    public static UItem asButtonWithSubtext(int id, int iconResId, CharSequence text, CharSequence subtext, int pad, int height) {
+        UItem i = new UItem(UniversalAdapter.VIEW_TYPE_TEXT, false);
+        i.id = id;
+        i.iconResId = iconResId;
+        i.text = text;
+        i.subtext = subtext;
+        i.pad = pad;
+        i.intValue = height;
         return i;
     }
 

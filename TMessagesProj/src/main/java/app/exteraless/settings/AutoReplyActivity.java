@@ -173,9 +173,8 @@ public class AutoReplyActivity extends BaseNekoSettingsActivity {
             if (type == TYPE_CHECK) {
                 TextCheckCell cell = (TextCheckCell) holder.itemView;
                 if (position == enableRow) {
-                    cell.setTextAndCheckAndSubText(
+                    cell.setTextAndCheck(
                             getString(R.string.OEAutoReplyEnable),
-                            getString(R.string.OEAutoReplyInfo),
                             SharedConfig.autoReplyEnabled, true);
                 } else if (position == textRow) {
                     cell.setTextAndValue(
