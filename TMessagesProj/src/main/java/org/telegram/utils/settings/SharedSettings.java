@@ -1,7 +1,7 @@
 package org.telegram.utils.settings;
 
 import org.telegram.messenger.BuildVars;
-import org.telegram.utils.recorder.round.RoundVideoSession;
+import org.telegram.utils.camera.roundvideo.RoundVideoSession;
 import org.telegram.utils.recorder.audio.AudioRecordingSession;
 
 public final class SharedSettings {

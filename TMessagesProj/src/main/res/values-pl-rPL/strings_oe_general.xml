@@ -52,7 +52,7 @@
     <string name="OEGeneralImportEtgDone">Zaimportowane ustawienia: %1$d</string>
     <string name="OEGeneralResetSettings">Zresetuj ustawienia</string>
     <string name="OEGeneralResetSettingsInfo">Wszystkie ustawienia zostaną przywrócone do wartości domyślnych, a aplikacja uruchomi się ponownie.</string>
-    <string name="OEGeneralResetSettingsDone">Ustawienia exteradive zostały zresetowane.</string>
+    <string name="OEGeneralResetSettingsDone">Ustawienia exteraless zostały zresetowane.</string>
     <string name="OEGeneralDeleteAccount">Usuń konto</string>
     <string name="DeepLFormalityDefault">Ton: jak w oryginale</string>
     <string name="DeepLFormalityInformal">Ton: nieformalny</string>
@@ -64,15 +64,6 @@
     <string name="OEGeneralAyuMomentsDisableAll">Wyłącz wszystkie funkcje AyuMoments</string>
     <string name="OELastActivityFormatted">ostatnia aktywność %1$s</string>
     <string name="OELastActivityDateFormatted">ostatnia aktywność %1$s</string>
-    <string name="OEGeneralLastFm">Last.fm</string>
-    <string name="OEGeneralLastFmHint">nazwa użytkownika</string>
-    <string name="OEGeneralLastFmNotSet">Nie ustawiono</string>
-    <string name="OEGeneralLastFmApplied">Zaktualizowano muzykę profilu</string>
-    <string name="OEGeneralLastFmNoMusic">Najpierw ustaw muzykę profilu</string>
-    <string name="OEGeneralLastFmFailed">Nie udało się zaktualizować muzyki profilu</string>
-    <string name="OEGeneralLastFmNoFile">Nie udało się pobrać utworu</string>
-    <string name="OEGeneralLastFmNoUpload">Przekroczono czas wysyłania</string>
-    <string name="OEGeneralLastFmAbout">Ta funkcja opiera się na muzyce profilu: zapisuje ukryte bajty z Twoją nazwą użytkownika Last.fm w najnowszym utworze profilu. Po ustawieniu nazwy utwór jest wysyłany ponownie ze zmianą.\n\nPo wyłączeniu funkcji utwór wraca do pierwotnej postaci.</string>
     <string name="OEGeneralNotificationsHeader">Powiadomienia</string>
     <string name="OEGeneralPushStatus">Stan powiadomień push</string>
     <string name="OEGeneralPushStatusBlocked">zablokowane przez system</string>
@@ -94,7 +85,7 @@
     <string name="OEGeneralMapProvider">Dostawca map</string>
     <string name="OEGeneralMapPreview">Podglądy lokalizacji</string>
     <string name="OEGeneralMapDriftingFix">Popraw przesunięcie mapy</string>
-    <string name="OECrashTitle">exteradive uległ awarii</string>
+    <string name="OECrashTitle">exteraless uległ awarii</string>
     <string name="OEGeneralNetworkHeader">Sieć</string>
     <string name="OEPrivacyFalseBottom">Podwójne dno</string>
     <string name="OEPrivacyFalseBottomShowIn">Pokazuj w sekcji „%1$s”</string>
@@ -129,7 +120,7 @@
     <string name="OEAyuSaveInArchivedInfo">Usunięte i edytowane wiadomości z zarchiwizowanych czatów też są zapisywane.</string>
     <string name="OEAyuDatabaseExport">Eksportuj bazę danych</string>
     <string name="OEAyuDatabaseImport">Importuj bazę danych</string>
-    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z exteradive i AyuGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
+    <string name="OEAyuDatabaseImportInfo">Usunięte i edytowane wiadomości z tego pliku zostaną dodane do już zapisanych. Obsługiwane są eksporty z exteraless i AyuGram. Multimedia z innej aplikacji mogą być niedostępne.</string>
     <string name="OEAyuDatabaseImportDone">Dodano wiadomości: %1$d</string>
     <string name="OEAyuDatabaseImportFailed">Nie udało się zaimportować pliku</string>
     <string name="OEAyuRegexReversed">Odwrócony</string>
@@ -149,35 +140,7 @@
     <string name="OEUpdaterChannelStableInfo">Nowe wydania na GitHubie są sprawdzane co 6 godzin.</string>
     <string name="OEUpdaterChannelBetaInfo">Oferuje też wydania wstępne z GitHuba, zanim staną się wydaniami.</string>
     <string name="OEUpdaterAllReleases">Wszystkie wydania na GitHubie</string>
-<string name="OEDiveHeader">DiveLite</string>
-    <string name="OEDiveBadges">Odznaki</string>
-    <string name="OEDiveStreaks">Serie</string>
-    <string name="OEDiveNfts">Prezenty NFT</string>
-    <string name="OEDiveInfo">Odznaki, serie i prezenty NFT pochodzą z DiveLite. Wyłącz przełącznik, aby ukryć funkcję.</string>
-    <string name="OEDiveTitle">Funkcje DiveLite</string>
-    <string name="TypingInChat">pisze w %s</string>
-    <string name="OEDiveTypingInfo">Działa tylko z osobami, z którymi masz wspólny czat: Telegram wysyła status pisania dla czatów, których jesteś uczestnikiem.</string>
-    <string name="OEDiveTypingHeader">Pisanie</string>
-    <string name="OEDiveShowTypingLocation">Pokaż, w którym czacie pisze</string>
-    <string name="OEDiveMediaInfo">Kodek Bluetooth i jakość nagrywania głosu.</string>
-    <string name="OEDiveMediaHeader">Multimedia</string>
-    <string name="OEDivePrivacyHeader">Prywatność</string>
-    <string name="OEDivePlayerBitrate">Pokazuj bitrate audio</string>
-    <string name="OEDiveMentionAll">Wspomnij o wszystkich (@all)</string>
-    <string name="OEAutoReplyInfo">Anty-spam: co najwyżej jedna autoodpowiedź na przerwę na osobę, nie więcej niż 20 na godzinę.</string>
-    <string name="OEDiveOff">Wyłączone</string>
-    <string name="OEDiveOn">Włączone</string>
-    <string name="OEDiveVoiceBitrateTitle">Jakość nagrywania głosu</string>
-    <string name="OEDiveAutoReplyTitle">Autoodpowiedź</string>
-    <string name="OEAutoReplyCooldownTitle">Przerwa między odpowiedziami</string>
-    <string name="OEAutoReplyTitle">Autoodpowiedź</string>
-    <string name="OEDiveAudioCodecTitle">Kodek audio</string>
-    <string name="OEAutoReplyEnable">Włącz autoodpowiedź</string>
-    <string name="OEAutoReplyTextTitle">Tekst odpowiedzi</string>
-    <string name="OEAutoReplyTextHint">Wpisz tekst odpowiedzi…</string>
-    <string name="OEDivePrivacyInfo">Twój numer jest pokazywany jako +79*******11 w Ustawienia &gt; Konto.</string>
-    <string name="OEDiveMentionAllSplit">Wysyłaj wspomnienia częściami</string>
-    <string name="OEDiveAnimationsHeader">Animacje</string>
-    <string name="OEDiveDisableAnimations">Wyłącz animacje</string>
-    <string name="OEDiveAnimationsInfo">Wyłącza animacje w całej aplikacji. W odtwarzaczu muzyki falujący pasek czasu staje się płaski, a tekst piosenki zapala się od razu w całości.</string>
-</resources>
+    <string name="OELiteFollowSystemSaver">Zgodnie z systemowym oszczędzaniem baterii</string>
+    <string name="OELiteFollowSystemSaverInfo">Oszczędzanie energii włącza się razem z systemowym trybem oszczędzania baterii.</string>
+
+                                                                                                                                                                </resources>

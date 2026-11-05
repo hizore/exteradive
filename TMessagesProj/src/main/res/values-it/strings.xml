@@ -440,8 +440,7 @@
     <string name="AskAQuestionInfo">Per favore ricorda che il supporto di Telegram è gestito da volontari. Proviamo a rispondere quanto prima, ma potrebbe volerci del tempo.\n\nDai un\'occhiata alle <![CDATA[<a href=\"https://telegram.org/faq/it#domande-generali\">FAQ di Telegram</a>]]>: contengono risposte a quasi tutte le domande e suggerimenti importanti per <![CDATA[<a href=\"https://telegram.org/faq/it#risoluzione-dei-problemi\">risolvere i problemi</a>]]>.</string>
     <string name="AskButton">Chiedi ai volontari</string>
     <string name="TelegramFAQ">FAQ Telegram</string>
-    <string name="TelegramFaq">FAQ Telegram</string>
-    <string name="TelegramFeatures">Funzioni di Telegram</string>
+        <string name="TelegramFeatures">Funzioni di Telegram</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTipsIT</string>
     <string name="AddAccount">Aggiungi account</string>
     <string name="SelectAccount">Seleziona Account</string>
@@ -658,11 +657,9 @@
     <string name="LowDiskSpaceMessage">Hai quasi esaurito lo spazio sul dispositivo. Per liberarlo, imposta Telegram per salvare nella cache solo i media recenti.</string>
     <string name="LowDiskSpaceMessage2">Il tuo dispositivo ha quasi esaurito lo spazio libero. Puoi usare le impostazioni della cache per rimuovere i media non necessari, e riscaricare i file se ne hai bisogno.</string>
     <string name="LowDiskSpaceButton">Gestisci la cache</string>
-    <string name="AutodownloadContacts">Contatti</string>
-    <string name="AutodownloadPrivateChats">Chat private</string>
+        <string name="AutodownloadPrivateChats">Chat private</string>
     <string name="AutodownloadGroupChats">Gruppi</string>
-    <string name="AutodownloadChannels">Canali</string>
-    <string name="AutodownloadSizeLimit">Limita per dimensione</string>
+        <string name="AutodownloadSizeLimit">Limita per dimensione</string>
     <string name="AutodownloadSizeLimitUpTo">fino a %1$s</string>
     <string name="Streaming">Streaming</string>
     <string name="EnableStreaming">Streaming file video e audio</string>
@@ -1537,4 +1534,7 @@
     <string name="RemindDayAt">\'Ricorda il\' d MMM \'alle\' HH:mm</string>
     <string name="RemindDayYearAt">\'Ricorda il\' d MMM yyyy \'alle\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
+    <string name="TelegramFaq">FAQ Telegram</string>
+    <string name="AutodownloadContacts">Contatti</string>
+    <string name="AutodownloadChannels">Canali</string>
 </resources>

@@ -247,6 +247,16 @@ public class TextCheckCell extends FrameLayout {
         setTextAndCheck(text, checked, divider, false);
     }
 
+    /**
+     * Совместимость с экраном функций DiveGram: там у ячейки есть вторая
+     * строка с пояснением. В этой сборке подписи нет, поэтому подзаголовок
+     * игнорируется — переносить всю подсистему subtitle ради одного экрана
+     * было бы рискованнее, чем потерять пояснения.
+     */
+    public void setTextAndCheckAndSubText(CharSequence text, CharSequence subText, boolean checked, boolean divider) {
+        setTextAndCheck(text, checked, divider);
+    }
+
     public void setTextAndCheck(CharSequence text, boolean checked, boolean divider, boolean isNekoCell) {
         AvatarSpan.checkSpansParent(text, this);
         textView.setText(text);

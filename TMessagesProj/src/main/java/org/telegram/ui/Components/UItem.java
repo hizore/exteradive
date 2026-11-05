@@ -48,6 +48,7 @@ public class UItem extends AdapterWithDiffUtils.Item implements Cloneable {
     public int spanCount = MAX_SPAN_COUNT;
     public int parentSpanCount;
 
+
     public boolean include;
     public long dialogId;
     public String chatType;

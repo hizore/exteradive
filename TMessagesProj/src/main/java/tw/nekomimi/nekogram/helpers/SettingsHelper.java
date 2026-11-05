@@ -131,6 +131,7 @@ public class SettingsHelper {
         NAGRAM_ROWS.put("MainTabsHideContacts", "navigation");
         NAGRAM_ROWS.put("MainTabsHideCallsSettings", "navigation");
         NAGRAM_ROWS.put("MainTabsHideProfile", "navigation");
+        NAGRAM_ROWS.put("AlwaysShowDownloadIcon", "navigation");
         NAGRAM_ROWS.put("DisableSystemAccount", "privacy");
         NAGRAM_ROWS.put("PerformanceClass", "powersaving");
         NAGRAM_ROWS.put("VideoPlayerDecoder", "chats");
@@ -143,7 +144,7 @@ public class SettingsHelper {
     }
 
     private static final Set<String> EXTERALESS_SCREENS = new HashSet<>(Arrays.asList(
-            "settings", "general", "appearance", "chats", "pillstack", "other",
+            "settings", "general", "appearance", "chats", "plugins", "pillstack", "other",
             "ayumoments", "navigation", "menus", "media", "hiding"));
 
     public static boolean isDeepLink(String path) {

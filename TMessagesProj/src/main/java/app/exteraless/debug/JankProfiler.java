@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+
 public final class JankProfiler {
 
     private static final long TRIGGER_NS = 8_000_000L;
@@ -675,6 +676,7 @@ public final class JankProfiler {
                     .append(" messages, ").append(entry.getValue().ns / 1_000_000).append(" ms\n");
         }
 
+
         appendTop(out, "top self frames (all code)", selfAll);
         appendTop(out, "top self frames (app code)", selfApp);
         appendTop(out, "top inclusive frames (app code)", inclusiveApp);
@@ -706,6 +708,7 @@ public final class JankProfiler {
         }
         return reportFile;
     }
+
 
     private static void appendFrameLine(StringBuilder out, String name, FrameStats stats) {
         out.append("  ").append(name).append(": frames ").append(stats.frames)

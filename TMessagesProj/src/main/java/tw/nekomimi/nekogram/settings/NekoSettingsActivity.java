@@ -36,7 +36,6 @@ import java.util.UUID;
 
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.AppRestartHelper;
-import tw.nekomimi.nekogram.helpers.CloudSettingsHelper;
 import tw.nekomimi.nekogram.helpers.PasscodeHelper;
 import tw.nekomimi.nekogram.helpers.SettingsBackupHelper;
 import tw.nekomimi.nekogram.utils.AlertUtil;
@@ -92,7 +91,6 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
 
         ActionBarMenu menu = actionBar.createMenu();
         menu.addItem(MENU_SEARCH, R.drawable.outline_header_search, resourcesProvider);
-        menu.addItem(MENU_SYNC, R.drawable.cloud_sync, resourcesProvider);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -101,8 +99,6 @@ public class NekoSettingsActivity extends BaseNekoSettingsActivity {
                     finishFragment();
                 } else if (id == MENU_SEARCH) {
                     showSettingsSearchDialog();
-                } else if (id == MENU_SYNC) {
-                    presentFragment(new app.exteraless.settings.OpenExteraCloudActivity());
                 }
             }
         });

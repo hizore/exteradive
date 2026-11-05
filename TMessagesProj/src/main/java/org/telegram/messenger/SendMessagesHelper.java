@@ -2476,7 +2476,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         newMsg.flags = TLRPC.MESSAGE_FLAG_FWD;
                     }
                     if (peer == myId && newMsg.fwd_from != null) {
-                        newMsg.fwd_from.saved_out = true;
                         newMsg.fwd_from.flags |= 16;
                         newMsg.fwd_from.saved_from_msg_id = msgObj.getId();
                         newMsg.fwd_from.saved_from_peer = msgObj.messageOwner.peer_id;
@@ -3608,7 +3607,17 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         if (fragment == null || fragment.getParentActivity() == null) {
             return 0;
         }
-        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
+        // exteradive (dive://emoji): премиум-эмодзи в правке уходят ссылкой,
+        // поэтому текст тоже меняется, а не только сущности.
+        if (entities != null && !entities.isEmpty() && message != null) {
+            CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                    currentAccount, messageObject.getDialogId(), message, entities);
+            if (diveText != message) {
+                message = diveText.toString();
+            }
+        } else {
+            app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, messageObject.getDialogId(), entities);
+        }
 
         final TLRPC.TL_messages_editMessage req;
         if (messageObject.isEphemeral()) {
@@ -3926,16 +3935,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         return waitingForVote.get(key);
     }
 
-    private void markReadOnInteraction(int messageId, TLRPC.InputPeer peer) {
-        // --- Ghost Mode ---
-        if (messageId != 0 && NekoConfig.markReadAfterSend.Bool() && !NekoConfig.sendReadMessagePackets.Bool()) {
-            if (!AyuGhostPreferences.getGhostModeReadExclusion(AyuGhostUtils.getDialogId(peer))) {
-                AyuGhostUtils.markReadOnServer(messageId, peer, false);
-            }
-        }
-        // --- Ghost Mode ---
-    }
-
     public int sendVote(final MessageObject messageObject, final ArrayList<TLRPC.PollAnswer> answers, final Runnable finishRunnable) {
         if (messageObject == null) {
             return 0;
@@ -3960,7 +3959,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             options = new byte[0];
         }
         waitingForVote.put(key, options);
-        markReadOnInteraction(req.msg_id, req.peer);
         return getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error == null) {
                 voteSendTime.put(messageObject.getPollId(), 0L);
@@ -4064,7 +4062,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             req.flags |= 2;
             req.big = true;
         }
-        markReadOnInteraction(req.msg_id, req.peer);
+        // --- Ghost Mode ---
+        if (req.msg_id != 0 && NekoConfig.markReadAfterSend.Bool() && !NekoConfig.sendReadMessagePackets.Bool()) {
+            if (!AyuGhostPreferences.getGhostModeReadExclusion(AyuGhostUtils.getDialogId(req.peer))) {
+                AyuGhostUtils.markReadOnServer(req.msg_id, req.peer, false);
+            }
+        }
+        // --- Ghost Mode ---
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
                 getMessagesController().processUpdates((TLRPC.Updates) response, false);
@@ -4498,10 +4502,32 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(SendMessageParams originalParams) {
+        // exteraless plugins: исходящее сообщение через on_send_message_hook (CANCEL = не отправлять)
         final SendMessageParams sendMessageParams = originalParams;
-        if (app.exteraless.privacy.BotAccountRouter.guardSend(currentAccount, sendMessageParams.peer, () -> sendMessage(sendMessageParams))) return;
         app.exteraless.chats.DeletedReplyQuote.rewrite(currentAccount, sendMessageParams);
-        app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        // exteradive (dive://emoji): если в тексте есть премиум-эмодзи, они
+        // заменяются ссылкой целиком, поэтому правим не только сущности,
+        // но и само тело сообщения. Обрабатываем message, caption и richMessage.
+        if (sendMessageParams.entities != null && !sendMessageParams.entities.isEmpty()) {
+            if (sendMessageParams.message != null) {
+                CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                        currentAccount, sendMessageParams.peer, sendMessageParams.message, sendMessageParams.entities);
+                if (diveText != sendMessageParams.message) {
+                    sendMessageParams.message = diveText.toString();
+                }
+            }
+            if (sendMessageParams.caption != null) {
+                CharSequence diveText = app.exteraless.chats.LinkedCustomEmoji.replaceTextForSend(
+                        currentAccount, sendMessageParams.peer, sendMessageParams.caption, sendMessageParams.entities);
+                if (diveText != sendMessageParams.caption) {
+                    sendMessageParams.caption = diveText.toString();
+                }
+            }
+        } else {
+            app.exteraless.chats.LinkedCustomEmoji.replaceForSend(currentAccount, sendMessageParams.peer, sendMessageParams.entities);
+        }
+        // exteradive: приватная маршрутизация сообщений ботов через отдельный аккаунт
+        if (app.exteraless.privacy.BotAccountRouter.guardSend(currentAccount, sendMessageParams.peer, () -> sendMessage(sendMessageParams))) return;
         final SendMessageChatArguments sendMessageChatArguments = sendMessageParams.sendMessageChatArguments != null ?
                 sendMessageParams.sendMessageChatArguments : SendMessageChatArguments.EMPTY;
         String message = sendMessageParams.message;
@@ -12224,10 +12250,6 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     @UiThread
     public static void prepareSendingVideo(AccountInstance accountInstance, String videoPath, VideoEditedInfo info, String coverPath, TLRPC.Photo coverPhoto, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, TL_stories.StoryItem storyItem, ChatActivity.ReplyQuote quote, ArrayList<TLRPC.MessageEntity> entities, int ttl, MessageObject editingMessageObject, boolean notify, int scheduleDate, int scheduleRepeatPeriod, boolean forceDocument, boolean hasMediaSpoilers, CharSequence caption, String quickReplyShortcut, int quickReplyShortcutId, long effectId, long stars) {
         prepareSendingVideo(accountInstance, videoPath, info, coverPath, coverPhoto, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, entities, ttl, editingMessageObject, notify, scheduleDate, scheduleRepeatPeriod, forceDocument, hasMediaSpoilers, caption, chatArguments(quickReplyShortcut, quickReplyShortcutId), effectId, stars);
-    }
-
-    public static void prepareSendingVideo(AccountInstance accountInstance, String videoPath, VideoEditedInfo info, String coverPath, TLRPC.Photo coverPhoto, long dialogId, MessageObject replyToMsg, MessageObject replyToTopMsg, TL_stories.StoryItem storyItem, ChatActivity.ReplyQuote quote, ArrayList<TLRPC.MessageEntity> entities, int ttl, MessageObject editingMessageObject, boolean notify, int scheduleDate, boolean forceDocument, boolean hasMediaSpoilers, CharSequence caption, String quickReplyShortcut, int quickReplyShortcutId, long effectId, long stars, long monoForumPeerId, MessageSuggestionParams suggestionParams) {
-        prepareSendingVideo(accountInstance, videoPath, info, coverPath, coverPhoto, dialogId, replyToMsg, replyToTopMsg, storyItem, quote, entities, ttl, editingMessageObject, notify, scheduleDate, 0, forceDocument, hasMediaSpoilers, caption, chatArguments(quickReplyShortcut, quickReplyShortcutId), effectId, stars, monoForumPeerId, suggestionParams);
     }
 
     @UiThread

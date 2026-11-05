@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">exteradive</string>
+    <string name="AppName">exteraless</string>
     <string name="AppNameBeta">Telegram Beta</string>
     <string name="LanguageName">English</string>
     <string name="English">English</string>
@@ -1989,8 +1989,7 @@
     <!--group info view-->
     <string name="GroupMembers">Members</string>
     <string name="SharedMedia">Shared Media</string>
-    <string name="SETTINGS">Settings</string>
-    <string name="AddSubscriber">Add subscriber</string>
+        <string name="AddSubscriber">Add subscriber</string>
     <string name="AddMember">Add Member</string>
     <string name="BanFromTheGroupNoCaps">Ban from the group</string>
     <string name="DeleteAndExit">Delete and leave group</string>
@@ -2480,8 +2479,7 @@
     <string name="AskAQuestionInfo">Please note that Telegram Support is done by volunteers. We try to respond as quickly as possible, but it may take a while.\n\nPlease take a look at the <![CDATA[<a href=\"https://telegram.org/faq#general-questions\">Telegram FAQ</a>]]>: it has answers to most questions and important tips for <![CDATA[<a href=\"https://telegram.org/faq#troubleshooting\">troubleshooting</a>]]>.</string>
     <string name="AskButton">Ask a volunteer</string>
     <string name="TelegramFAQ">Telegram FAQ</string>
-    <string name="TelegramFaq">Telegram FAQ</string>
-    <string name="TelegramFeatures">Telegram Features</string>
+        <string name="TelegramFeatures">Telegram Features</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTips</string>
     <string name="AddAccount">Add Account</string>
     <string name="SwitchAccountHint">"Long tap to switch accounts"</string>
@@ -2702,11 +2700,9 @@
     <string name="LowDiskSpaceMessage">Your device is almost out of disk space. To free some space, you can set up Telegram to cache only recent media.</string>
     <string name="LowDiskSpaceMessage2">Your device is almost out of disk space. You can use cache settings to remove unnecessary media — and re-download files if you need them again.</string>
     <string name="LowDiskSpaceButton">Manage Cache</string>
-    <string name="AutodownloadContacts">Contacts</string>
-    <string name="AutodownloadPrivateChats">Private Chats</string>
+        <string name="AutodownloadPrivateChats">Private Chats</string>
     <string name="AutodownloadGroupChats">Group Chats</string>
-    <string name="AutodownloadChannels">Channels</string>
-    <string name="AutodownloadSizeLimit">Limit by Size</string>
+        <string name="AutodownloadSizeLimit">Limit by Size</string>
     <string name="AutodownloadSizeLimitUpTo">up to %1$s</string>
     <string name="Streaming">Streaming</string>
     <string name="EnableStreaming">Stream Videos and Audio Files</string>
@@ -3723,6 +3719,11 @@
     <string name="SendingGif">Sending GIF...</string>
     <!--bot-->
     <string name="Bot">bot</string>
+    <string name="BotTypeAgent">Agent</string>
+    <string name="BotTypeGame">Game</string>
+    <string name="BotTypeApp">App</string>
+    <string name="BotTypeAI">AI</string>
+    <string name="BotTypeNonBinary">Non-binary</string>
     <string name="BotShare">Share</string>
     <string name="BotSettings">Settings</string>
     <string name="BotHelp">Help</string>
@@ -8382,7 +8383,6 @@
     <string name="StarsCountX">%s Stars</string>
     <string name="TonCountX">%s TON</string>
 
-
     <string name="StarsTOS">By proceeding and purchasing Stars, you agree with the **Terms and Conditions**.</string>
     <string name="StarsTOSLink">https://telegram.org/tos</string>
     <string name="StarsBalance">Balance</string>
@@ -11302,6 +11302,14 @@
     <string name="RoundVideoCompositionEnabled">Round video styling</string>
     <string name="RoundVideoCompositionInfo">Disable styling to record a plain square without outside-circle blur, dimming or Telegram overlays.</string>
 
+    <string name="AudioRecorderSettings">Voice Messages</string>
+    <string name="AudioRecorderGeneral">Recorder</string>
+    <string name="AudioRecorderUseNewRecorder">Use new recorder</string>
+    <string name="AudioRecorderNoiseSuppression">Noise suppression</string>
+    <string name="AudioRecorderNoiseSuppressionOff">Off</string>
+    <string name="AudioRecorderNoiseSuppressionRNNoise">RNNoise</string>
+    <string name="AudioRecorderGeneralInfo">RNNoise removes background noise may affect music or very quiet speech.</string>
+
     <!-- Wallet -->
     <string name="WalletUseDevicePasscode">Use device PIN or password</string>
     <string name="WalletTouchFingerprint">Touch the fingerprint sensor to unlock your wallet.</string>
@@ -11623,16 +11631,8 @@
     <string name="NoPaidMessagesTokenUsed">un1 used your QR code and can message you for free</string>
     <string name="NoPaidMessagesTokenUsedOut">You used the QR code of un1 and can message them for free</string>
     <string name="NoPaidMessagesTokenImported">You can now message **%1$s** for free.</string>
-    <string name="BotTypeAgent">Agent</string>
-    <string name="BotTypeGame">Game</string>
-    <string name="BotTypeApp">App</string>
-    <string name="BotTypeAI">AI</string>
-    <string name="BotTypeNonBinary">Non-binary</string>
-    <string name="AudioRecorderSettings">Voice Messages</string>
-    <string name="AudioRecorderGeneral">Recorder</string>
-    <string name="AudioRecorderUseNewRecorder">Use new recorder</string>
-    <string name="AudioRecorderNoiseSuppression">Noise suppression</string>
-    <string name="AudioRecorderNoiseSuppressionOff">Off</string>
-    <string name="AudioRecorderNoiseSuppressionRNNoise">RNNoise</string>
-    <string name="AudioRecorderGeneralInfo">RNNoise removes background noise may affect music or very quiet speech.</string>
+    <string name="SETTINGS">Settings</string>
+    <string name="TelegramFaq">Telegram FAQ</string>
+    <string name="AutodownloadContacts">Contacts</string>
+    <string name="AutodownloadChannels">Channels</string>
 </resources>

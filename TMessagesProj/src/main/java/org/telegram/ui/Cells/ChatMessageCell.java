@@ -1382,6 +1382,36 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private String currentPhotoFilter;
     private String currentPhotoFilterThumb;
     private Drawable foreverDrawable;
+    // exteradive: значок рядом с именем (DiveLite)
+    private Drawable dgNameBadgeDrawable;
+    private String dgNameBadgeDrawableId;
+    /** Границы значка рядом с именем отправителя - по ним ловим нажатие. */
+    private final android.graphics.Rect dgNameBadgeBounds = new android.graphics.Rect();
+    /** Нажатие началось прямо по значку, а не по имени. */
+    private boolean dgNameBadgePressed;
+    /** Размер значка в строке имени и отступы вокруг него. */
+    private static final int DG_MSG_BADGE_SIZE = 16;
+    private static final int DG_MSG_BADGE_GAP = 4;
+
+    /**
+     * exteradive: место, которое значок занимает в строке имени (с отступами).
+     * Считаем на лету, а не в layout: конфиг значков приходит из сети и может
+     * прийти уже после того, как ячейка собрана.
+     */
+    private int dgNameBadgeSpace() {
+        if (currentUser == null || !org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+            return 0;
+        }
+        return dp(DG_MSG_BADGE_GAP + DG_MSG_BADGE_SIZE + DG_MSG_BADGE_GAP);
+    }
+
+    /** На столько сдвигается тег (звёздочка премиума), чтобы значок был между ником и тегом. */
+    private int dgNameBadgeShift() {
+        if (currentUser == null || !org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+            return 0;
+        }
+        return dp(DG_MSG_BADGE_GAP + DG_MSG_BADGE_SIZE);
+    }
     private int foreverDrawableColor = 0xFFFFFFFF;
 
     private boolean timePressed;
@@ -1627,6 +1657,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private int substractBackgroundHeight;
     private boolean allowAssistant;
     public MessageDrawable currentBackgroundDrawable;
+    // exteradive: значок корзинки у сохранённых удалённых сообщений.
+    private android.graphics.drawable.Drawable deletedTrashDrawable;
     private MessageDrawable currentBackgroundSelectedDrawable;
     private int backgroundDrawableLeft;
     private int backgroundDrawableRight;
@@ -2336,16 +2368,32 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             nameLayoutPressed = false;
             return false;
         }
-        final boolean pressed = nameLayoutSelector.getBounds().contains((int) getEventX(event), (int) getEventY(event));
+        // exteradive: нажатие по самому значку (он нарисован правее имени, за
+        // пределами селектора) - открывает описание значка. Область нажатия
+        // чуть шире самого значка, чтобы по нему было легко попасть пальцем.
+        final boolean badgePressed = !dgNameBadgeBounds.isEmpty()
+                && getEventX(event) >= dgNameBadgeBounds.left - dp(2)
+                && getEventX(event) <= dgNameBadgeBounds.right + dp(6)
+                && getEventY(event) >= dgNameBadgeBounds.top - dp(6)
+                && getEventY(event) <= dgNameBadgeBounds.bottom + dp(6);
+        final boolean pressed = badgePressed || nameLayoutSelector.getBounds().contains((int) getEventX(event), (int) getEventY(event));
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             nameLayoutPressed = pressed;
+            dgNameBadgePressed = badgePressed;
             if (nameLayoutPressed) {
                 nameLayoutSelector.setHotspot((int) getEventX(event), (int) getEventY(event));
                 nameLayoutSelector.setState(pressedState);
             }
         } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             if (event.getAction() == MotionEvent.ACTION_UP && nameLayoutPressed) {
-                if (delegate != null) {
+                boolean badgeHandled = false;
+                if (dgNameBadgePressed && currentUser != null
+                        && org.telegram.messenger.DiveGramBadge.hasBadge(currentUser.id)) {
+                    // тап прямо по значку - показываем его описание
+                    org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), currentUser.id);
+                    badgeHandled = true;
+                }
+                if (!badgeHandled && delegate != null) {
                     if (viaOnly) {
                         if (currentViaBotUser != null && currentViaBotUser.bot_inline_placeholder == null) {
                             delegate.didPressViaBotNotInline(this, currentViaBotUser != null ? currentViaBotUser.id : 0);
@@ -2354,6 +2402,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             delegate.didPressViaBot(this, username != null ? username : currentMessageObject.messageOwner.via_bot_name);
                         }
                     } else if (currentUser != null) {
+                        // exteradive: тап по нику открывает профиль как обычно.
+                        // Описание значка - только если нажали прямо по значку,
+                        // его ловит dgNameBadgePressed выше.
                         delegate.didPressUserAvatar(this, currentUser, getEventX(event), getEventY(event), false);
                     } else if (currentChat != null) {
                         int id;
@@ -2374,6 +2425,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             }
             nameLayoutSelector.setState(StateSet.NOTHING);
             nameLayoutPressed = false;
+            dgNameBadgePressed = false;
         }
         return nameLayoutPressed;
     }
@@ -7054,6 +7106,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentMessageObject.richLayout.detach(this);
             }
             currentMessageObject = messageObject;
+            // exteradive: сохранённые удалённые сообщения. Помечаем объект как
+            // удалённый, но оставляем в чате - с корзинкой вместо исчезновения.
+            if (SharedConfig.saveDeletedMessages && currentMessageObject.messageOwner != null && !currentMessageObject.deleted) {
+                currentMessageObject.deleted = SharedConfig.isDeletedMessage(currentMessageObject.getDialogId(), currentMessageObject.getId());
+            }
             currentMessagesGroup = groupedMessages;
             wasAllChats = isAllChats;
             lastTime = -2;
@@ -7961,7 +8018,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
 
                 int maxChildWidth = backgroundWidth;
-                maxChildWidth = Math.max(maxChildWidth, nameWidth);
+                // exteradive: значок стоит между ником и тегом, поэтому пузырь
+                // должен быть шире на его ширину - иначе значок наедет на тег.
+                maxChildWidth = Math.max(maxChildWidth, nameWidth + dgNameBadgeSpace());
                 maxChildWidth = Math.max(maxChildWidth, sideNameWidth);
                 maxChildWidth = Math.max(maxChildWidth, forwardedNameWidth);
                 maxChildWidth = Math.max(maxChildWidth, replyNameWidth);
@@ -19440,6 +19499,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (drawNameAvatar) {
                 nameWidth -= dp(32.33f);
             }
+            // exteradive: место под значок между ником и тегом даёт расширение
+            // пузыря (maxChildWidth), сам ник укорачивать не нужно.
             if (drawTopic && topicButton != null) {
                 nameWidth -= topicButton.width + dp(8);
             }
@@ -20750,6 +20811,21 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     protected void onDraw(Canvas canvas) {
         drawInternal(canvas);
     }
+
+    @SuppressLint("WrongCall")
+    @Override
+    public void draw(Canvas canvas) {
+        // exteradive: сохранённые удалённые сообщения можно показывать бледными.
+        if (currentMessageObject != null && currentMessageObject.deleted && SharedConfig.saveDeletedMessages && SharedConfig.deletedMessagesOpacity < 100) {
+            int alpha = (int) (255 * SharedConfig.deletedMessagesOpacity / 100f);
+            canvas.saveLayerAlpha(0, 0, getMeasuredWidth(), getMeasuredHeight(), alpha, Canvas.ALL_SAVE_FLAG);
+            super.draw(canvas);
+            canvas.restore();
+        } else {
+            super.draw(canvas);
+        }
+    }
+
     @SuppressLint("WrongCall")
     public void drawInternal(Canvas canvas) {
         if (currentMessageObject == null) {
@@ -20943,7 +21019,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             drawOverlays(canvas);
         }
         if ((drawTime || !mediaBackground) && !forceNotDrawTime && !transitionParams.animateBackgroundBoundsInner && !(enterTransitionInProgress && !currentMessageObject.isVoice()) && (!currentMessageObject.isQuickReply() || currentMessageObject.isSendError())) {
-            drawTime(canvas, 1f, false);
+            // exteradive: у сохранённого удалённого сообщения время не рисуется,
+            // вместо него показывается корзинка.
+            if (!(currentMessageObject.deleted && SharedConfig.saveDeletedMessages)) {
+                drawTime(canvas, 1f, false);
+            }
+        }
+        if (currentMessageObject.deleted && SharedConfig.saveDeletedMessages) {
+            drawDeletedTrashIcon(canvas);
         }
 
         if ((controlsAlpha != 1.0f || timeAlpha != 1.0f) && currentMessageObject.type != MessageObject.TYPE_ROUND_VIDEO) {
@@ -21004,6 +21087,25 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (ayuDeleted && !bubbleAyuDeleted() && shouldShowAyuDeletedMark(currentMessageObject)) {
             drawGroupItemDeletedBadge(canvas);
         }
+    }
+
+    /** exteradive: значок корзинки у сохранённого удалённого сообщения. */
+    private void drawDeletedTrashIcon(Canvas canvas) {
+        if (currentMessageObject == null || currentBackgroundDrawable == null) {
+            return;
+        }
+        if (deletedTrashDrawable == null) {
+            deletedTrashDrawable = getResources().getDrawable(R.drawable.msg_delete_filled).mutate();
+        }
+        int size = dp(16);
+        android.graphics.Rect bounds = currentBackgroundDrawable.getBounds();
+        int x = bounds.right - dp(8) - size;
+        int y = bounds.bottom - dp(4) - size;
+        deletedTrashDrawable.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFFFF3B30, android.graphics.PorterDuff.Mode.SRC_IN));
+        deletedTrashDrawable.setBounds(x, y, x + size, y + size);
+        deletedTrashDrawable.setAlpha((int) (255 * getAlpha()));
+        deletedTrashDrawable.draw(canvas);
+        deletedTrashDrawable.setAlpha(255);
     }
 
     public void drawBackgroundInternal(Canvas canvas, boolean fromParent) {
@@ -21975,10 +22077,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentNameEmojiStatusDrawable.draw(canvas);
             }
             if (currentNameStatusDrawable != null) {
+                // exteradive: если у отправителя есть значок, он стоит между ником
+                // и тегом - сдвигаем тег вправо, чтобы они не наезжали друг на друга.
+                int dgStatusShift = dgNameBadgeShift();
                 currentNameStatusDrawable.setBounds(
-                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(2)),
+                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(2) + dgStatusShift),
                     (int) (ny + nameLayout.getHeight() / 2 - dp(10)),
-                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(22)),
+                    (int) (Math.abs(nx) + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(22) + dgStatusShift),
                     (int) (ny + nameLayout.getHeight() / 2 + dp(10))
                 );
                 currentNameStatusDrawable.setColor(ColorUtils.setAlphaComponent(color, 115));
@@ -22977,10 +23082,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     //star has smaller size than other emoji
                     float starVerticalOffset = isStarDrawable ? 1.5f : 0f;
                     float starHorizontalOffset = isStarDrawable ? -5 : 0;
+                    // exteradive: значок занимает первые ~20dp после имени,
+                    // поэтому статус (звезда, премиум) сдвигаем за него.
+                    int dgStatusShift = dgNameBadgeShift();
                     nameStatusSelector.setBounds(
-                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth)),
+                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dgStatusShift),
                         (int) (ny - dp(1.33f + 2 - starVerticalOffset)),
-                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dp(4 + 12 + 4 + 4 + starHorizontalOffset)),
+                        (int) (nx + nameOffsetX + (viaNameWidth > 0 ? viaNameWidth - dp(4 + 28) : nameLayoutWidth) + dgStatusShift + dp(4 + 12 + 4 + 4 + starHorizontalOffset)),
                         (int) (ny + nameLayout.getHeight() + dp(1.33f + 2 - starVerticalOffset))
                     );
                     nameStatusSelector.setAlpha((int) (0xFF * nameAlpha));
@@ -22994,6 +23102,46 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             nameLayout.draw(canvas);
             Theme.chat_namePaint.setAlpha(oldAlpha);
             canvas.restore();
+
+            // exteradive: значок рядом с именем отправителя (функция DiveLite).
+            // В чате "Избранное" отправитель - это сам пользователь, значка там нет.
+            final boolean dgSavedMessages = currentMessageObject != null && currentUser != null
+                    && currentUser.id == org.telegram.messenger.UserConfig.getInstance(currentAccount).getClientUserId()
+                    && currentMessageObject.getDialogId() == currentUser.id;
+            org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = !dgSavedMessages && currentUser != null
+                    ? org.telegram.messenger.DiveGramBadge.getBadge(currentUser.id) : null;
+            if (dgBadgeObj != null && nameLayout != null) {
+                if (dgNameBadgeDrawable == null || !java.util.Objects.equals(dgNameBadgeDrawableId, dgBadgeObj.id)) {
+                    if (dgNameBadgeDrawable != null) {
+                        dgNameBadgeDrawable.setCallback(null);
+                    }
+                    dgNameBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                            dgBadgeObj, Theme.getColor(Theme.key_windowBackgroundWhiteBlueText), dp(20), dp(36));
+                    dgNameBadgeDrawable.setCallback(this);
+                    dgNameBadgeDrawableId = dgBadgeObj.id;
+                }
+                int bs = dp(DG_MSG_BADGE_SIZE);
+                int bcy = (int) (ny + nameLayout.getHeight() / 2);
+                float badgeOffsetX = dp(DG_MSG_BADGE_GAP);
+                int dgBadgeLeft = (int) (Math.abs(nx) + nameLayoutWidth + badgeOffsetX);
+                dgNameBadgeDrawable.setBounds(
+                        dgBadgeLeft,
+                        bcy - bs / 2,
+                        dgBadgeLeft + bs,
+                        bcy + bs / 2
+                );
+                // запоминаем, где значок нарисован - по этим границам ловим тап
+                dgNameBadgeBounds.set(dgNameBadgeDrawable.getBounds());
+                dgNameBadgeDrawable.setAlpha((int) (255 * nameAlpha));
+                dgNameBadgeDrawable.draw(canvas);
+                // invalidate() не нужен: AnimatedBadgeDrawable.draw() сам вызывает
+                // invalidateSelf(), а callback у него выставлен на этот cell.
+            } else if (dgNameBadgeDrawable != null) {
+                dgNameBadgeDrawable.setCallback(null);
+                dgNameBadgeDrawable = null;
+                dgNameBadgeDrawableId = null;
+                dgNameBadgeBounds.setEmpty();
+            }
 
             float end;
             if (currentMessagesGroup != null && !currentMessagesGroup.isDocuments) {

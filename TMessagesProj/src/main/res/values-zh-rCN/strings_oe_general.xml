@@ -52,7 +52,7 @@
     <string name="OEGeneralImportEtgDone">已导入设置：%1$d 项</string>
     <string name="OEGeneralResetSettings">重置设置</string>
     <string name="OEGeneralResetSettingsInfo">所有设置都将恢复为默认值，应用将重新启动。</string>
-    <string name="OEGeneralResetSettingsDone">exteradive 设置已重置。</string>
+    <string name="OEGeneralResetSettingsDone">exteraless 设置已重置。</string>
     <string name="OEGeneralDeleteAccount">删除账号</string>
     <string name="DeepLFormalityDefault">语气：随原文</string>
     <string name="DeepLFormalityInformal">语气：非正式</string>
@@ -64,15 +64,6 @@
     <string name="OEGeneralAyuMomentsDisableAll">关闭所有 AyuMoments 功能</string>
     <string name="OELastActivityFormatted">最后活跃于 %1$s</string>
     <string name="OELastActivityDateFormatted">最后活跃于 %1$s</string>
-    <string name="OEGeneralLastFm">Last.fm</string>
-    <string name="OEGeneralLastFmHint">用户名</string>
-    <string name="OEGeneralLastFmNotSet">未设置</string>
-    <string name="OEGeneralLastFmApplied">资料音乐已更新</string>
-    <string name="OEGeneralLastFmNoMusic">请先设置资料音乐</string>
-    <string name="OEGeneralLastFmFailed">无法更新资料音乐</string>
-    <string name="OEGeneralLastFmNoFile">无法下载该曲目</string>
-    <string name="OEGeneralLastFmNoUpload">上传超时</string>
-    <string name="OEGeneralLastFmAbout">此功能基于资料音乐实现：它会把你的 Last.fm 用户名以隐藏字节写入你最新的资料曲目中。设置用户名后，该曲目会带着改动重新上传。\n\n关闭此功能后，曲目会恢复原样。</string>
     <string name="OEGeneralNotificationsHeader">通知</string>
     <string name="OEGeneralPushStatus">推送状态</string>
     <string name="OEGeneralPushStatusBlocked">被系统阻止</string>
@@ -94,7 +85,7 @@
     <string name="OEGeneralMapProvider">地图提供方</string>
     <string name="OEGeneralMapPreview">位置预览</string>
     <string name="OEGeneralMapDriftingFix">修正地图偏移</string>
-    <string name="OECrashTitle">exteradive 已崩溃</string>
+    <string name="OECrashTitle">exteraless 已崩溃</string>
     <string name="OEGeneralNetworkHeader">网络</string>
     <string name="OEPrivacyFalseBottom">私密空间</string>
     <string name="OEPrivacyFalseBottomShowIn">在“%1$s”中显示</string>
@@ -129,7 +120,7 @@
     <string name="OEAyuSaveInArchivedInfo">也会保存已归档聊天中被删除和编辑的消息。</string>
     <string name="OEAyuDatabaseExport">导出数据库</string>
     <string name="OEAyuDatabaseImport">导入数据库</string>
-    <string name="OEAyuDatabaseImportInfo">此文件中被删除和编辑的消息将添加到已保存的消息中。支持 exteradive 和 AyuGram 的导出文件。来自其他应用的媒体可能无法打开。</string>
+    <string name="OEAyuDatabaseImportInfo">此文件中被删除和编辑的消息将添加到已保存的消息中。支持 exteraless 和 AyuGram 的导出文件。来自其他应用的媒体可能无法打开。</string>
     <string name="OEAyuDatabaseImportDone">已添加消息：%1$d</string>
     <string name="OEAyuDatabaseImportFailed">无法导入此文件</string>
     <string name="OEAyuRegexReversed">反向</string>
@@ -149,35 +140,7 @@
     <string name="OEUpdaterChannelStableInfo">每 6 小时检查 GitHub 上的新版本。</string>
     <string name="OEUpdaterChannelBetaInfo">还会提供 GitHub 上的预发布版本。</string>
     <string name="OEUpdaterAllReleases">GitHub 上的所有版本</string>
-<string name="OEDiveHeader">DiveLite</string>
-    <string name="OEDiveBadges">徽章</string>
-    <string name="OEDiveStreaks">连续签到</string>
-    <string name="OEDiveNfts">NFT 礼物</string>
-    <string name="OEDiveInfo">徽章、连续签到和 NFT 礼物来自 DiveLite。关闭开关即可在所有位置隐藏。</string>
-    <string name="OEDiveTitle">DiveLite 功能</string>
-    <string name="TypingInChat">正在 %s 中输入</string>
-    <string name="OEDiveTypingInfo">仅对与你共同参与某个聊天的人有效：Telegram 会发送你参与的聊天的输入状态。</string>
-    <string name="OEDiveTypingHeader">正在输入</string>
-    <string name="OEDiveShowTypingLocation">显示对方在哪个聊天中输入</string>
-    <string name="OEDiveMediaInfo">蓝牙编解码器和语音录制质量。</string>
-    <string name="OEDiveMediaHeader">媒体</string>
-    <string name="OEDivePrivacyHeader">隐私</string>
-    <string name="OEDivePlayerBitrate">显示音频比特率</string>
-    <string name="OEDiveMentionAll">提及所有人 (@all)</string>
-    <string name="OEAutoReplyInfo">反垃圾邮件：同一人每个间隔最多一条自动回复，每小时总共不超过20条。</string>
-    <string name="OEDiveOff">关</string>
-    <string name="OEDiveOn">开</string>
-    <string name="OEDiveVoiceBitrateTitle">语音录制质量</string>
-    <string name="OEDiveAutoReplyTitle">自动回复</string>
-    <string name="OEAutoReplyCooldownTitle">回复间隔</string>
-    <string name="OEAutoReplyTitle">自动回复</string>
-    <string name="OEDiveAudioCodecTitle">音频编解码器</string>
-    <string name="OEAutoReplyEnable">启用自动回复</string>
-    <string name="OEAutoReplyTextTitle">回复文本</string>
-    <string name="OEAutoReplyTextHint">输入回复文本…</string>
-    <string name="OEDivePrivacyInfo">您的号码在 设置 &gt; 账户 中显示为 +79*******11。</string>
-    <string name="OEDiveMentionAllSplit">分段发送提及</string>
-    <string name="OEDiveAnimationsHeader">动画</string>
-    <string name="OEDiveDisableAnimations">关闭动画</string>
-    <string name="OEDiveAnimationsInfo">关闭整个应用的动画。在音乐播放器中，波浪形进度条会变为平直，歌词也会一次性完全点亮。</string>
-</resources>
+    <string name="OELiteFollowSystemSaver">跟随系统省电模式</string>
+    <string name="OELiteFollowSystemSaverInfo">开启系统省电模式时，自动开启省电模式。</string>
+
+                                                                                                                                                                </resources>

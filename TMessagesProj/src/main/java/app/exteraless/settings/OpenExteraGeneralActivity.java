@@ -69,7 +69,9 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private static final int TYPE_SLIDE = 100;
     private static final int PUSH_SERVICE_IN_APP = 0;
+    private static final int PUSH_SERVICE_FCM = 1;
     private static final int PUSH_SERVICE_UNIFIED = 2;
+    private static final int PUSH_SERVICE_MICROG = 3;
 
     /** Проверяется имя папки, а не путь. */
     private static final Pattern SAVE_PATH_PATTERN = Pattern.compile("^(?!\\.{1,2}$)[A-Za-z0-9._ -]{1,255}$");
@@ -233,6 +235,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         pushStatusRow = addRow("pushStatus");
         batteryOptimizationRow = addRow("batteryOptimization");
         glyphRow = Build.MANUFACTURER.equalsIgnoreCase("Nothing") ? addRow("glyph") : -1;
+        // exteradive: функции, перенесённые из DiveLite
         notificationsDividerRow = addRow();
     }
 
@@ -337,7 +340,6 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             presentFragment(new OpenExteraGlyphActivity());
             return;
         }
-
         if (position == pushStatusRow) {
             copyPushStatus();
             return;
@@ -690,11 +692,14 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private CharSequence[] pushServiceTypeOptions() {
         return new CharSequence[]{
-                getString(R.string.PushServiceTypeInApp),
                 getString(R.string.PushServiceTypeFCM),
-                getString(R.string.PushServiceTypeUnified),
                 getString(R.string.PushServiceTypeMicroG)};
     }
+
+    // Соответствие индекса пункта в диалоге к внутреннему типу сервиса.
+    private static final int[] PUSH_SERVICE_TYPE_VALUES = {
+            PUSH_SERVICE_FCM,
+            PUSH_SERVICE_MICROG};
 
     private void showPushServiceTypeSelector() {
         if (getParentActivity() == null) {
@@ -703,12 +708,14 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle(getString(R.string.PushServiceType));
         builder.setItems(pushServiceTypeOptions(), (dialog, which) -> {
-            if (NaConfig.INSTANCE.getPushServiceType().Int() == which) {
+            final int type = PUSH_SERVICE_TYPE_VALUES[which];
+            if (NaConfig.INSTANCE.getPushServiceType().Int() == type) {
                 return;
             }
-            NaConfig.INSTANCE.getPushServiceType().setConfigInt(which);
+            NaConfig.INSTANCE.getPushServiceType().setConfigInt(type);
             PushListenerController.reconcilePushRegistration();
-            if (which == PUSH_SERVICE_IN_APP) {
+            ApplicationLoader.reinitializePushServices();
+            if (type == PUSH_SERVICE_IN_APP) {
                 AndroidUtil.setPushService(false);
             } else {
                 NaConfig.INSTANCE.getPushServiceTypeInAppDialog().setConfigBool(false);
@@ -820,7 +827,7 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
 
     private String formatPushStatus() {
         final int type = NaConfig.INSTANCE.getPushServiceType().Int();
-        final String name = type == 0 ? "In-App" : type == 2 ? "UnifiedPush" : "FCM";
+        final String name = type == PUSH_SERVICE_FCM ? "FCM" : "microG";
         if (!osNotificationsEnabled()) {
             return name + " \u00b7 " + getString(R.string.OEGeneralPushStatusBlocked);
         }
@@ -843,11 +850,18 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
         text.append("push type: ").append(NaConfig.INSTANCE.getPushServiceType().Int()).append('\n');
         text.append("token: ").append(hasToken
                 ? SharedConfig.pushString.length() + " chars" : "none").append('\n');
-        if (!hasToken) {
-            text.append("token status: ").append(SharedConfig.pushStringStatus).append('\n');
-            if (GooglePushListenerServiceProvider.lastError != null) {
-                text.append("token error: ").append(GooglePushListenerServiceProvider.lastError).append('\n');
-            }
+        // exteradive: токен FCM привязан к проекту-отправителю. Telegram
+        // рассылает пуши только из своего проекта (tmessages2, 760348033671) -
+        // токен от чужого проекта сервер не принимает и доставить не может.
+        if (hasToken && SharedConfig.pushString.startsWith("1:")
+                && SharedConfig.pushString.indexOf(':', 2) > 2) {
+            text.append("token sender: ").append(SharedConfig.pushString, 2,
+                    SharedConfig.pushString.indexOf(':', 2)).append('\n');
+        }
+        text.append("token status: ").append(SharedConfig.pushStringStatus).append('\n');
+        // exteradive: показываем всегда - причина неудачи важна даже со старым токеном
+        if (GooglePushListenerServiceProvider.lastError != null) {
+            text.append("token error: ").append(GooglePushListenerServiceProvider.lastError).append('\n');
         }
         text.append("token fetch ms: ").append(
                 SharedConfig.pushStringGetTimeEnd - SharedConfig.pushStringGetTimeStart).append('\n');
@@ -856,6 +870,12 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
             if (config.getClientUserId() != 0) {
                 text.append("account ").append(a).append(" registered: ")
                         .append(config.registeredForPush).append('\n');
+                // exteradive: сохранённый ответ сервера на registerDevice.
+                android.content.SharedPreferences gs = MessagesController.getGlobalMainSettings();
+                String registerResult = gs.getString("PushRegisterResult" + a, null);
+                long registerTime = gs.getLong("PushRegisterResultTime" + a, 0);
+                text.append("account ").append(a).append(" register resp: ").append(registerResult == null
+                        ? "none" : registerResult + " at " + LocaleController.formatDateTime(registerTime / 1000L, true)).append('\n');
             }
         }
         text.append("last push: ").append(SharedConfig.pushLastReceivedTime <= 0 ? "never"
@@ -1073,8 +1093,10 @@ public class OpenExteraGeneralActivity extends BaseNekoSettingsActivity {
                     } else if (position == pushServiceTypeRow) {
                         CharSequence[] options = pushServiceTypeOptions();
                         int type = NaConfig.INSTANCE.getPushServiceType().Int();
+                        int idx = (type == PUSH_SERVICE_FCM)
+                                ? 0 : (type == PUSH_SERVICE_MICROG ? 1 : 0);
                         cell.setTextAndValue(getString(R.string.PushServiceType),
-                                options[type < 0 || type >= options.length ? 0 : type], true);
+                                options[idx], true);
                     } else if (position == pushGatewayRow) {
                         String gateway = NaConfig.INSTANCE.getPushServiceTypeUnifiedGateway().String();
                         cell.setTextAndValue(getString(R.string.PushServiceTypeUnifiedGateway),

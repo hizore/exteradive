@@ -438,8 +438,12 @@ public class ConnectionsManager extends BaseController {
         final var onComplete = interceptResult.effectiveOnComplete();
         // --- Ghost Mode ---
 
+        // --- exteraless plugins: pre_request_hook (CANCEL = запрос не уходит) ---
+        TLObject pluginRequest = object;
+        // --- exteraless plugins ---
+
         try {
-            final TLObject normalizedObject = FeedRequestNormalizer.normalize(currentAccount, object);
+            final TLObject normalizedObject = FeedRequestNormalizer.normalize(currentAccount, pluginRequest);
             NativeByteBuffer buffer = new NativeByteBuffer(normalizedObject.getObjectSize());
             normalizedObject.serializeToStream(buffer);
             normalizedObject.freeResources();
@@ -504,7 +508,8 @@ public class ConnectionsManager extends BaseController {
                     final TLObject finalResponse = resp;
                     final TLRPC.TL_error finalError = error;
                     Utilities.stageQueue.postRunnable(() -> {
-                        final TLObject pluginResponse = finalResponse;
+                        TLObject pluginResponse = finalResponse;
+                        // exteraless plugins: post_request_hook
                         if (onComplete != null) {
                             onComplete.run(pluginResponse, finalError);
                         } else if (onCompleteTimestamp != null) {

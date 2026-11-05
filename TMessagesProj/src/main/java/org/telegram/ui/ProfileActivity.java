@@ -413,6 +413,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private Drawable lockIconDrawable;
     private final Drawable[] verifiedDrawable = new Drawable[2];
     private final Drawable[] premiumStarDrawable = new Drawable[2];
+    // exteradive (DiveGram): кэш значка и огонька серии для профиля
+    private Drawable dgBadgeDrawable;
+    private String dgBadgeDrawableId;
+    private org.telegram.messenger.DiveGramStreak.FireDrawable dgStreakDrawable;
     private Long emojiStatusGiftId;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] emojiStatusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[] botVerificationDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable[2];
@@ -503,6 +507,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ActionBarMenuItem videoCallItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem otherItem;
+    // exteraless plugins: подменю PROFILE_ACTION_MENU в меню «⋮».
     private ActionBarMenuItem searchItem;
     private ActionBarMenuSubItem editColorItem;
     private ActionBarMenuSubItem linkItem;
@@ -2222,6 +2227,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             getNotificationCenter().addObserver(this, NotificationCenter.botInfoDidLoad);
             getNotificationCenter().addObserver(this, NotificationCenter.userInfoDidLoad);
             getNotificationCenter().addObserver(this, NotificationCenter.privacyRulesUpdated);
+            // exteradive (DiveGram): значки приезжают из сети - обновляем шапку
+            getNotificationCenter().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.DiveGramBadgesChanged);
             NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.reloadInterface);
 
             userBlocked = getMessagesController().blockePeers.indexOfKey(userId) >= 0;
@@ -9442,11 +9450,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @SuppressWarnings("unchecked")
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
-        if (id == NotificationCenter.pluginMenuItemsUpdated) {
-            return;
-        }
         if (id == NotificationCenter.uploadStoryEnd || id == NotificationCenter.chatWasBoostedByUser) {
             checkCanSendStoryForPosting();
+        } else if (id == NotificationCenter.DiveGramBadgesChanged) {
+            // exteradive (DiveGram): значок в шапке профиля - обновляем данные
+            if (!isPaused()) {
+                updateProfileData(false);
+            }
         } else if (id == NotificationCenter.updateInterfaces) {
             int mask = (Integer) args[0];
             if (isPaused()) {
@@ -10893,7 +10903,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         return chatId != 0;
     }
 
-    private void updateRowsIds() {
+    public void updateRowsIds() {
         updateNotifications(false);
 
         boolean hasJoinRow = false;
@@ -11167,7 +11177,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     debugHeaderRow = rowCount++;
                 }
                 if (BuildVars.LOGS_ENABLED) {
-                    sendLogsRow = rowCount++;
+                    sendLogsRow = -1; rowCount++;
                     sendLastLogsRow = -1;
                     // disable send last logs
                     clearLogsRow = rowCount++;
@@ -12041,7 +12051,36 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (a == 0 && !copyFromChatActivity) {
                     BadgeDTO userBadge = BadgesController.INSTANCE.getBadge(user);
                     nameTextView[a].setRightDrawable2OnClick(null);
-                    if (user.scam || user.fake) {
+                    // exteradive (DiveLite): DiveGram badge - show at top priority
+                    org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = org.telegram.messenger.DiveGramBadge.getBadge(user.id);
+                    org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(user.id, currentAccount);
+                    boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
+                    
+                    if (dgBadgeObj != null) {
+                        if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
+                            if (dgBadgeDrawable != null) {
+                                dgBadgeDrawable.setCallback(null);
+                            }
+                            dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                                    dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(40));
+                            dgBadgeDrawableId = dgBadgeObj.id;
+                        }
+                        nameTextView[a].setRightDrawable2(dgBadgeDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                        nameTextViewRightDrawable2ContentDescription = dgStreakVisible
+                                ? dgBadgeObj.title + " | " + dgStreakInfo.days + " дн."
+                                : dgBadgeObj.title;
+                    } else if (dgStreakVisible) {
+                        if (dgStreakDrawable == null) {
+                            dgStreakDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                        }
+                        dgStreakDrawable.setColor(dgStreakInfo.pending
+                                ? org.telegram.messenger.DiveGramStreak.getGrayColor()
+                                : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days));
+                        nameTextView[a].setRightDrawable2(dgStreakDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(null);
+                        nameTextViewRightDrawable2ContentDescription = dgStreakInfo.days + " дн. серии";
+                    } else if (user.scam || user.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
                         nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.ScamMessage);
                     } else if (user.verified) {
@@ -12082,7 +12121,36 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else if (a == 1) {
                     BadgeDTO userBadge = BadgesController.INSTANCE.getBadge(user);
                     nameTextView[a].setRightDrawable2OnClick(null);
-                    if (user.scam || user.fake) {
+                    // exteradive (DiveGram): бейдж и огонёк серии в профиле
+                    org.telegram.messenger.DiveGramBadge.Badge dgBadgeObj = org.telegram.messenger.DiveGramBadge.getBadge(user.id);
+                    org.telegram.messenger.DiveGramStreak.StreakInfo dgStreakInfo = org.telegram.messenger.DiveGramStreak.getStreak(user.id, currentAccount);
+                    boolean dgStreakVisible = dgStreakInfo != null && dgStreakInfo.days >= org.telegram.messenger.DiveGramStreak.getThreshold();
+
+                    if (dgBadgeObj != null) {
+                        if (dgBadgeDrawable == null || !java.util.Objects.equals(dgBadgeDrawableId, dgBadgeObj.id)) {
+                            if (dgBadgeDrawable != null) {
+                                dgBadgeDrawable.setCallback(null);
+                            }
+                            dgBadgeDrawable = org.telegram.messenger.DiveGramBadge.createAnimatedDiveGramBadge(
+                                    dgBadgeObj, Theme.getColor(Theme.key_profile_title, resourcesProvider), AndroidUtilities.dp(18), AndroidUtilities.dp(40));
+                            dgBadgeDrawableId = dgBadgeObj.id;
+                        }
+                        nameTextView[a].setRightDrawable2(dgBadgeDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(v -> org.telegram.messenger.DiveGramBadge.showBadgeInfo(getContext(), user.id));
+                        nameTextViewRightDrawable2ContentDescription = dgStreakVisible
+                                ? dgBadgeObj.title + " | " + dgStreakInfo.days + " дн."
+                                : dgBadgeObj.title;
+                    } else if (dgStreakVisible) {
+                        if (dgStreakDrawable == null) {
+                            dgStreakDrawable = new org.telegram.messenger.DiveGramStreak.FireDrawable();
+                        }
+                        dgStreakDrawable.setColor(dgStreakInfo.pending
+                                ? org.telegram.messenger.DiveGramStreak.getGrayColor()
+                                : org.telegram.messenger.DiveGramStreak.getFireColor(dgStreakInfo.days));
+                        nameTextView[a].setRightDrawable2(dgStreakDrawable);
+                        nameTextView[a].setRightDrawable2OnClick(null);
+                        nameTextViewRightDrawable2ContentDescription = dgStreakInfo.days + " дн. серии";
+                    } else if (user.scam || user.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
                     } else if (user.verified) {
                         nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
@@ -13037,8 +13105,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             actionsView.commitActions();
         }
 
-        // exteraless plugins: подменю PROFILE_ACTION_MENU в конце меню «⋮».
-        // В форке плагинов больше нет — подменю больше не подключается.
+
         if (!mediaHeaderVisible) {
             if (callItemVisible) {
                 if (callItem.getVisibility() != View.VISIBLE) {

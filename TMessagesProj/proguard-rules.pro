@@ -223,3 +223,8 @@
 -keep class * extends com.sun.jna.Structure { *; }
 -dontwarn java.awt.**
 -dontwarn com.sun.jna.**
+
+-keep class org.telegram.ui.Wallet.WalletPluginFreeze {
+    static boolean frozen;
+    static int bridgeState();
+}

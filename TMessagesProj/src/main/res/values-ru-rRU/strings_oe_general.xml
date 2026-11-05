@@ -24,7 +24,6 @@
     <string name="OEGeneralFilterZalgo">Фильтровать «Zalgo»</string>
     <string name="OEGeneralFilterZalgoInfo">Убирает комбинируемые символы, ломающие вёрстку текста: Z̷͍͌ā̸̜l̸̞̂g̷͍̝o̶̩̓ превращается в Zalgo.</string>
 
-
     <!-- Download Speed Boost -->
     <string name="OEGeneralSpeedHeader">Ускорение загрузки</string>
     <string name="OEGeneralNetworkSpeedHeader">Сеть и загрузка</string>
@@ -67,7 +66,7 @@
     <string name="OEGeneralImportEtgDone">Импортировано настроек: %1$d</string>
     <string name="OEGeneralResetSettings">Сброс настроек</string>
     <string name="OEGeneralResetSettingsInfo">Все настройки вернутся к значениям по умолчанию, приложение перезапустится.</string>
-    <string name="OEGeneralResetSettingsDone">Настройки exteradive сброшены.</string>
+    <string name="OEGeneralResetSettingsDone">Настройки exteraless сброшены.</string>
     <string name="OEGeneralDeleteAccount">Удалить аккаунт</string>
     <string name="DeepLFormalityDefault">Тон: как есть</string>
     <string name="DeepLFormalityInformal">Тон: неформальный</string>
@@ -81,15 +80,6 @@
     <string name="OELastActivityFormatted">последняя активность %1$s</string>
     <string name="OELastActivityDateFormatted">последняя активность %1$s</string>
     <string name="OEBottomNavigationModeFloating">Плавающая</string>
-    <string name="OEGeneralLastFm">Last.fm</string>
-    <string name="OEGeneralLastFmHint">имя пользователя</string>
-    <string name="OEGeneralLastFmNotSet">Не задано</string>
-    <string name="OEGeneralLastFmApplied">Музыка профиля обновлена</string>
-    <string name="OEGeneralLastFmNoMusic">Сначала выберите музыку профиля</string>
-    <string name="OEGeneralLastFmFailed">Не удалось обновить музыку профиля</string>
-    <string name="OEGeneralLastFmNoFile">Не удалось скачать трек</string>
-    <string name="OEGeneralLastFmNoUpload">Не дождались загрузки</string>
-    <string name="OEGeneralLastFmAbout">Эта функция работает на основе треков в профиле, добавляя в последний трек скрытые байты содержащие ваш ник на Last.fm. После добавления юзернейма последний трек в профиле будет перезалит с этим изменением.\n\nПосле отключения этой функции трек будет возвращен до изначального состояния.</string>
     <string name="OEGeneralNotificationsHeader">Уведомления</string>
     <string name="OEGeneralPushStatus">Состояние пушей</string>
     <string name="OEGeneralPushStatusBlocked">заблокированы системой</string>
@@ -111,7 +101,7 @@
     <string name="OEGeneralMapProvider">Провайдер карт</string>
     <string name="OEGeneralMapPreview">Превью локаций</string>
     <string name="OEGeneralMapDriftingFix">Исправлять смещение карты</string>
-    <string name="OECrashTitle">exteradive аварийно завершился</string>
+    <string name="OECrashTitle">exteraless аварийно завершился</string>
     <string name="OEGeneralNetworkHeader">Сеть</string>
     <string name="OEPrivacyFalseBottom">Двойное дно</string>
     <string name="OEPrivacyFalseBottomShowIn">Показывать в разделе «%1$s»</string>
@@ -126,7 +116,7 @@
     <string name="CloudConfigIncludeApiKeysDesc">Ключи API сервисов ИИ и перевода тоже попадут в облако.</string>
     <string name="OECloudTitle">Облако</string>
     <string name="OECloudHeroTitle">Настройки в облаке</string>
-    <string name="OECloudHeroText">Храните настройки exteradive в Telegram и восстанавливайте их на любом устройстве с этим аккаунтом.</string>
+    <string name="OECloudHeroText">Храните настройки exteraless в Telegram и восстанавливайте их на любом устройстве с этим аккаунтом.</string>
     <string name="OECloudStatus">Состояние</string>
     <string name="OECloudLocal">Это устройство</string>
     <string name="OECloudRemote">Облако</string>
@@ -146,17 +136,6 @@
     <string name="OECloudOptions">Параметры</string>
     <string name="OECloudAutoSync">Автосинхронизация</string>
     <string name="OECloudAutoSyncInfo">Сохранять после каждого изменения настроек</string>
-    <string name="OEGeneralLastFmDebug">Отладка Last.fm</string>
-    <string name="OEGeneralLastFmDebugTest">Проверить</string>
-    <string name="OEGeneralLastFmDebugMode">Режим</string>
-    <string name="OEGeneralLastFmDebugPage">WebView</string>
-    <string name="OEGeneralLastFmDebugCookies">Сбросить куки</string>
-    <string name="OEGeneralLastFmDebugClear">Очистить</string>
-    <string name="OEGeneralLastFmDebugCopy">Копировать</string>
-    <string name="OEGeneralLastFmStageDownload">Скачиваю трек…</string>
-    <string name="OEGeneralLastFmStagePrepare">Добавляю метку…</string>
-    <string name="OEGeneralLastFmStageUpload">Загружаю трек…</string>
-    <string name="OEGeneralLastFmStageSave">Сохраняю в профиль…</string>
     <string name="OEAyuSaveReadDate">Сохранять дату прочтения</string>
     <string name="OEAyuGhostHeader">Призрак</string>
     <string name="OEAyuSavingHeader">Сохранение</string>
@@ -188,7 +167,7 @@
     <string name="OEAyuSaveInArchivedInfo">Удалённые и изменённые сообщения из чатов в архиве тоже сохраняются.</string>
     <string name="OEAyuDatabaseExport">Экспорт базы</string>
     <string name="OEAyuDatabaseImport">Импорт базы</string>
-    <string name="OEAyuDatabaseImportInfo">Удалённые и изменённые сообщения из файла добавятся к уже сохранённым. Подходят выгрузки exteradive и AyuGram. Медиа из другого приложения могут не открыться.</string>
+    <string name="OEAyuDatabaseImportInfo">Удалённые и изменённые сообщения из файла добавятся к уже сохранённым. Подходят выгрузки exteraless и AyuGram. Медиа из другого приложения могут не открыться.</string>
     <string name="OEAyuDatabaseImportDone">Добавлено сообщений: %1$d</string>
     <string name="OEAyuDatabaseImportFailed">Не удалось импортировать файл</string>
     <string name="OEAyuRegexReversed">Обратный</string>
@@ -208,46 +187,7 @@
     <string name="OEUpdaterChannelStableInfo">Раз в 6 часов проверяются новые релизы на GitHub.</string>
     <string name="OEUpdaterChannelBetaInfo">Ещё и пре-релизы с GitHub — раньше, чем они станут релизами.</string>
     <string name="OEUpdaterAllReleases">Все релизы на GitHub</string>
-<string name="OEDiveHeader">DiveLite</string>
-    <string name="OEDiveBadges">Значки</string>
-    <string name="OEDiveStreaks">Серии</string>
-    <string name="OEDiveNfts">NFT-подарки</string>
-    <string name="OEDiveInfo">Значки, серии и NFT-подарки перенесены из DiveLite. Выключатель скрывает функцию везде.</string>
-    <string name="OEDiveTitle">Функции DiveLite</string>
-    <string name="TypingInChat">печатает в %s</string>
-    <string name="OEDiveTypingInfo">Работает только с теми, у кого есть общий с вами чат: Telegram присылает статус набора для чатов, участником которых вы являетесь.</string>
-    <string name="OEDiveTypingHeader">Набор текста</string>
-    <string name="OEDiveShowTypingLocation">Показывать, в каком чате печатает</string>
-    <string name="OEDiveMediaInfo">Кодек Bluetooth и качество записи голосовых сообщений.</string>
-    <string name="OEDiveMediaHeader">Медиа</string>
-    <string name="OEDivePrivacyHeader">Приватность</string>
-    <string name="OEDivePlayerBitrate">Показывать битрейт аудио</string>
-    <string name="OEDiveMentionAll">Упомянуть всех (@all)</string>
-    <string name="OEAutoReplyInfo">Анти-спам: одному человеку автоответ отправляется не чаще выбранной паузы, а всего — не более 20 автоответов в час.</string>
-    <string name="OEDiveOff">Выкл</string>
-    <string name="OEDiveOn">Вкл</string>
-    <string name="OEDiveVoiceBitrateTitle">Качество записи голосовых</string>
-    <string name="OEDiveAutoReplyTitle">Автоответчик</string>
-    <string name="OEAutoReplyCooldownTitle">Пауза между ответами</string>
-    <string name="OEAutoReplyTitle">Автоответчик</string>
-    <string name="OEDiveAudioCodecTitle">Звуковой кодек</string>
-    <string name="OEAutoReplyEnable">Включить автоответчик</string>
-    <string name="OEAutoReplyTextTitle">Текст автоответа</string>
-    <string name="OEAutoReplyTextHint">Введите текст автоответа…</string>
-    <string name="OEDivePrivacyInfo">Ваш номер показывается как +79*******11 в Настройки &gt; Аккаунт.</string>
-    <string name="OEDiveMentionAllSplit">Отправлять отметки частями</string>
-    <string name="OEDiveAnimationsHeader">Анимации</string>
-    <string name="OEDiveDisableAnimations">Отключить анимации</string>
-    <string name="OEDiveAnimationsInfo">Отключает анимации во всём приложении. В плеере музыки волнистая полоска времени становится плоской, а текст лирики сразу загорается целиком.</string>
-    <string name="OEDiveDeletedHeader">Удалённые сообщения</string>
-    <string name="OEDiveSaveDeleted">Сохранять удалённые сообщения</string>
-    <string name="OEDiveDeletedOpacity">Прозрачность удалённых сообщений</string>
-    <string name="OEDivePurgeDeletedTitle">Удалить сохранённые удалённые</string>
-    <string name="OEDivePurgeDeletedText">Будет убрано %1$d сохранённых удалённых сообщений. Их больше нельзя будет процитировать в ответе. Сами сообщения в Telegram при этом не изменятся.</string>
-    <string name="OEDiveNoSavedDeleted">Сохранённых удалённых сообщений нет</string>
-    <string name="OEDiveSavedDeletedCleared">Сохранённые удалённые сообщения убраны из чатов</string>
-    <string name="OEDiveDelete">Удалить</string>
-    <string name="OEDiveRemoveSavedDeletedTitle">Удалить у себя</string>
-    <string name="OEDiveRemoveSavedDeletedText">Удалить сохранённую копию этого удалённого сообщения из вашего чата?</string>
-    <string name="OEDiveDeletedInfo">Удалённые собеседником сообщения не исчезают: помечаются корзинкой, а цитата сохраняется. При выключении все сохранённые удаляются из чатов.</string>
-</resources>
+    <string name="OELiteFollowSystemSaver">Как в системе</string>
+    <string name="OELiteFollowSystemSaverInfo">Энергосбережение включается вместе с системным режимом экономии заряда.</string>
+
+                                                                                                                                                                                                                                                        </resources>

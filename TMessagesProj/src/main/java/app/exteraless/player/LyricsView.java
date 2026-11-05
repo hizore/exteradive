@@ -551,8 +551,16 @@ public class LyricsView extends FrameLayout {
             long now = SystemClock.elapsedRealtime();
             float dt = lastFrame == 0 ? 0.016f : (now - lastFrame) / 1000f;
             lastFrame = now;
-            boolean animating = opacity.step(dt);
-            animating |= scale.step(dt);
+            // exteradive: с выключенными анимациями лирика не "загорается" постепенно,
+            // а сразу рисуется целиком яркой.
+            boolean animationsOff = !org.telegram.messenger.SharedConfig.animationsEnabled();
+            if (animationsOff) {
+                // прыгаем сразу к целевому значению, без плавного перехода
+                opacity.snap(opacity.target);
+                scale.snap(scale.target);
+            }
+            boolean animating = animationsOff ? false : opacity.step(dt);
+            animating |= animationsOff ? false : scale.step(dt);
             ensureLayout(getWidth());
             float alpha = Math.max(0f, Math.min(1f, opacity.value));
             int baseAlpha = colorActive >>> 24;
@@ -565,7 +573,7 @@ public class LyricsView extends FrameLayout {
             canvas.scale(scale.value, scale.value, 0, pivotY);
             if (isInterlude()) {
                 drawInterlude(canvas, live, progress, alpha, now);
-            } else if (live) {
+            } else if (live && !animationsOff) {
                 int filled = ColorUtils.setAlphaComponent(colorActive, (int) (alpha * baseAlpha));
                 int unfilled = ColorUtils.setAlphaComponent(colorActive, (int) (alpha * baseAlpha * UNFILLED_ALPHA));
                 float height = layout.getHeight();
@@ -587,11 +595,12 @@ public class LyricsView extends FrameLayout {
             } else {
                 paint.setShader(null);
                 paint.clearShadowLayer();
+                // с выключенными анимациями вся строка сразу яркая, без градиента
                 paint.setColor(ColorUtils.setAlphaComponent(colorActive, (int) (alpha * baseAlpha)));
                 layout.draw(canvas);
             }
             canvas.restore();
-            if (animating || (live && isPlaying())) {
+            if (!animationsOff && (animating || (live && isPlaying()))) {
                 postInvalidateOnAnimation();
             } else {
                 lastFrame = 0;

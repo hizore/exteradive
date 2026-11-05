@@ -441,8 +441,7 @@
     <string name="AskAQuestionInfo">Houd er rekening mee dat de ondersteuning van Telegram door vrijwilligers wordt gedaan. We proberen zo snel mogelijk te reageren, maar soms kan het even duren.\n\nBekijk ook de <![CDATA[<a href=\"https://telegram.org/faq#general-questions\">veelgestelde vragen</a>]]> van Telegram: daar vind je antwoorden op de meestgestelde vragen en belangrijke tips voor <![CDATA[<a href=\"https://telegram.org/faq#troubleshooting\">probleemoplossing</a>]]>.</string>
     <string name="AskButton">Vraag een vrijwilliger</string>
     <string name="TelegramFAQ">Veelgestelde vragen</string>
-    <string name="TelegramFaq">Veelgestelde vragen</string>
-    <string name="TelegramFeatures">Telegram-functies</string>
+        <string name="TelegramFeatures">Telegram-functies</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTips</string>
     <string name="AddAccount">Account toevoegen</string>
     <string name="SelectAccount">Account kiezen</string>
@@ -636,11 +635,9 @@
     <string name="LowDiskSpaceMessage">Je opslagruimte begint vol te raken. Om ruimte te maken kun je Telegram instellen om alleen recente media te cachen.</string>
     <string name="LowDiskSpaceMessage2">Je apparaat heeft bijna geen vrije opslagruimte meer. Je kunt de cache-instellingen gebruiken om onnodige media te verwijderen — bestanden kunnen makkelijk opnieuw worden gedownload wanneer je ze weer nodig hebt.</string>
     <string name="LowDiskSpaceButton">Cache beheren</string>
-    <string name="AutodownloadContacts">Contacten</string>
-    <string name="AutodownloadPrivateChats">Chats</string>
+        <string name="AutodownloadPrivateChats">Chats</string>
     <string name="AutodownloadGroupChats">Groepschats</string>
-    <string name="AutodownloadChannels">Kanalen</string>
-    <string name="AutodownloadSizeLimit">MAXIMALE GROOTTE</string>
+        <string name="AutodownloadSizeLimit">MAXIMALE GROOTTE</string>
     <string name="AutodownloadSizeLimitUpTo">tot %1$s</string>
     <string name="Streaming">Streamen</string>
     <string name="EnableStreaming">Muziek en audio streamen</string>
@@ -1084,4 +1081,7 @@
     <string name="RemindDayAt">\'Herinner op\' d MMM \'om\' HH:mm</string>
     <string name="RemindDayYearAt">\'Herinner op\' d MMM yyyy \'om\' HH:mm</string>
     <string name="BotsMenuTitle">Menu</string>
+    <string name="TelegramFaq">Veelgestelde vragen</string>
+    <string name="AutodownloadContacts">Contacten</string>
+    <string name="AutodownloadChannels">Kanalen</string>
 </resources>

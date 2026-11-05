@@ -408,8 +408,7 @@
     <string name="AskAQuestionInfo">الدعم الفني في تيليجرام يقوم به متطوعون يحاولون الرد سريعًا قدر الإمكان، لكن ذلك قد يستغرق بعض الوقت.\n\nيرجى الاطلاع على<![CDATA[<a href=\"https://telegram.org/faq/ar#a\"> الأسئلة الشائعة عن تيليجرام</a>]]> فهي تحوي إجابات لمعظم الأسئلة  <![CDATA[<a href=\"https://telegram.org/faq/ar#j\">وحلولًا للعديد من المشاكل.</a>]]></string>
     <string name="AskButton">اسأل متطوعًا</string>
     <string name="TelegramFAQ">الأسئلة الشائعة</string>
-    <string name="TelegramFaq">الأسئلة الشائعة</string>
-    <string name="TelegramFeatures">ميزات تيليجرام</string>
+        <string name="TelegramFeatures">ميزات تيليجرام</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTipsAR/128</string>
     <string name="AddAccount">إضافة حساب</string>
     <string name="SelectAccount">اختيار حساب</string>
@@ -603,11 +602,9 @@
     <string name="LowDiskSpaceMessage">مساحة جهازك ممتلئة تقريبًا، لتحرير مساحة إضافية يمكنك جعل تيليجرام يقوم بالتخزين المؤقت للوسائط الحديثة فقط.</string>
     <string name="LowDiskSpaceMessage2">مساحة القرص على جهازك على وشك النفاد. يمكنك استخدام إعدادات ذاكرة التخزين المؤقت لإزالة الوسائط غير الضرورية. يمكنك إعادة تنزيل الملفات إذا احتجت إليها مرة أخرى.</string>
     <string name="LowDiskSpaceButton">إدارة ذاكرة التخزين المؤقت</string>
-    <string name="AutodownloadContacts">جهات الاتصال</string>
-    <string name="AutodownloadPrivateChats">المحادثات الخاصة</string>
+        <string name="AutodownloadPrivateChats">المحادثات الخاصة</string>
     <string name="AutodownloadGroupChats">المجموعات</string>
-    <string name="AutodownloadChannels">القنوات</string>
-    <string name="AutodownloadSizeLimit">تقييد بالحجم</string>
+        <string name="AutodownloadSizeLimit">تقييد بالحجم</string>
     <string name="AutodownloadSizeLimitUpTo">حتى %1$s</string>
     <string name="Streaming">البث</string>
     <string name="EnableStreaming">تشغيل الوسائط قبل تنزيلها</string>
@@ -1243,4 +1240,7 @@
     <string name="RemindTodayAt">\'ذكّرني اليوم عند\' HH:mm</string>
     <string name="RemindDayAt">\'ذكّرني بتاريخ\' d MMM \'عند\' HH:mm</string>
     <string name="RemindDayYearAt">\'ذكّرني بتاريخ\' d MMM yyyy \'عند\' HH:mm</string>
+    <string name="TelegramFaq">╪з┘Д╪г╪│╪ж┘Д╪й ╪з┘Д╪┤╪з╪ж╪╣╪й</string>
+    <string name="AutodownloadContacts">╪м┘З╪з╪к ╪з┘Д╪з╪к╪╡╪з┘Д</string>
+    <string name="AutodownloadChannels">╪з┘Д┘В┘Ж┘И╪з╪к</string>
 </resources>

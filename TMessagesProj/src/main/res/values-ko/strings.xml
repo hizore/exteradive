@@ -441,8 +441,7 @@
     <string name="AskAQuestionInfo">텔레그램 지원은 자원봉사자들이 처리합니다. 신속하게 응답해 드리고자 노력하지만, 다소 시간이 걸릴 수 있습니다.\n\n<![CDATA[<a href=\"https://telegram.org/faq/ko#325188137\"> 자주 묻는 질문</a>]]>을 확인해 보세요. 잦은 질문에 대한 답과 <![CDATA[<a href=\"https://telegram.org/faq/ko#1478791328\">문제 해결</a>]]>을 위한 중요한 조언이 있습니다.</string>
     <string name="AskButton">봉사자에게 질문하기</string>
     <string name="TelegramFAQ">자주 묻는 질문</string>
-    <string name="TelegramFaq">자주 묻는 질문</string>
-    <string name="TelegramFeatures">텔레그램 기능 소개</string>
+        <string name="TelegramFeatures">텔레그램 기능 소개</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTipsKo</string>
     <string name="AddAccount">계정 추가</string>
     <string name="SelectAccount">계정을 선택하세요</string>
@@ -659,11 +658,9 @@
     <string name="LowDiskSpaceMessage">기기에 남은 공간이 거의 없습니다. 텔레그램이 최근 미디어의 캐시만 저장하도록 설정해 여유 공간을 확보하실 수 있습니다.</string>
     <string name="LowDiskSpaceMessage2">기기의 저장 공간이 거의 다 찼습니다. 캐시 설정으로 불필요한 미디어를 제거하실 수 있습니다. 파일이 필요할 때 다시 다운로드하세요.</string>
     <string name="LowDiskSpaceButton">캐시 관리</string>
-    <string name="AutodownloadContacts">연락처</string>
-    <string name="AutodownloadPrivateChats">개인 대화</string>
+        <string name="AutodownloadPrivateChats">개인 대화</string>
     <string name="AutodownloadGroupChats">그룹 대화</string>
-    <string name="AutodownloadChannels">채널</string>
-    <string name="AutodownloadSizeLimit">크기 제한</string>
+        <string name="AutodownloadSizeLimit">크기 제한</string>
     <string name="AutodownloadSizeLimitUpTo">최대 %1$s</string>
     <string name="Streaming">스트리밍</string>
     <string name="EnableStreaming">동영상 및 음악 파일 스트리밍</string>
@@ -1136,4 +1133,7 @@
     <string name="RemindDayAt">MMM d HH:mm\'에 알리기\'</string>
     <string name="RemindDayYearAt">yyyy\'년\' M\'월\' d\'일\' HH:mm\'에 알림\'</string>
     <string name="BotsMenuTitle">메뉴</string>
+    <string name="TelegramFaq">ьЮРьг╝ ым╗ыКФ ьзИым╕</string>
+    <string name="AutodownloadContacts">ьЧ░ыЭ╜ь▓Ш</string>
+    <string name="AutodownloadChannels">ь▒ДыДР</string>
 </resources>

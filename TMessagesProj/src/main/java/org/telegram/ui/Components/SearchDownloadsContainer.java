@@ -163,8 +163,6 @@ public class SearchDownloadsContainer extends FrameLayout implements Notificatio
                         PhotoViewer.getInstance().openPhoto(documents, 0, 0, 0, 0, new PhotoViewer.EmptyPhotoViewerProvider());
                         return;
                     }
-                    // exteraless plugins: установить плагин, а не открывать его в просмотрщике.
-
                     AndroidUtilities.openDocument(message, parentActivity, parentFragment);
                 } else if (!cell.isLoading()) {
                     messageObject.putInDownloadsStore = true;

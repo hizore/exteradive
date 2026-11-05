@@ -130,7 +130,7 @@ public final class EtgBackup {
     }
 
     public static String generateBackupName() {
-        return "exteraless-" + Utilities.generateRandomString(4) + EXTENSION;
+        return "exteradive-" + Utilities.generateRandomString(4) + EXTENSION;
     }
 
     /** Файл похож на бэкап exteraGram: расширение на месте и внутри есть хоть один знакомый ключ. */
@@ -295,6 +295,7 @@ public final class EtgBackup {
     private static SharedPreferences mainPreferences() {
         return ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
     }
+
 
     // ---- Таблица соответствий ----
 
@@ -552,6 +553,7 @@ public final class EtgBackup {
                 value -> MainMenuLayout.save(MainMenuLayout.getLayout(), parseIds(value.getAsString()))));
     }
 
+
     /**
      * mainconfig — настройки самого Telegram. Пишем в тот же файл, что и SharedConfig,
      * и обновляем поля в памяти: перечитывания у SharedConfig нет.
@@ -645,6 +647,7 @@ public final class EtgBackup {
                 () -> new JsonPrimitive(item.String()),
                 value -> item.setConfigString(value.getAsString())));
     }
+
 
     // ---- Проверки строковых значений ----
 
