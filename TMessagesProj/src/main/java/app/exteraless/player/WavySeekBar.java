@@ -42,6 +42,7 @@ public class WavySeekBar extends View {
     private float amplitude;
     private float phase;
     private long lastFrame;
+    private boolean frozen;
     private float maxAmplitude = dp(4);
 
     public WavySeekBar(Context context) {
@@ -65,6 +66,17 @@ public class WavySeekBar extends View {
         fillPaint.setColor(active);
         trackPaint.setColor(inactive);
         invalidate();
+    }
+
+    public void setFrozen(boolean value) {
+        if (frozen == value) {
+            return;
+        }
+        frozen = value;
+        lastFrame = 0;
+        if (!value) {
+            invalidate();
+        }
     }
 
     public void setMaxAmplitude(float px) {
@@ -165,11 +177,9 @@ public class WavySeekBar extends View {
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         long now = SystemClock.elapsedRealtime();
-        float dt = lastFrame == 0 ? 0.016f : Math.min(0.05f, (now - lastFrame) / 1000f);
-        lastFrame = now;
-        // exteradive: с выключенными анимациями полоска плоская - без волны.
-        boolean animationsOff = !org.telegram.messenger.SharedConfig.animationsEnabled();
-        float targetAmp = playing && !animationsOff ? maxAmplitude : 0f;
+        float dt = frozen ? 0f : lastFrame == 0 ? 0.016f : Math.min(0.05f, (now - lastFrame) / 1000f);
+        lastFrame = frozen ? 0 : now;
+        float targetAmp = playing ? maxAmplitude : 0f;
         amplitude += (targetAmp - amplitude) * (1f - (float) Math.pow(0.85, dt / 0.04f));
         if (Math.abs(amplitude - targetAmp) < dpf2(0.05f)) {
             amplitude = targetAmp;
@@ -189,28 +199,23 @@ public class WavySeekBar extends View {
         float lambda = dp(34);
         float step = dp(2);
         if (waveEnd > left) {
-            if (animationsOff) {
-                // плоская линия вместо волны
-                canvas.drawLine(left, cy, waveEnd, cy, wavePaint);
-            } else {
-                path.rewind();
-                boolean first = true;
-                for (float px = left; ; px += step) {
-                    boolean last = px >= waveEnd;
-                    float cx = last ? waveEnd : px;
-                    float y = cy + amplitude * (float) Math.sin(TAU * cx / lambda - phase);
-                    if (first) {
-                        path.moveTo(cx, y);
-                        first = false;
-                    } else {
-                        path.lineTo(cx, y);
-                    }
-                    if (last) {
-                        break;
-                    }
+            path.rewind();
+            boolean first = true;
+            for (float px = left; ; px += step) {
+                boolean last = px >= waveEnd;
+                float cx = last ? waveEnd : px;
+                float y = cy + amplitude * (float) Math.sin(TAU * cx / lambda - phase);
+                if (first) {
+                    path.moveTo(cx, y);
+                    first = false;
+                } else {
+                    path.lineTo(cx, y);
                 }
-                canvas.drawPath(path, wavePaint);
+                if (last) {
+                    break;
+                }
             }
+            canvas.drawPath(path, wavePaint);
         }
         float stopX = right - dp(1);
         float restX = Math.min(stopX, x + thumbW / 2f + gap);
@@ -221,7 +226,7 @@ public class WavySeekBar extends View {
         rect.set(x - thumbW / 2f, cy - dp(14), x + thumbW / 2f, cy + dp(14));
         canvas.drawRoundRect(rect, dpf2(1.5f), dpf2(1.5f), fillPaint);
 
-        if (amplitude > 0f || targetAmp != amplitude) {
+        if (!frozen && (amplitude > 0f || targetAmp != amplitude)) {
             postInvalidateOnAnimation();
         } else {
             lastFrame = 0;
