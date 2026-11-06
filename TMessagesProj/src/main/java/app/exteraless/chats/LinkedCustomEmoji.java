@@ -283,8 +283,14 @@ public final class LinkedCustomEmoji {
         for (int i = 0; i < entities.size(); i++) {
             TLRPC.MessageEntity entity = entities.get(i);
             if (!(entity instanceof TLRPC.TL_messageEntityCustomEmoji)
-                    || entity.offset < 0 || entity.length <= 0
-                    || entity.offset + entity.length > text.length()) {
+                    || entity.offset < 0 || entity.length <= 0) {
+                continue;
+            }
+            // exteradive: смещения проверяются против текущей длины собираемого
+            // текста, а не исходной - после первой конвертации текст растёт
+            // (эмодзи из 2 символов -> "dive://emoji/<id>" из 21), и сущности
+            // после неё уже не помещаются в исходную длину.
+            if (entity.offset + entity.length > (sb != null ? sb.length() : text.length())) {
                 continue;
             }
             TLRPC.TL_messageEntityCustomEmoji emoji = (TLRPC.TL_messageEntityCustomEmoji) entity;
