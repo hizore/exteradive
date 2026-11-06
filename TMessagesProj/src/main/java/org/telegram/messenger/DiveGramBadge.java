@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.LruCache;
 import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -180,15 +181,39 @@ public class DiveGramBadge {
         return new DiveGramBadgeDrawable(badge, color, sizePx);
     }
 
-    private static final HashMap<String, Drawable> THEME_BADGE_CACHE = new HashMap<>();
-    private static final HashMap<String, Bitmap> EMBLEM_CACHE = new HashMap<>();
+    private static final LruCache<String, Drawable> THEME_BADGE_CACHE = new LruCache<String, Drawable>(48) {
+        @Override
+        protected int sizeOf(String key, Drawable value) {
+            return 1;
+        }
+    };
+    private static final LruCache<String, Bitmap> EMBLEM_CACHE = new LruCache<String, Bitmap>(24 * 1024 * 1024) {
+        @Override
+        protected int sizeOf(String key, Bitmap value) {
+            return value.getAllocationByteCount();
+        }
+    };
+
+    /** Максимальная сторона декода эмблемы: рисуется до dp(26), 256px хватает с запасом. */
+    private static final int EMBLEM_MAX_DIM = 256;
 
     private static Bitmap sourceEmblem(Badge badge) {
         File file = cachedImageFile(badge);
         if (file != null && file.exists()) {
-            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-            if (bitmap != null) {
-                return bitmap;
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(file.getAbsolutePath(), bounds);
+            if (bounds.outWidth > 0 && bounds.outHeight > 0) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                int sample = 1;
+                while ((bounds.outWidth / sample) > EMBLEM_MAX_DIM || (bounds.outHeight / sample) > EMBLEM_MAX_DIM) {
+                    sample *= 2;
+                }
+                options.inSampleSize = sample;
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                if (bitmap != null) {
+                    return bitmap;
+                }
             }
         }
         if (badge.fallbackRes != 0) {
@@ -688,7 +713,7 @@ public class DiveGramBadge {
     }
 
     private static void emblemCacheClear() {
-        EMBLEM_CACHE.clear();
+        EMBLEM_CACHE.evictAll();
     }
 
     private static void loadCachedConfig() throws Exception {
