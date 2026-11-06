@@ -227,7 +227,6 @@
     <string name="OEDiveMediaInfo">Bluetooth codec and voice recording quality.</string>
     <string name="OEDiveMediaHeader">Media</string>
     <string name="OEDivePrivacyHeader">Privacy</string>
-    <string name="OEDivePlayerBitrate">Show audio bitrate</string>
     <string name="OEDiveMentionAll">Mention all (@all)</string>
     <string name="OEAutoReplyInfo">Anti-spam: at most one auto-reply per cooldown per person, no more than 20 per hour.</string>
     <string name="OEDiveOff">Off</string>

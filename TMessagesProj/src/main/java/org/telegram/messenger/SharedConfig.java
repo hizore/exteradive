@@ -273,7 +273,6 @@ public class SharedConfig {
     public static final int AUDIO_CODEC_LDAC = 2;
     public static int audioCodec = 0;
     public static int voiceRecordBitrate = 0; // 0 = максимум
-    public static boolean playerBitrate = false;
 
     // Сохранение удалённых сообщений (DiveGram)
     public static boolean saveDeletedMessages = false;
@@ -726,7 +725,6 @@ public class SharedConfig {
             mentionAllSplitEnabled = forkPrefs.getBoolean("dgMentionAllSplitEnabled", false);
             audioCodec = forkPrefs.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
             voiceRecordBitrate = forkPrefs.getInt("dgVoiceRecordBitrate", 0);
-            playerBitrate = forkPrefs.getBoolean("dgPlayerBitrate", false);
             // Сохранённые удалённые сообщения
             saveDeletedMessages = forkPrefs.getBoolean("dgSaveDeletedMessages", false);
             deletedMessagesOpacity = forkPrefs.getInt("dgDeletedMessagesOpacity", 100);
@@ -1685,13 +1683,6 @@ public class SharedConfig {
         voiceRecordBitrate = value;
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgVoiceRecordBitrate", value)
-                .apply();
-    }
-
-    public static void setPlayerBitrate(boolean value) {
-        playerBitrate = value;
-        MessagesController.getGlobalMainSettings().edit()
-                .putBoolean("dgPlayerBitrate", value)
                 .apply();
     }
 

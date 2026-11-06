@@ -47,7 +47,6 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
     private int mediaHeaderRow;
     private int audioCodecRow;
     private int voiceBitrateRow;
-    private int playerBitrateRow;
     private int mediaInfoRow;
     private int animationsHeaderRow;
     private int disableAnimationsRow;
@@ -81,7 +80,6 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         mediaHeaderRow = addRow("diveMediaHeader");
         audioCodecRow = addRow("diveAudioCodec");
         voiceBitrateRow = addRow("diveVoiceBitrate");
-        playerBitrateRow = addRow("divePlayerBitrate");
         mediaInfoRow = addRow();
 
         animationsHeaderRow = addRow("diveAnimationsHeader");
@@ -164,9 +162,6 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
         } else if (position == mentionAllSplitRow) {
             SharedConfig.setMentionAllSplitEnabled(!SharedConfig.mentionAllSplitEnabled);
             enabled = SharedConfig.mentionAllSplitEnabled;
-        } else if (position == playerBitrateRow) {
-            SharedConfig.setPlayerBitrate(!SharedConfig.playerBitrate);
-            enabled = SharedConfig.playerBitrate;
         } else if (position == disableAnimationsRow) {
             // exteradive: переключатель "Отключить анимации". В SharedConfig флаг означает
             // обратное - "анимации разрешены", поэтому инвертируем его.
@@ -416,9 +411,6 @@ public class OpenExteraDiveFeaturesActivity extends BaseNekoSettingsActivity {
                     } else if (position == voiceBitrateRow) {
                         cell.setTextAndValue(getString(R.string.OEDiveVoiceBitrateTitle),
                                 AudioCodecs.VOICE_BITRATE_TITLES[AudioCodecs.getVoiceBitrateIndex()], true, true);
-                    } else if (position == playerBitrateRow) {
-                        cell.setTextAndCheck(getString(R.string.OEDivePlayerBitrate),
-                                SharedConfig.playerBitrate, true);
                     } else if (position == disableAnimationsRow) {
                         cell.setTextAndCheck(getString(R.string.OEDiveDisableAnimations),
                                 !SharedConfig.animationsEnabled(), true);
