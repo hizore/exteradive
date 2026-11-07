@@ -43,6 +43,12 @@
     <string name="OEAppearanceDisableAvatarBlur">Отключить размытие аватарок</string>
     <string name="OEAppearanceBlurInfo">Размытие будет применяться ко всем темам, независимо от их настроек.</string>
 
+    <!-- DiveLite: непрозрачность баблов сообщений и блюр -->
+    <string name="OEAppearanceBubbleOpacity">Непрозрачность сообщений</string>
+    <string name="OEAppearanceBubbleOpacityMin">Прозрачно</string>
+    <string name="OEAppearanceBubbleOpacityMax">Непрозрачно</string>
+    <string name="OEAppearanceBubbleBlur">Блюр сообщений</string>
+
     <string name="OEAppearanceRestartNow">Перезапустить</string>
     <string name="OEAppearanceNeedRestart">Перезапустите приложение, чтобы применить настройку.</string>
 

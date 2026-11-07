@@ -25,6 +25,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.Components.MotionBackgroundDrawable;
 import org.telegram.ui.Components.blur3.utils.NinePatchBuilder;
+import org.telegram.ui.Components.SizeNotifierFrameLayout;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -106,6 +107,23 @@ public class MessageDrawable extends Drawable {
     private float overrideRounding;
     public boolean forceInvalidatePath;
 
+    // exteradive: непрозрачность бабла (1 = как из темы) и «стекло» под полупрозрачным фоном.
+    public float oeOpacityFactor = 1f;
+    public int oeContentWidth;
+    public int oeContentHeight;
+
+    public interface oeGlassBitmapSource {
+        Bitmap oeGetWallpaperBlurBitmap();
+    }
+
+    private oeGlassBitmapSource oeGlassSource;
+
+    public void setOEGlassSource(oeGlassBitmapSource source) {
+        if (oeGlassSource != source) {
+            oeGlassSource = source;
+        }
+    }
+
     public MessageDrawable(int type, boolean out, boolean selected) {
         this(type, out, selected, null);
     }
@@ -185,6 +203,10 @@ public class MessageDrawable extends Drawable {
     public void setTop(int top, int backgroundWidth, int backgroundHeight, int heightOffset, int blurredViewTopOffset, int blurredViewBottomOffset, boolean topNear, boolean bottomNear) {
         if (crossfadeFromDrawable != null) {
             crossfadeFromDrawable.setTop(top, backgroundWidth, backgroundHeight, heightOffset, blurredViewTopOffset, blurredViewBottomOffset, topNear, bottomNear);
+        }
+        if (backgroundWidth > 0 && backgroundHeight > 0) {
+            oeContentWidth = backgroundWidth;
+            oeContentHeight = backgroundHeight;
         }
         int color;
         int gradientColor1;
@@ -564,6 +586,15 @@ public class MessageDrawable extends Drawable {
         if (!oeRemoveMessageTail() && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
+                // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
+                Paint oeGlass = oeBuildGlassPaint(canvas);
+                if (oeGlass != null) {
+                    canvas.save();
+                    oeGlassPath.reset();
+                    oeGlassPath.addRect(bounds.left, bounds.top, bounds.right, bounds.bottom, Path.Direction.CW);
+                    canvas.drawPath(oeGlassPath, oeGlass);
+                    canvas.restore();
+                }
                 background.setBounds(bounds);
                 background.draw(canvas);
                 return;
@@ -619,12 +650,64 @@ public class MessageDrawable extends Drawable {
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
+        // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
+        if (paintToUse == null) {
+            Paint oeGlass = oeBuildGlassPaint(canvas);
+            if (oeGlass != null) {
+                canvas.drawPath(path, oeGlass);
+            }
+        }
+
         canvas.drawPath(path, p);
         if (gradientShader != null && isSelected && paintToUse == null) {
             int color = getColor(Theme.key_chat_outBubbleGradientSelectedOverlay);
             selectedPaint.setColor(ColorUtils.setAlphaComponent(color, (int) (Color.alpha(color) * alpha / 255f)));
             canvas.drawPath(path, selectedPaint);
         }
+    }
+
+    /**
+     * exteradive: краска «стекла» — сильно заблюренные обои чата, выровненные по
+     * координатам экрана. Рисуется под полупрозрачным баблом; при непрозрачности 100%
+     * не нужна (закрашивается), при выключенном тумблере — не вызывается.
+     */
+    private Paint oeGlassPaint;
+    private BitmapShader oeGlassShader;
+    private Bitmap oeGlassBitmap;
+    private final Matrix oeGlassMatrix = new Matrix();
+    private final Path oeGlassPath = new Path();
+
+    private Paint oeBuildGlassPaint(Canvas canvas) {
+        if (oeGlassSource == null || oeOpacityFactor >= 0.999f || alpha <= 0) {
+            return null;
+        }
+        if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {
+            // Снимок для блюра за панелями рисуется без стекла, чтобы не складывать блюры.
+            return null;
+        }
+        Bitmap bitmap = oeGlassSource.oeGetWallpaperBlurBitmap();
+        if (bitmap == null || bitmap.isRecycled()) {
+            return null;
+        }
+        int w = oeContentWidth > 0 ? oeContentWidth : AndroidUtilities.displaySize.x;
+        int h = oeContentHeight > 0 ? oeContentHeight : AndroidUtilities.displaySize.y;
+        if (w <= 0 || h <= 0) {
+            return null;
+        }
+        canvas.getMatrix(oeGlassMatrix);
+        oeGlassMatrix.preScale(w / (float) bitmap.getWidth(), h / (float) bitmap.getHeight());
+        if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
+            oeGlassBitmap = bitmap;
+            oeGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            if (oeGlassPaint == null) {
+                oeGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            }
+            oeGlassPaint.setShader(oeGlassShader);
+        }
+        oeGlassShader.setLocalMatrix(oeGlassMatrix);
+        // Стекло мерцает вместе с баблом (alpha уже без фактора непрозрачности).
+        oeGlassPaint.setAlpha(Math.min(255, alpha));
+        return oeGlassPaint;
     }
 
     public Path makePath() {
@@ -825,17 +908,20 @@ public class MessageDrawable extends Drawable {
 
     @Override
     public void setAlpha(int alpha) {
-        if (this.alpha != alpha || this.paint.getAlpha() != alpha) {
+        // exteradive: применяется фактор непрозрачности бабла; сам this.alpha
+        // хранится в «сыром» виде (нужен перекрёстфейду и selected-оверлею).
+        int oeFactorAlpha = (int) (alpha * oeOpacityFactor);
+        if (this.alpha != alpha || this.paint.getAlpha() != oeFactorAlpha) {
             this.alpha = alpha;
-            paint.setAlpha(alpha);
+            paint.setAlpha(oeFactorAlpha);
             if (isOut) {
-                selectedPaint.setAlpha((int) (Color.alpha(getColor(Theme.key_chat_outBubbleGradientSelectedOverlay)) * (alpha / 255.0f)));
+                selectedPaint.setAlpha((int) (Color.alpha(getColor(Theme.key_chat_outBubbleGradientSelectedOverlay)) * (alpha / 255.0f) * oeOpacityFactor));
             }
         }
         if (gradientShader == null) {
             Drawable background = getBackgroundDrawable();
-            if (background.getAlpha() != alpha) {
-                background.setAlpha(alpha);
+            if (background.getAlpha() != oeFactorAlpha) {
+                background.setAlpha(oeFactorAlpha);
             }
         }
     }

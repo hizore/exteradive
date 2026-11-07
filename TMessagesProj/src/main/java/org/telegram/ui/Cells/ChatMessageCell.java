@@ -84,6 +84,7 @@ import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.ViewStructure;
 import android.view.Window;
 import android.view.accessibility.AccessibilityEvent;
@@ -2028,6 +2029,39 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     private final Path sPath = new Path();
     public boolean isBlurred;
     public BotForumHelper.BotDraftAnimationsPool draftAnimationsPool;
+
+    // exteradive: непрозрачность баблов (0..100%) и «стекло» по тумблеру.
+    // Фактор выставляется при каждом присвоении currentBackgroundDrawable:
+    // themed-drawables разделяются между ячейками.
+    public float oeComputeOpacityFactor() {
+        if (currentMessageObject != null && (currentMessageObject.isVideo() || currentMessageObject.isGif())) {
+            // Гифки и видео всегда полностью непрозрачные.
+            return 1f;
+        }
+        return SharedConfig.bubbleOpacity / 100f;
+    }
+
+    private void oeApplyBubbleOpacity(MessageDrawable drawable) {
+        if (drawable == null) {
+            return;
+        }
+        float factor = oeComputeOpacityFactor();
+        drawable.oeOpacityFactor = factor;
+        drawable.setOEGlassSource(factor < 0.999f ? oeGlassSource : null);
+    }
+
+    private final MessageDrawable.oeGlassBitmapSource oeGlassSource = this::oeGetWallpaperBlurBitmap;
+
+    private Bitmap oeGetWallpaperBlurBitmap() {
+        ViewParent parent = getParent();
+        while (parent instanceof View) {
+            if (parent instanceof SizeNotifierFrameLayout) {
+                return ((SizeNotifierFrameLayout) parent).oeGetBlurredWallpaper();
+            }
+            parent = ((View) parent).getParent();
+        }
+        return null;
+    }
 
     public ChatMessageCell(Context context, int currentAccount) {
         this(context, currentAccount, false, null, null);
@@ -21245,6 +21279,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentBackgroundSelectedDrawable = (MessageDrawable) getThemedDrawable(Theme.key_drawable_msgOutMediaSelected);
                 transitionParams.drawPinnedBottomBackground = true;
             }
+            oeApplyBubbleOpacity(currentBackgroundDrawable);
+            oeApplyBubbleOpacity(currentBackgroundSelectedDrawable);
             setBackgroundTopY(true);
             if (isDrawSelectionBackground() && (currentPosition == null || getBackground() != null)) {
                 currentBackgroundShadowDrawable = currentBackgroundSelectedDrawable.getShadowDrawable();
@@ -21324,6 +21360,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentBackgroundSelectedDrawable = (MessageDrawable) getThemedDrawable(Theme.key_drawable_msgInMediaSelected);
                 transitionParams.drawPinnedBottomBackground = true;
             }
+            oeApplyBubbleOpacity(currentBackgroundDrawable);
+            oeApplyBubbleOpacity(currentBackgroundSelectedDrawable);
             setBackgroundTopY(true);
             if (isDrawSelectionBackground() && (currentPosition == null || getBackground() != null)) {
                 currentBackgroundShadowDrawable = currentBackgroundSelectedDrawable.getShadowDrawable();
@@ -22823,6 +22861,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentBackgroundDrawable = (MessageDrawable) getThemedDrawable(selected ? Theme.key_drawable_msgInMediaSelected : Theme.key_drawable_msgInMedia);
             }
         }
+        oeApplyBubbleOpacity(currentBackgroundDrawable);
 
         int w = parentWidth;
         int h = parentHeight;
@@ -24151,6 +24190,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     currentBackgroundDrawable = (MessageDrawable) getThemedDrawable(Theme.key_drawable_msgInMedia);
                 }
             }
+            oeApplyBubbleOpacity(currentBackgroundDrawable);
         }
         currentBackgroundDrawable.getBackgroundDrawable();
         return currentBackgroundDrawable;

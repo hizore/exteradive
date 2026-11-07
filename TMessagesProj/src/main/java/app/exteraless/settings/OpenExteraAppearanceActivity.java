@@ -20,6 +20,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.LiteMode;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCheckCell;
@@ -75,6 +76,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     /** Две карточки-превью формы плавающей кнопки. */
     private static final int TYPE_FAB_SHAPE = 106;
 
+    /** DiveLite: слайдер непрозрачности баблов сообщений. */
+    private static final int TYPE_BUBBLE_OPACITY = 107;
+
     // Appearance
     private int appearanceHeaderRow;
     private int fabShapeRow;
@@ -96,6 +100,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int glassMessageMenuRow;
     private int forceBlurRow;
     private int disableAvatarBlurRow;
+    // DiveLite: непрозрачность баблов и их блюр
+    private int bubbleOpacityRow;
+    private int bubbleBlurRow;
     private int blurDividerRow;
 
     // Avatar corners
@@ -245,6 +252,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         glassMessageMenuRow = addRow("glassMessageMenu");
         forceBlurRow = addRow("forceBlur");
         disableAvatarBlurRow = addRow("disableAvatarBlur");
+        // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
+        bubbleOpacityRow = addRow("bubbleOpacity");
+        bubbleBlurRow = addRow("bubbleBlur");
         blurDividerRow = addRow();
 
     }
@@ -645,6 +655,11 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     getString(R.string.OEAppearanceGlassOutlineHidden)
             }, AppearanceConfig.glassOutlineStyle, null);
             return;
+        } else if (position == bubbleBlurRow) {
+            // DiveLite: тумблер блюра баблов.
+            SharedConfig.setBubbleBlur(!SharedConfig.bubbleBlur);
+            notifyRow(bubbleBlurRow);
+            return;
         } else if (position == tabTitleStyleRow) {
             if (getParentActivity() == null) {
                 return;
@@ -852,6 +867,20 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     fabShapeCell.setNeedDivider(true);
                     view = fabShapeCell;
                     break;
+                case TYPE_BUBBLE_OPACITY: {
+                    // DiveLite: ползунок непрозрачности баблов (0..100%).
+                    AvatarCornersSeekBar bubbleSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setBubbleOpacity(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceBubbleOpacity),
+                            getString(R.string.OEAppearanceBubbleOpacityMin),
+                            getString(R.string.OEAppearanceBubbleOpacityMax));
+                    bubbleSlider.setValueSuffix("%");
+                    bubbleSlider.setValue(SharedConfig.bubbleOpacity);
+                    bubbleSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = bubbleSlider;
+                    break;
+                }
                 case TYPE_DETAIL_SETTINGS: {
                     // Базовый класс делает такую же ячейку, но многострочной; exteraGram
                     // (asButtonWithSubtext(..., 64, 60) :456-458) держит ровно 64 dp.
@@ -924,6 +953,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceForceBlur), LiteMode.isEnabledSetting(LiteMode.FLAG_CHAT_BLUR), true);
                     } else if (position == disableAvatarBlurRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceDisableAvatarBlur), NaConfig.INSTANCE.getDisableAvatarBlur().Bool(), false);
+                    } else if (position == bubbleBlurRow) {
+                        // DiveLite: тумблер блюра баблов.
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceBubbleBlur), SharedConfig.bubbleBlur, false);
                     } else if (position == singleCornerRadiusRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceSingleCornerRadius), AppearanceConfig.singleCornerRadius.Bool(), false);
                     } else if (position == forceSnowRow) {
@@ -1090,6 +1122,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_FOLDERS;
             } else if (position == sectionRadiusRow) {
                 return TYPE_SECTION_SLIDER;
+            } else if (position == bubbleOpacityRow) {
+                return TYPE_BUBBLE_OPACITY;
             } else if (position == appearanceHeaderRow || position == sectionsHeaderRow
                     || position == blurHeaderRow || position == chatListHeaderRow
                     || position == foldersHeaderRow || position == linksHeaderRow) {

@@ -54,6 +54,9 @@ import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.BlurSettingsBottomSheet;
 import org.telegram.ui.ChatBackgroundDrawable;
+import org.telegram.ui.Components.blur3.source.BlurredBackgroundSource;
+import org.telegram.ui.Components.blur3.source.BlurredBackgroundSourceBitmap;
+import org.telegram.ui.Components.chat.WallpaperBitmapProvider;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -903,6 +906,47 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
 
     public boolean blurWasDrawn() {
         return SharedConfig.chatBlurEnabled() && (DRAW_USING_RENDERNODE() || currentBitmap != null);
+    }
+
+    // exteradive: сильно заблюренная копия текущих обоев чата для «стекла» баблов.
+    // Возвращает null, если фон — сплошной цвет (блюр цвета визуально не нужен).
+    private WallpaperBitmapProvider oeWallpaperBitmapProvider;
+    private Drawable oeLastWallpaperDrawable;
+    private Bitmap oeCachedBlurredWallpaper;
+
+    public Bitmap oeGetBlurredWallpaper() {
+        if (!SharedConfig.bubbleBlur) {
+            oeCachedBlurredWallpaper = null;
+            oeLastWallpaperDrawable = null;
+            return null;
+        }
+        Drawable drawable = backgroundDrawable;
+        if (drawable == null) {
+            drawable = oldBackgroundDrawable;
+        }
+        if (drawable == null) {
+            return null;
+        }
+        if (drawable == oeLastWallpaperDrawable && oeCachedBlurredWallpaper != null) {
+            return oeCachedBlurredWallpaper;
+        }
+        if (oeWallpaperBitmapProvider == null) {
+            oeWallpaperBitmapProvider = new WallpaperBitmapProvider();
+        }
+        try {
+            BlurredBackgroundSource source = oeWallpaperBitmapProvider.updateSourceFromBackgroundViewDrawable(drawable);
+            if (source instanceof BlurredBackgroundSourceBitmap) {
+                Bitmap bitmap = ((BlurredBackgroundSourceBitmap) source).getBitmap();
+                if (bitmap != null && !bitmap.isRecycled()) {
+                    oeLastWallpaperDrawable = drawable;
+                    oeCachedBlurredWallpaper = bitmap;
+                    return bitmap;
+                }
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return null;
     }
 
     private float lastDrawnBottomBlurOffset;

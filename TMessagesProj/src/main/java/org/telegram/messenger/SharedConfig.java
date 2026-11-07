@@ -267,6 +267,10 @@ public class SharedConfig {
     public static boolean mentionAllEnabled = false;
     public static boolean mentionAllSplitEnabled = false;
 
+    // Непрозрачность баблов сообщений (0..100) и их блюр (DiveGram)
+    public static int bubbleOpacity = 100;
+    public static boolean bubbleBlur = false;
+
     // Звуковой кодек и битрейт (DiveGram)
     public static final int AUDIO_CODEC_AUTO = 0;
     public static final int AUDIO_CODEC_AAC = 1;
@@ -723,6 +727,8 @@ public class SharedConfig {
             showTypingLocation = forkPrefs.getBoolean("dgShowTypingLocation", false);
             mentionAllEnabled = forkPrefs.getBoolean("dgMentionAllEnabled", false);
             mentionAllSplitEnabled = forkPrefs.getBoolean("dgMentionAllSplitEnabled", false);
+            bubbleOpacity = forkPrefs.getInt("dgBubbleOpacity", 100);
+            bubbleBlur = forkPrefs.getBoolean("dgBubbleBlur", false);
             audioCodec = forkPrefs.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
             voiceRecordBitrate = forkPrefs.getInt("dgVoiceRecordBitrate", 0);
             // Сохранённые удалённые сообщения
@@ -1669,6 +1675,21 @@ public class SharedConfig {
         mentionAllSplitEnabled = value;
         MessagesController.getGlobalMainSettings().edit()
                 .putBoolean("dgMentionAllSplitEnabled", value)
+                .apply();
+    }
+
+    // exteradive: непрозрачность баблов (0..100) и тумблер блюра
+    public static void setBubbleOpacity(int value) {
+        bubbleOpacity = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgBubbleOpacity", bubbleOpacity)
+                .apply();
+    }
+
+    public static void setBubbleBlur(boolean value) {
+        bubbleBlur = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgBubbleBlur", value)
                 .apply();
     }
 

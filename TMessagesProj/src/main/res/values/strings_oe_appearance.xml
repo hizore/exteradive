@@ -58,6 +58,12 @@
     <string name="OEAppearanceDisableAvatarBlur">Disable Avatar Blur</string>
     <string name="OEAppearanceBlurInfo">Blur effects will be applied to all themes, overriding their default settings.</string>
 
+    <!-- DiveLite: message bubble opacity &amp; blur -->
+    <string name="OEAppearanceBubbleOpacity">Message Opacity</string>
+    <string name="OEAppearanceBubbleOpacityMin">Transparent</string>
+    <string name="OEAppearanceBubbleOpacityMax">Opaque</string>
+    <string name="OEAppearanceBubbleBlur">Blur Messages</string>
+
     <string name="OEAppearanceRestartNow">Restart</string>
     <string name="OEAppearanceNeedRestart">Restart the app to apply this setting.</string>
 
