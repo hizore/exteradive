@@ -7601,6 +7601,17 @@ public class ChatActivity extends BaseFragment implements
                 if (contentView != null) {
                     contentView.updateBlurContent();
                 }
+                // DiveLite: полупрозрачным баблам со «стеклом» нужна перерисовка каждый
+                // кадр скролла — иначе RenderNode ячейки не перевычисляется и стекло
+                // не показывает новую область обоев под сообщением.
+                if (SharedConfig.bubbleOpacity < 100) {
+                    for (int i = 0; i < chatListView.getChildCount(); i++) {
+                        View child = chatListView.getChildAt(i);
+                        if (child instanceof ChatMessageCell) {
+                            child.invalidate();
+                        }
+                    }
+                }
                 if (chatListThanosEffect != null) {
                     chatListThanosEffect.scroll(dx, dy);
                 }
