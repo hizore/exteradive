@@ -2054,13 +2054,25 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         drawable.setOEGlassSource(factor < 0.999f ? oeGlassSource : null);
     }
 
-    private final MessageDrawable.oeGlassBitmapSource oeGlassSource = this::oeGetWallpaperBlurBitmap;
+    private final MessageDrawable.oeGlassBitmapSource oeGlassSource = new MessageDrawable.oeGlassBitmapSource() {
+        @Override
+        public Bitmap oeGetWallpaperBlurBitmap() {
+            SizeNotifierFrameLayout pane = oeFindBackgroundPane();
+            return pane == null ? null : pane.oeGetBlurredWallpaper();
+        }
 
-    private Bitmap oeGetWallpaperBlurBitmap() {
+        @Override
+        public Rect oeGetWallpaperScreenBounds() {
+            SizeNotifierFrameLayout pane = oeFindBackgroundPane();
+            return pane != null && pane.oeHasWallpaperBounds() ? pane.oeWallpaperDrawBounds : null;
+        }
+    };
+
+    private SizeNotifierFrameLayout oeFindBackgroundPane() {
         ViewParent parent = getParent();
         while (parent instanceof View) {
             if (parent instanceof SizeNotifierFrameLayout) {
-                return ((SizeNotifierFrameLayout) parent).oeGetBlurredWallpaper();
+                return (SizeNotifierFrameLayout) parent;
             }
             parent = ((View) parent).getParent();
         }

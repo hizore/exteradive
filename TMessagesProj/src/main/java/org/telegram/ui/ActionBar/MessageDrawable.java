@@ -112,6 +112,9 @@ public class MessageDrawable extends Drawable {
 
     public interface oeGlassBitmapSource {
         Bitmap oeGetWallpaperBlurBitmap();
+
+        /** Точный прямоугольник обоев на экране (те же bounds, что при их рисовании), или null для fallback на весь экран. */
+        Rect oeGetWallpaperScreenBounds();
     }
 
     private oeGlassBitmapSource oeGlassSource;
@@ -684,12 +687,21 @@ public class MessageDrawable extends Drawable {
         if (bitmap == null || bitmap.isRecycled()) {
             return null;
         }
-        // Стекло растягивается на весь экран (как настоящие обои): за баблом виден
-        // ровно тот участок обоев, который и находится под ним в реальности.
-        int w = AndroidUtilities.displaySize.x;
-        int h = AndroidUtilities.displaySize.y;
+        // Стекло строится по точной геометрии обоев (bounds их последней отрисовки,
+        // включая параллакс и сдвиг при скролле): за баблом виден именно тот участок
+        // обоев, который реально находится под ним в данный момент.
+        Rect wallpaper = oeGlassSource.oeGetWallpaperScreenBounds();
+        int bw = bitmap.getWidth();
+        int bh = bitmap.getHeight();
         canvas.getMatrix(oeGlassMatrix);
-        oeGlassMatrix.preScale(w / (float) bitmap.getWidth(), h / (float) bitmap.getHeight());
+        if (wallpaper != null && wallpaper.width() > 0 && wallpaper.height() > 0) {
+            oeGlassMatrix.preTranslate(wallpaper.left, wallpaper.top);
+            oeGlassMatrix.preScale(wallpaper.width() / (float) bw, wallpaper.height() / (float) bh);
+        } else {
+            int w = AndroidUtilities.displaySize.x;
+            int h = AndroidUtilities.displaySize.y;
+            oeGlassMatrix.preScale(w / (float) bw, h / (float) bh);
+        }
         if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
             oeGlassBitmap = bitmap;
             oeGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);

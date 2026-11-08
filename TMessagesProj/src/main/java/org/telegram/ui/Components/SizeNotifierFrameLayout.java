@@ -241,6 +241,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         canvas.save();
                         canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                         drawable.setBounds(x, y, x + width, y + height);
+                        oeRecordWallpaperBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
                         canvas.restore();
@@ -252,6 +253,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         motionBackgroundDrawable.setTranslationY(backgroundTranslationY);
                         int bottom = (int) (getRootView().getMeasuredHeight() - backgroundTranslationY + translationY);
                         drawable.setBounds(0, 0, getMeasuredWidth(), bottom);
+                        oeRecordWallpaperBounds(0, 0, getMeasuredWidth(), bottom);
                         drawable.draw(canvas);
                         if (bottomClip != 0) {
                             canvas.restore();
@@ -274,6 +276,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         canvas.clipRect(0, 0, getMeasuredWidth(), getRootView().getMeasuredHeight() - bottomClip);
                     }
                     drawable.setBounds(0, backgroundTranslationY, getMeasuredWidth(), backgroundTranslationY + getRootView().getMeasuredHeight());
+                    oeRecordWallpaperBounds(0, 0, getMeasuredWidth(), getRootView().getMeasuredHeight());
                     drawable.draw(canvas);
                     checkSnowflake(canvas);
                     if (bottomClip != 0) {
@@ -286,6 +289,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         float scale = 2.0f / AndroidUtilities.density;
                         canvas.scale(scale, scale);
                         drawable.setBounds(0, 0, (int) Math.ceil(getMeasuredWidth() / scale), (int) Math.ceil(getRootView().getMeasuredHeight() / scale));
+                        oeRecordWallpaperBounds(0, 0, (int) (getMeasuredWidth() * scale), (int) (getRootView().getMeasuredHeight() * scale));
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
                         canvas.restore();
@@ -302,6 +306,7 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                         canvas.save();
                         canvas.clipRect(0, actionBarHeight, width, getMeasuredHeight() - bottomClip);
                         drawable.setBounds(x, y, x + width, y + height);
+                        oeRecordWallpaperBounds(x, y, x + width, y + height);
                         drawable.draw(canvas);
                         checkSnowflake(canvas);
                         canvas.restore();
@@ -317,6 +322,12 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
                     float x = -getMeasuredWidth() * (parallaxScale - 1f) / 2f + translationX;
                     float y = -getRootView().getMeasuredHeight() * (parallaxScale - 1f) / 2f + translationY;
                     drawable.setBounds(
+                            (int) x,
+                            (int) (backgroundTranslationY + y),
+                            (int) (getMeasuredWidth() * parallaxScale + x),
+                            (int) (backgroundTranslationY + getRootView().getMeasuredHeight() * parallaxScale + y)
+                    );
+                    oeRecordWallpaperBounds(
                             (int) x,
                             (int) (backgroundTranslationY + y),
                             (int) (getMeasuredWidth() * parallaxScale + x),
@@ -900,6 +911,18 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         if (oldBackgroundDrawable instanceof MotionBackgroundDrawable) {
             ((MotionBackgroundDrawable) oldBackgroundDrawable).onDetachedFromWindow();
         }
+    }
+
+    // exteradive: точная геометрия обоев на экране (обновляется при каждом их рисовании,
+    // включая параллакс и сдвиг при скролле) — стекло баблов строится по ней.
+    public final Rect oeWallpaperDrawBounds = new Rect();
+
+    public boolean oeHasWallpaperBounds() {
+        return !oeWallpaperDrawBounds.isEmpty();
+    }
+
+    public void oeRecordWallpaperBounds(int left, int top, int right, int bottom) {
+        oeWallpaperDrawBounds.set(left, top, right, bottom);
     }
 
     public boolean blurWasDrawn() {
