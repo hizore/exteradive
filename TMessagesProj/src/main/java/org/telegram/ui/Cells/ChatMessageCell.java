@@ -2038,6 +2038,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             // Гифки и видео всегда полностью непрозрачные.
             return 1f;
         }
+        if (!SharedConfig.bubbleOpacityOut && currentMessageObject != null && currentMessageObject.isOutOwner()) {
+            // Свои сообщения не прозрачные, если тумблер для своих выключен.
+            return 1f;
+        }
         return SharedConfig.bubbleOpacity / 100f;
     }
 
@@ -21521,7 +21525,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 currentBackgroundDrawable.drawCached(canvas, backgroundCacheParams);
 //                }
                 if (currentBackgroundShadowDrawable != null && currentPosition == null) {
-                    currentBackgroundShadowDrawable.setAlpha((int) (255 * alphaInternal));
+                    currentBackgroundShadowDrawable.setAlpha((int) (255 * alphaInternal * oeComputeOpacityFactor()));
                     currentBackgroundShadowDrawable.draw(canvas);
                 }
             } else {
@@ -21564,7 +21568,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                     }
                 }
                 if (currentBackgroundShadowDrawable != null && currentPosition == null) {
-                    currentBackgroundShadowDrawable.setAlpha((int) (255 * alphaInternal));
+                    currentBackgroundShadowDrawable.setAlpha((int) (255 * alphaInternal * oeComputeOpacityFactor()));
                     currentBackgroundShadowDrawable.draw(canvas);
                 }
 
@@ -22880,7 +22884,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentBackgroundDrawable.setBotButtonsBottom(hasInlineBotButtons());
             Drawable currentBackgroundShadowDrawable = currentBackgroundDrawable.getShadowDrawable();
             if (currentBackgroundShadowDrawable != null) {
-                currentBackgroundShadowDrawable.setAlpha((int) (getAlpha() * 255));
+                currentBackgroundShadowDrawable.setAlpha((int) (getAlpha() * 255 * oeComputeOpacityFactor()));
                 currentBackgroundShadowDrawable.setBounds(left, top, right, bottom);
                 currentBackgroundShadowDrawable.draw(canvas);
                 currentBackgroundShadowDrawable.setAlpha(255);

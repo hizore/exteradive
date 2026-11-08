@@ -678,7 +678,8 @@ public class MessageDrawable extends Drawable {
     private final Path oeGlassPath = new Path();
 
     private Paint oeBuildGlassPaint(Canvas canvas) {
-        if (oeGlassSource == null || oeOpacityFactor >= 0.999f || alpha <= 0) {
+        // При factor 0 бабла не видно вовсе — стекло не рисуем, иначе «остаётся» пятно блюра.
+        if (oeGlassSource == null || oeOpacityFactor < 0.001f || oeOpacityFactor >= 0.999f || alpha <= 0) {
             return null;
         }
         if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {

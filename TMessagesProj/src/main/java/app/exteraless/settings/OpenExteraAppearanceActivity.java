@@ -102,6 +102,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int disableAvatarBlurRow;
     // DiveLite: непрозрачность баблов и их блюр
     private int bubbleOpacityRow;
+    private int bubbleOpacityOutRow;
     private int bubbleBlurRow;
     private int blurDividerRow;
 
@@ -254,6 +255,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         disableAvatarBlurRow = addRow("disableAvatarBlur");
         // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
         bubbleOpacityRow = addRow("bubbleOpacity");
+        bubbleOpacityOutRow = addRow("bubbleOpacityOut");
         bubbleBlurRow = addRow("bubbleBlur");
         blurDividerRow = addRow();
 
@@ -660,6 +662,11 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
             SharedConfig.setBubbleBlur(!SharedConfig.bubbleBlur);
             notifyRow(bubbleBlurRow);
             return;
+        } else if (position == bubbleOpacityOutRow) {
+            // DiveLite: применять ли ползунок непрозрачности к своим сообщениям.
+            SharedConfig.setBubbleOpacityOut(!SharedConfig.bubbleOpacityOut);
+            notifyRow(bubbleOpacityOutRow);
+            return;
         } else if (position == tabTitleStyleRow) {
             if (getParentActivity() == null) {
                 return;
@@ -956,6 +963,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     } else if (position == bubbleBlurRow) {
                         // DiveLite: тумблер блюра баблов.
                         cell.setTextAndCheck(getString(R.string.OEAppearanceBubbleBlur), SharedConfig.bubbleBlur, false);
+                    } else if (position == bubbleOpacityOutRow) {
+                        // DiveLite: применять ли ползунок непрозрачности к своим сообщениям.
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceBubbleOpacityOut), SharedConfig.bubbleOpacityOut, false);
                     } else if (position == singleCornerRadiusRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceSingleCornerRadius), AppearanceConfig.singleCornerRadius.Bool(), false);
                     } else if (position == forceSnowRow) {

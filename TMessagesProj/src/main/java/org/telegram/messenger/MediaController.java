@@ -4664,9 +4664,12 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     }
 
     private boolean shouldUseAudioRecorderV2(int account) {
-        return SharedSettings.audioRecorderV2Enabled.isSet() ?
-            SharedSettings.audioRecorderV2Enabled.get() :
-            !MessagesController.getInstance(account).config.audioRecorderV2Disabled.get();
+        // exteradive: V2-рекордер отключён. В нативе форка (libtmessages.49) нет
+        // реализаций AudioRecorderNative (nCreate/nWriteFrame/...), поэтому V2
+        // мгновенно падает (UnsatisfiedLinkError -> recordStartError) и запись
+        // голосовых сбрасывается. Кружки не затронуты (RoundVideoSession/камера).
+        // Используем legacy-рекордер из jni/audio.c (Opus, поддерживает битрейт).
+        return false;
     }
 
     private void startRecordingV2(

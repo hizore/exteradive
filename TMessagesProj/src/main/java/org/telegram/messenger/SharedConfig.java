@@ -270,6 +270,8 @@ public class SharedConfig {
     // Непрозрачность баблов сообщений (0..100) и их блюр (DiveGram)
     public static int bubbleOpacity = 100;
     public static boolean bubbleBlur = false;
+    // Применять ли ползунок непрозрачности к своим сообщениям (DiveGram)
+    public static boolean bubbleOpacityOut = false;
 
     // Звуковой кодек и битрейт (DiveGram)
     public static final int AUDIO_CODEC_AUTO = 0;
@@ -729,6 +731,7 @@ public class SharedConfig {
             mentionAllSplitEnabled = forkPrefs.getBoolean("dgMentionAllSplitEnabled", false);
             bubbleOpacity = forkPrefs.getInt("dgBubbleOpacity", 100);
             bubbleBlur = forkPrefs.getBoolean("dgBubbleBlur", false);
+            bubbleOpacityOut = forkPrefs.getBoolean("dgBubbleOpacityOut", false);
             audioCodec = forkPrefs.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
             voiceRecordBitrate = forkPrefs.getInt("dgVoiceRecordBitrate", 0);
             // Сохранённые удалённые сообщения
@@ -1690,6 +1693,13 @@ public class SharedConfig {
         bubbleBlur = value;
         MessagesController.getGlobalMainSettings().edit()
                 .putBoolean("dgBubbleBlur", value)
+                .apply();
+    }
+
+    public static void setBubbleOpacityOut(boolean value) {
+        bubbleOpacityOut = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgBubbleOpacityOut", value)
                 .apply();
     }
 

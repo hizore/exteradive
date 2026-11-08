@@ -62,6 +62,7 @@
     <string name="OEAppearanceBubbleOpacity">Message Opacity</string>
     <string name="OEAppearanceBubbleOpacityMin">Transparent</string>
     <string name="OEAppearanceBubbleOpacityMax">Opaque</string>
+    <string name="OEAppearanceBubbleOpacityOut">Apply to My Messages</string>
     <string name="OEAppearanceBubbleBlur">Blur Messages</string>
 
     <string name="OEAppearanceRestartNow">Restart</string>
