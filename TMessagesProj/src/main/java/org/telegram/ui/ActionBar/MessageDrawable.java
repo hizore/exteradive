@@ -109,8 +109,6 @@ public class MessageDrawable extends Drawable {
 
     // exteradive: непрозрачность бабла (1 = как из темы) и «стекло» под полупрозрачным фоном.
     public float oeOpacityFactor = 1f;
-    public int oeContentWidth;
-    public int oeContentHeight;
 
     public interface oeGlassBitmapSource {
         Bitmap oeGetWallpaperBlurBitmap();
@@ -203,10 +201,6 @@ public class MessageDrawable extends Drawable {
     public void setTop(int top, int backgroundWidth, int backgroundHeight, int heightOffset, int blurredViewTopOffset, int blurredViewBottomOffset, boolean topNear, boolean bottomNear) {
         if (crossfadeFromDrawable != null) {
             crossfadeFromDrawable.setTop(top, backgroundWidth, backgroundHeight, heightOffset, blurredViewTopOffset, blurredViewBottomOffset, topNear, bottomNear);
-        }
-        if (backgroundWidth > 0 && backgroundHeight > 0) {
-            oeContentWidth = backgroundWidth;
-            oeContentHeight = backgroundHeight;
         }
         int color;
         int gradientColor1;
@@ -690,11 +684,10 @@ public class MessageDrawable extends Drawable {
         if (bitmap == null || bitmap.isRecycled()) {
             return null;
         }
-        int w = oeContentWidth > 0 ? oeContentWidth : AndroidUtilities.displaySize.x;
-        int h = oeContentHeight > 0 ? oeContentHeight : AndroidUtilities.displaySize.y;
-        if (w <= 0 || h <= 0) {
-            return null;
-        }
+        // Стекло растягивается на весь экран (как настоящие обои): за баблом виден
+        // ровно тот участок обоев, который и находится под ним в реальности.
+        int w = AndroidUtilities.displaySize.x;
+        int h = AndroidUtilities.displaySize.y;
         canvas.getMatrix(oeGlassMatrix);
         oeGlassMatrix.preScale(w / (float) bitmap.getWidth(), h / (float) bitmap.getHeight());
         if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
