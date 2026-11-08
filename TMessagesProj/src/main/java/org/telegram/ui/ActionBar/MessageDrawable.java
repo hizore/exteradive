@@ -711,8 +711,10 @@ public class MessageDrawable extends Drawable {
             oeGlassPaint.setShader(oeGlassShader);
         }
         oeGlassShader.setLocalMatrix(oeGlassMatrix);
-        // Стекло мерцает вместе с баблом (alpha уже без фактора непрозрачности).
-        oeGlassPaint.setAlpha(Math.min(255, alpha));
+        // Стекло полупрозрачное, пропорционально ползунку: сквозь бабл всегда видны
+        // настоящие обои, находящиеся за ним (они сами динамичны при скролле),
+        // а «морозный» слой лишь слегка тонирует картинку по величине прозрачности.
+        oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * oeOpacityFactor));
         return oeGlassPaint;
     }
 
