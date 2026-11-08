@@ -54,9 +54,7 @@ import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.BlurSettingsBottomSheet;
 import org.telegram.ui.ChatBackgroundDrawable;
-import org.telegram.ui.Components.blur3.source.BlurredBackgroundSource;
-import org.telegram.ui.Components.blur3.source.BlurredBackgroundSourceBitmap;
-import org.telegram.ui.Components.chat.WallpaperBitmapProvider;
+import org.telegram.ui.Components.MotionBackgroundDrawable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -908,16 +906,16 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         return SharedConfig.chatBlurEnabled() && (DRAW_USING_RENDERNODE() || currentBitmap != null);
     }
 
-    // exteradive: сильно заблюренная копия текущих обоев чата для «стекла» баблов.
-    // Возвращает null, если фон — сплошной цвет (блюр цвета визуально не нужен).
-    private WallpaperBitmapProvider oeWallpaperBitmapProvider;
-    private Drawable oeLastWallpaperDrawable;
+    // exteradive: «стекло» баблов — заблюренная копия текущих обоев чата.
+    // Блюр заметно чётче, чем у панели-навбара (~1/3 ширины), чтобы обои
+    // динамически проглядывали сквозь прозрачность.
     private Bitmap oeCachedBlurredWallpaper;
+    private Bitmap oeCachedBlurSource;
 
     public Bitmap oeGetBlurredWallpaper() {
         if (!SharedConfig.bubbleBlur) {
             oeCachedBlurredWallpaper = null;
-            oeLastWallpaperDrawable = null;
+            oeCachedBlurSource = null;
             return null;
         }
         Drawable drawable = backgroundDrawable;
@@ -927,24 +925,35 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         if (drawable == null) {
             return null;
         }
-        if (drawable == oeLastWallpaperDrawable && oeCachedBlurredWallpaper != null) {
+        if (drawable instanceof ChatBackgroundDrawable) {
+            drawable = ((ChatBackgroundDrawable) drawable).getDrawable(false);
+        }
+        Bitmap source = null;
+        if (drawable instanceof BitmapDrawable) {
+            source = ((BitmapDrawable) drawable).getBitmap();
+        } else if (drawable instanceof MotionBackgroundDrawable) {
+            source = ((MotionBackgroundDrawable) drawable).getBitmap();
+        }
+        if (source == null || source.isRecycled()) {
+            // Сплошной цвет без файла обоев — блюр невозможен и не нужен.
+            return null;
+        }
+        if (source == oeCachedBlurSource && oeCachedBlurredWallpaper != null && !oeCachedBlurredWallpaper.isRecycled()) {
             return oeCachedBlurredWallpaper;
         }
-        if (oeWallpaperBitmapProvider == null) {
-            oeWallpaperBitmapProvider = new WallpaperBitmapProvider();
-        }
+        // Блюрим до ~1/3 разрешения: детали обоев остаются различимы сквозь бабл.
         try {
-            BlurredBackgroundSource source = oeWallpaperBitmapProvider.updateSourceFromBackgroundViewDrawable(drawable);
-            if (source instanceof BlurredBackgroundSourceBitmap) {
-                Bitmap bitmap = ((BlurredBackgroundSourceBitmap) source).getBitmap();
-                if (bitmap != null && !bitmap.isRecycled()) {
-                    oeLastWallpaperDrawable = drawable;
-                    oeCachedBlurredWallpaper = bitmap;
-                    return bitmap;
-                }
+            float maxDim = Math.max(source.getWidth(), source.getHeight());
+            float scaleFactor = Math.max(1f, maxDim / (float) AndroidUtilities.dp(240));
+            Bitmap blurred = Utilities.stackBlurBitmapWithScaleFactor(source, scaleFactor);
+            if (blurred != null && !blurred.isRecycled() && blurred != source) {
+                blurred.setHasAlpha(false);
+                oeCachedBlurSource = source;
+                oeCachedBlurredWallpaper = blurred;
+                return blurred;
             }
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable t) {
+            FileLog.e(t);
         }
         return null;
     }
