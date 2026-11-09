@@ -583,6 +583,14 @@ public class MessageDrawable extends Drawable {
         if (!oeRemoveMessageTail() && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
+                // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
+                Paint oeGlass = oeBuildGlassPaint(canvas);
+                if (oeGlass != null) {
+                    makePath();
+                    oeGlassPath.reset();
+                    oeGlassPath.addPath(this.path);
+                    canvas.drawPath(oeGlassPath, oeGlass);
+                }
                 background.setBounds(bounds);
                 background.draw(canvas);
                 return;
@@ -638,8 +646,12 @@ public class MessageDrawable extends Drawable {
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
-        // exteradive: «стекло» бабла теперь рисует ItemDecoration списка
-        // (ChatActivity.BubbleGlassDecoration), чтобы оно обновлялось каждый кадр скролла.
+        // exteradive: «стекло» под полупрозрачным баблом — рисуется по тому же
+        // path, каким ложится фон и текст, в отрисовке самой ячейки (статично).
+        Paint oeGlass = oeBuildGlassPaint(canvas);
+        if (oeGlass != null) {
+            canvas.drawPath(path, oeGlass);
+        }
 
         canvas.drawPath(path, p);
         if (gradientShader != null && isSelected && paintToUse == null) {
@@ -650,13 +662,52 @@ public class MessageDrawable extends Drawable {
     }
 
     /**
-     * exteradive: «стекло» — сильно заблюренные обои чата. Рисуется декорацией
-     * списка (ChatActivity → ChatMessageCell.oeDrawGlassDecoration). Сам drawable
-     * больше ничего не хранит: краски/путь живут в ячейке, потому что themed-
-     * drawables разделяются между ячейками, и общие поля (alpha, параметры path)
-     * остаются от последней нарисованной ячейки — это давало мерцание стекла
-     * при скролле («эпилепсию»).
+     * exteradive: «стекло» — заблюренные обои чата, отрисовываются в самой ячейке
+     * (статично, без динамической пере-привязки к скроллу). Привязка к экрану —
+     * один раз по матрице canvas этой отрисовки: никакие волатильные данные
+     * (bounds обоев, поля чужих ячеек) в рендер не входят, поэтому мерцания нет.
      */
+    private Paint oeGlassPaint;
+    private BitmapShader oeGlassShader;
+    private Bitmap oeGlassBitmap;
+    private final Matrix oeGlassMatrix = new Matrix();
+    private final Path oeGlassPath = new Path();
+
+    private Paint oeBuildGlassPaint(Canvas canvas) {
+        // При factor 0 бабла не видно вовсе, при 100% — обои скрыты: стекло не нужно.
+        if (oeGlassSource == null || oeOpacityFactor < 0.001f || oeOpacityFactor >= 0.999f || alpha <= 0) {
+            return null;
+        }
+        if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {
+            // Снимок для блюра за панелями рисуется без стекла, чтобы не складывать блюры.
+            return null;
+        }
+        if (SharedConfig.bubbleBlurStrength <= 0) {
+            return null;
+        }
+        Bitmap bitmap = oeGlassSource.oeGetWallpaperBlurBitmap();
+        if (bitmap == null || bitmap.isRecycled()) {
+            return null;
+        }
+        int bw = bitmap.getWidth();
+        int bh = bitmap.getHeight();
+        canvas.getMatrix(oeGlassMatrix);
+        oeGlassMatrix.preScale(AndroidUtilities.displaySize.x / (float) bw, AndroidUtilities.displaySize.y / (float) bh);
+        if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
+            oeGlassBitmap = bitmap;
+            oeGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            if (oeGlassPaint == null) {
+                oeGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            }
+            oeGlassPaint.setShader(oeGlassShader);
+        }
+        oeGlassShader.setLocalMatrix(oeGlassMatrix);
+        // Честная настройка блюра: заметность = кривая factor^0.65 * сила блюра.
+        // 0% силы — стекла нет вовсе, 100% — максимум мороза.
+        float strength01 = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
+        oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * (float) Math.pow(oeOpacityFactor, 0.65f) * strength01));
+        return oeGlassPaint;
+    }
 
     public Path makePath() {
         return makePath(pathDrawCacheParams);

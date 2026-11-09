@@ -7492,24 +7492,6 @@ public class ChatActivity extends BaseFragment implements
             }
         });
         chatListView.setLayoutManager(chatLayoutManager);
-        // DiveLite: «стекло» баблов рисуется ItemDecoration списка — onDraw списка
-        // перевычисляется каждый кадр скролла (chatListView.invalidate()), поэтому
-        // обои под баблом видны динамически, независимо от RenderNode ячейки.
-        // Декорация рисуется до детей, бабл ложится поверх стекла.
-        chatListView.addItemDecoration(new RecyclerView.ItemDecoration() {
-            @Override
-            public void onDraw(@NonNull Canvas canvas, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-                if (!SharedConfig.bubbleBlur || SharedConfig.bubbleBlurStrength <= 0 || SharedConfig.bubbleOpacity >= 100) {
-                    return;
-                }
-                for (int i = 0; i < parent.getChildCount(); i++) {
-                    View child = parent.getChildAt(i);
-                    if (child instanceof ChatMessageCell) {
-                        ((ChatMessageCell) child).oeDrawGlassDecoration(canvas);
-                    }
-                }
-            }
-        });
         chatListView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
             public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
@@ -7619,9 +7601,6 @@ public class ChatActivity extends BaseFragment implements
                 if (contentView != null) {
                     contentView.updateBlurContent();
                 }
-                // DiveLite: полупрозрачным баблам со «стеклом» нужна перерисовка каждый
-                // кадр скролла — иначе RenderNode ячейки не перевычисляется и стекло
-                // не показывает новую область обоев под сообщением.
                 if (SharedConfig.bubbleOpacity < 100) {
                     for (int i = 0; i < chatListView.getChildCount(); i++) {
                         View child = chatListView.getChildAt(i);
