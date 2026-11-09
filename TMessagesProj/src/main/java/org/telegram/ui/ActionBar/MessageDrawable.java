@@ -940,5 +940,14 @@ public class MessageDrawable extends Drawable {
         public Path getPath() {
             return path;
         }
+
+        /** DiveLite: сброс кэша пути при пере-использовании ячейки; иначе декорация стекла рисует путь предыдущего сообщения. */
+        public void oeResetForRebind() {
+            path.rewind();
+            lastRect.setEmpty();
+            lastDrawFullTop = false;
+            lastDrawFullBottom = false;
+            lastNoTail = oeRemoveMessageTail();
+        }
     }
 }

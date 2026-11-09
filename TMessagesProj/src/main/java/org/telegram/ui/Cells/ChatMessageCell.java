@@ -7113,6 +7113,13 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         mediaSpoilerRevealProgress = 0f;
         TLRPC.Message newReply = messageObject.hasValidReplyMessageObject() ? messageObject.replyMessageObject.messageOwner : null;
         boolean messageIdChanged = currentMessageObject == null || currentMessageObject.getId() != messageObject.getId();
+        if (messageIdChanged || widthChanged) {
+            // DiveLite: при пере-использовании ячейки сбрасываем кэш пути фона.
+            // Декорация стекла рисуется до первой отрисовки ячейки; без этого она
+            // берёт путь предыдущего сообщения в этой ячейке — стекло мигает
+            // чужой формой/мощностью, пока бабл не отрисуется с новым path.
+            backgroundCacheParams.oeResetForRebind();
+        }
         boolean messageChanged = currentMessageObject != messageObject || messageObject.forceUpdate || (isRoundVideo && isPlayingRound != (MediaController.getInstance().isPlayingMessage(currentMessageObject) && delegate != null && !delegate.keyboardIsOpened()));
         boolean dataChanged = currentMessageObject != null && currentMessageObject.getId() == messageObject.getId() && lastSendState == MessageObject.MESSAGE_SEND_STATE_EDITING && messageObject.isSent() ||
                 currentMessageObject == messageObject && (isUserDataChanged() || photoNotSet) ||
