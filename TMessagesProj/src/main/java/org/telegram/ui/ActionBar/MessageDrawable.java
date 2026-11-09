@@ -713,9 +713,11 @@ public class MessageDrawable extends Drawable {
         if (oeBuildGlassPaint(canvas) == null) {
             return;
         }
-        Rect bounds = getBounds();
+        // Форма бабла — снимок реального path в независимый объект: внутренний this.path
+        // переиспользуется отрисовкой ячейки, мутировать его из декорации нельзя.
+        makePath();
         oeGlassPath.reset();
-        oeGlassPath.addRect(bounds.left, bounds.top, bounds.right, bounds.bottom, Path.Direction.CW);
+        oeGlassPath.addPath(this.path);
         canvas.drawPath(oeGlassPath, oeGlassPaint);
     }
 
