@@ -78,6 +78,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
 
     /** DiveLite: слайдер непрозрачности баблов сообщений. */
     private static final int TYPE_BUBBLE_OPACITY = 107;
+    private static final int TYPE_BUBBLE_BLUR_STRENGTH = 108;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -103,6 +104,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     // DiveLite: непрозрачность баблов и их блюр
     private int bubbleOpacityRow;
     private int bubbleOpacityOutRow;
+    private int bubbleBlurStrengthRow;
     private int bubbleBlurRow;
     private int blurDividerRow;
 
@@ -256,6 +258,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
         bubbleOpacityRow = addRow("bubbleOpacity");
         bubbleOpacityOutRow = addRow("bubbleOpacityOut");
+        bubbleBlurStrengthRow = addRow("bubbleBlurStrength");
         bubbleBlurRow = addRow("bubbleBlur");
         blurDividerRow = addRow();
 
@@ -888,6 +891,20 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = bubbleSlider;
                     break;
                 }
+                case TYPE_BUBBLE_BLUR_STRENGTH: {
+                    // DiveLite: сила блюра баблов независимо от непрозрачности.
+                    AvatarCornersSeekBar blurStrengthSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setBubbleBlurStrength(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceBubbleBlurStrength),
+                            getString(R.string.OEAppearanceBubbleBlurStrengthMin),
+                            getString(R.string.OEAppearanceBubbleBlurStrengthMax));
+                    blurStrengthSlider.setValueSuffix("%");
+                    blurStrengthSlider.setValue(SharedConfig.bubbleBlurStrength);
+                    blurStrengthSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = blurStrengthSlider;
+                    break;
+                }
                 case TYPE_DETAIL_SETTINGS: {
                     // Базовый класс делает такую же ячейку, но многострочной; exteraGram
                     // (asButtonWithSubtext(..., 64, 60) :456-458) держит ровно 64 dp.
@@ -1134,6 +1151,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_SECTION_SLIDER;
             } else if (position == bubbleOpacityRow) {
                 return TYPE_BUBBLE_OPACITY;
+            } else if (position == bubbleBlurStrengthRow) {
+                return TYPE_BUBBLE_BLUR_STRENGTH;
             } else if (position == appearanceHeaderRow || position == sectionsHeaderRow
                     || position == blurHeaderRow || position == chatListHeaderRow
                     || position == foldersHeaderRow || position == linksHeaderRow) {

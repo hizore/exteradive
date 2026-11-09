@@ -64,6 +64,9 @@
     <string name="OEAppearanceBubbleOpacityMax">Opaque</string>
     <string name="OEAppearanceBubbleOpacityOut">Apply to My Messages</string>
     <string name="OEAppearanceBubbleBlur">Blur Messages</string>
+    <string name="OEAppearanceBubbleBlurStrength">Blur Strength</string>
+    <string name="OEAppearanceBubbleBlurStrengthMin">Light</string>
+    <string name="OEAppearanceBubbleBlurStrengthMax">Strong</string>
 
     <string name="OEAppearanceRestartNow">Restart</string>
     <string name="OEAppearanceNeedRestart">Restart the app to apply this setting.</string>

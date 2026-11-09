@@ -711,10 +711,12 @@ public class MessageDrawable extends Drawable {
             oeGlassPaint.setShader(oeGlassShader);
         }
         oeGlassShader.setLocalMatrix(oeGlassMatrix);
-        // Стекло полупрозрачное, пропорционально ползунку: сквозь бабл всегда видны
-        // настоящие обои, находящиеся за ним (они сами динамичны при скролле),
-        // а «морозный» слой лишь слегка тонирует картинку по величине прозрачности.
-        oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * oeOpacityFactor));
+        // Стекло полупрозрачное: заметность блюра = кривая factor^0.65 * сила блюра.
+        // Исчезает на 0% и никогда не закрывает обои наглухо (кроме 100% непрозрачности,
+        // где стекло не рисуется вовсе). Сквозь остаточную прозрачность всегда видны
+        // настоящие обои за баблом, поэтому динамика не зависит от перерисовки ячеек.
+        float strength = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
+        oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * (float) Math.pow(oeOpacityFactor, 0.65f) * strength));
         return oeGlassPaint;
     }
 

@@ -49,6 +49,9 @@
     <string name="OEAppearanceBubbleOpacityMax">Непрозрачно</string>
     <string name="OEAppearanceBubbleOpacityOut">Прозрачность своих сообщений</string>
     <string name="OEAppearanceBubbleBlur">Блюр сообщений</string>
+    <string name="OEAppearanceBubbleBlurStrength">Сила блюра</string>
+    <string name="OEAppearanceBubbleBlurStrengthMin">Слабый</string>
+    <string name="OEAppearanceBubbleBlurStrengthMax">Сильный</string>
 
     <string name="OEAppearanceRestartNow">Перезапустить</string>
     <string name="OEAppearanceNeedRestart">Перезапустите приложение, чтобы применить настройку.</string>
