@@ -117,7 +117,7 @@ public class MessageDrawable extends Drawable {
         Rect oeGetWallpaperScreenBounds();
     }
 
-    private oeGlassBitmapSource oeGlassSource;
+    public oeGlassBitmapSource oeGlassSource;
 
     public void setOEGlassSource(oeGlassBitmapSource source) {
         if (oeGlassSource != source) {
@@ -583,15 +583,6 @@ public class MessageDrawable extends Drawable {
         if (!oeRemoveMessageTail() && paintToUse == null && paint.getStyle() == Paint.Style.FILL && gradientShader == null && overrideRoundRadius == 0 && overrideRounding <= 0) {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
-                // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
-                Paint oeGlass = oeBuildGlassPaint(canvas);
-                if (oeGlass != null) {
-                    canvas.save();
-                    oeGlassPath.reset();
-                    oeGlassPath.addRect(bounds.left, bounds.top, bounds.right, bounds.bottom, Path.Direction.CW);
-                    canvas.drawPath(oeGlassPath, oeGlass);
-                    canvas.restore();
-                }
                 background.setBounds(bounds);
                 background.draw(canvas);
                 return;
@@ -647,13 +638,8 @@ public class MessageDrawable extends Drawable {
             generatePath(path, bounds, padding, rad, smallRad, nearRad, top, drawFullBottom, drawFullTop, paintToUse != null);
         }
 
-        // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
-        if (paintToUse == null) {
-            Paint oeGlass = oeBuildGlassPaint(canvas);
-            if (oeGlass != null) {
-                canvas.drawPath(path, oeGlass);
-            }
-        }
+        // exteradive: «стекло» бабла теперь рисует ItemDecoration списка
+        // (ChatActivity.BubbleGlassDecoration), чтобы оно обновлялось каждый кадр скролла.
 
         canvas.drawPath(path, p);
         if (gradientShader != null && isSelected && paintToUse == null) {
@@ -711,13 +697,26 @@ public class MessageDrawable extends Drawable {
             oeGlassPaint.setShader(oeGlassShader);
         }
         oeGlassShader.setLocalMatrix(oeGlassMatrix);
-        // Стекло полупрозрачное: заметность блюра = кривая factor^0.65 * сила блюра.
-        // Исчезает на 0% и никогда не закрывает обои наглухо (кроме 100% непрозрачности,
-        // где стекло не рисуется вовсе). Сквозь остаточную прозрачность всегда видны
-        // настоящие обои за баблом, поэтому динамика не зависит от перерисовки ячеек.
+        // Стекло полупрозрачное: заметность = кривая factor^0.65 * сила блюра.
+        // Сила 0 = стекла нет вовсе; максимум блюра — самый сильный мороз из кэша.
+        // Сквозь остаточную прозрачность всегда видны настоящие обои за баблом.
+        if (SharedConfig.bubbleBlurStrength <= 0) {
+            return null;
+        }
         float strength = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
         oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * (float) Math.pow(oeOpacityFactor, 0.65f) * strength));
         return oeGlassPaint;
+    }
+
+    /** exteradive: рисует только «стекло» бабла (без фона), вызывается декорацией списка. */
+    public void oeDrawGlass(Canvas canvas) {
+        if (oeBuildGlassPaint(canvas) == null) {
+            return;
+        }
+        Rect bounds = getBounds();
+        oeGlassPath.reset();
+        oeGlassPath.addRect(bounds.left, bounds.top, bounds.right, bounds.bottom, Path.Direction.CW);
+        canvas.drawPath(oeGlassPath, oeGlassPaint);
     }
 
     public Path makePath() {

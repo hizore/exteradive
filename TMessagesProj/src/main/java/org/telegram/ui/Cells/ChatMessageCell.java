@@ -2079,6 +2079,33 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         return null;
     }
 
+    /**
+     * exteradive: рисует «стекло» бабла по запросу декорации списка. Декорация
+     * рисуется в onDraw самого списка (перевычисляется каждый кадр скролла),
+     * поэтому обои под баблом динамичны независимо от RenderNode ячейки.
+     */
+    public void oeDrawGlassDecoration(Canvas canvas) {
+        if (SharedConfig.bubbleBlurStrength <= 0 || currentBackgroundDrawable == null) {
+            return;
+        }
+        float factor = oeComputeOpacityFactor();
+        if (factor < 0.001f || factor >= 0.999f) {
+            return;
+        }
+        currentBackgroundDrawable.oeOpacityFactor = factor;
+        if (currentBackgroundDrawable.oeGlassSource == null) {
+            return;
+        }
+        MessageDrawable.oeGlassBitmapSource source = currentBackgroundDrawable.oeGlassSource;
+        if (source.oeGetWallpaperBlurBitmap() == null) {
+            return;
+        }
+        canvas.save();
+        canvas.translate(getX(), getY());
+        currentBackgroundDrawable.oeDrawGlass(canvas);
+        canvas.restore();
+    }
+
     public ChatMessageCell(Context context, int currentAccount) {
         this(context, currentAccount, false, null, null);
     }

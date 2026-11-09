@@ -970,6 +970,11 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             float scaleFactor = Math.max(1f, maxDim / (float) AndroidUtilities.dp(240));
             Bitmap blurred = Utilities.stackBlurBitmapWithScaleFactor(source, scaleFactor);
             if (blurred != null && !blurred.isRecycled() && blurred != source) {
+                // Вторая проходка с явным сильным радиусом: первое размытие (radius
+                // зажат снизу 10px) давало едва заметный мороз, читавшийся только
+                // при полной непрозрачности стекла.
+                int strongRadius = Math.max(10, Math.max(blurred.getWidth(), blurred.getHeight()) / 12);
+                Utilities.stackBlurBitmap(blurred, strongRadius);
                 blurred.setHasAlpha(false);
                 oeCachedBlurSource = source;
                 oeCachedBlurredWallpaper = blurred;
