@@ -650,76 +650,13 @@ public class MessageDrawable extends Drawable {
     }
 
     /**
-     * exteradive: краска «стекла» — сильно заблюренные обои чата, выровненные по
-     * координатам экрана. Рисуется под полупрозрачным баблом; при непрозрачности 100%
-     * не нужна (закрашивается), при выключенном тумблере — не вызывается.
+     * exteradive: «стекло» — сильно заблюренные обои чата. Рисуется декорацией
+     * списка (ChatActivity → ChatMessageCell.oeDrawGlassDecoration). Сам drawable
+     * больше ничего не хранит: краски/путь живут в ячейке, потому что themed-
+     * drawables разделяются между ячейками, и общие поля (alpha, параметры path)
+     * остаются от последней нарисованной ячейки — это давало мерцание стекла
+     * при скролле («эпилепсию»).
      */
-    private Paint oeGlassPaint;
-    private BitmapShader oeGlassShader;
-    private Bitmap oeGlassBitmap;
-    private final Matrix oeGlassMatrix = new Matrix();
-    private final Path oeGlassPath = new Path();
-
-    private Paint oeBuildGlassPaint(Canvas canvas) {
-        // При factor 0 бабла не видно вовсе — стекло не рисуем, иначе «остаётся» пятно блюра.
-        if (oeGlassSource == null || oeOpacityFactor < 0.001f || oeOpacityFactor >= 0.999f || alpha <= 0) {
-            return null;
-        }
-        if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {
-            // Снимок для блюра за панелями рисуется без стекла, чтобы не складывать блюры.
-            return null;
-        }
-        Bitmap bitmap = oeGlassSource.oeGetWallpaperBlurBitmap();
-        if (bitmap == null || bitmap.isRecycled()) {
-            return null;
-        }
-        // Стекло строится по точной геометрии обоев (bounds их последней отрисовки,
-        // включая параллакс и сдвиг при скролле): за баблом виден именно тот участок
-        // обоев, который реально находится под ним в данный момент.
-        Rect wallpaper = oeGlassSource.oeGetWallpaperScreenBounds();
-        int bw = bitmap.getWidth();
-        int bh = bitmap.getHeight();
-        canvas.getMatrix(oeGlassMatrix);
-        if (wallpaper != null && wallpaper.width() > 0 && wallpaper.height() > 0) {
-            oeGlassMatrix.preTranslate(wallpaper.left, wallpaper.top);
-            oeGlassMatrix.preScale(wallpaper.width() / (float) bw, wallpaper.height() / (float) bh);
-        } else {
-            int w = AndroidUtilities.displaySize.x;
-            int h = AndroidUtilities.displaySize.y;
-            oeGlassMatrix.preScale(w / (float) bw, h / (float) bh);
-        }
-        if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
-            oeGlassBitmap = bitmap;
-            oeGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-            if (oeGlassPaint == null) {
-                oeGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            }
-            oeGlassPaint.setShader(oeGlassShader);
-        }
-        oeGlassShader.setLocalMatrix(oeGlassMatrix);
-        // Стекло полупрозрачное: заметность = кривая factor^0.65 * сила блюра.
-        // Сила 0 = стекла нет вовсе; максимум блюра — самый сильный мороз из кэша.
-        // Сквозь остаточную прозрачность всегда видны настоящие обои за баблом.
-        if (SharedConfig.bubbleBlurStrength <= 0) {
-            return null;
-        }
-        float strength = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
-        oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * (float) Math.pow(oeOpacityFactor, 0.65f) * strength));
-        return oeGlassPaint;
-    }
-
-    /** exteradive: рисует только «стекло» бабла (без фона), вызывается декорацией списка. */
-    public void oeDrawGlass(Canvas canvas) {
-        if (oeBuildGlassPaint(canvas) == null) {
-            return;
-        }
-        // Форма бабла — снимок реального path в независимый объект: внутренний this.path
-        // переиспользуется отрисовкой ячейки, мутировать его из декорации нельзя.
-        makePath();
-        oeGlassPath.reset();
-        oeGlassPath.addPath(this.path);
-        canvas.drawPath(oeGlassPath, oeGlassPaint);
-    }
 
     public Path makePath() {
         return makePath(pathDrawCacheParams);

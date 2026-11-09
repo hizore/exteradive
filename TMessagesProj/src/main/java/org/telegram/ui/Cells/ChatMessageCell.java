@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -46,6 +47,7 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
@@ -2082,27 +2084,74 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     /**
      * exteradive: рисует «стекло» бабла по запросу декорации списка. Декорация
      * рисуется в onDraw самого списка (перевычисляется каждый кадр скролла),
-     * поэтому обои под баблом динамичны независимо от RenderNode ячейки.
+     * поэтому обои под баблом видны динамически, независимо от RenderNode ячейки.
+     *
+     * Форма — точный путь ЭТОГО бабла из его per-cell кэша (backgroundCacheParams),
+     * тот самый path, каким ячейка рисует бабл в этом же кадре. Разделяемые
+     * themed-drawables (fields alpha/параметры path от последней нарисованной
+     * ячейки) в вычислениях стекла не участвуют — это убирает мерцание при скролле
+     * и смену геометрии стекла от кадра к кадру.
      */
+    private Paint oeGlassPaint;
+    private BitmapShader oeGlassShader;
+    private Bitmap oeGlassBitmap;
+    private final Matrix oeGlassMatrix = new Matrix();
+
     public void oeDrawGlassDecoration(Canvas canvas) {
-        if (SharedConfig.bubbleBlurStrength <= 0 || currentBackgroundDrawable == null) {
+        int strength = SharedConfig.bubbleBlurStrength;
+        if (strength <= 0 || currentBackgroundDrawable == null || getAlpha() == 0f) {
+            return;
+        }
+        MessageDrawable.oeGlassBitmapSource source = currentBackgroundDrawable.oeGlassSource;
+        if (source == null) {
             return;
         }
         float factor = oeComputeOpacityFactor();
         if (factor < 0.001f || factor >= 0.999f) {
             return;
         }
-        currentBackgroundDrawable.oeOpacityFactor = factor;
-        if (currentBackgroundDrawable.oeGlassSource == null) {
+        if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {
+            // Снимок для блюра за панелями рисуется без стекла, чтобы не складывать блюры.
             return;
         }
-        MessageDrawable.oeGlassBitmapSource source = currentBackgroundDrawable.oeGlassSource;
-        if (source.oeGetWallpaperBlurBitmap() == null) {
+        Bitmap bitmap = source.oeGetWallpaperBlurBitmap();
+        if (bitmap == null || bitmap.isRecycled()) {
+            return;
+        }
+        MessageDrawable.PathDrawParams params = backgroundCacheParams;
+        Path path = params == null ? null : params.getPath();
+        if (path == null || path.isEmpty()) {
             return;
         }
         canvas.save();
         canvas.translate(getX(), getY());
-        currentBackgroundDrawable.oeDrawGlass(canvas);
+        // Матрица обоев: та же схема выравнивания по экрану, что и раньше (bounds
+        // последней отрисовки обоев, включая кроп, параллакс и сдвиг при скролле).
+        int bw = bitmap.getWidth();
+        int bh = bitmap.getHeight();
+        canvas.getMatrix(oeGlassMatrix);
+        Rect wallpaper = source.oeGetWallpaperScreenBounds();
+        if (wallpaper != null && wallpaper.width() > 0 && wallpaper.height() > 0) {
+            oeGlassMatrix.preTranslate(wallpaper.left, wallpaper.top);
+            oeGlassMatrix.preScale(wallpaper.width() / (float) bw, wallpaper.height() / (float) bh);
+        } else {
+            oeGlassMatrix.preScale(AndroidUtilities.displaySize.x / (float) bw, AndroidUtilities.displaySize.y / (float) bh);
+        }
+        if (oeGlassPaint == null || oeGlassBitmap != bitmap) {
+            oeGlassBitmap = bitmap;
+            oeGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            if (oeGlassPaint == null) {
+                oeGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            }
+            oeGlassPaint.setShader(oeGlassShader);
+        }
+        oeGlassShader.setLocalMatrix(oeGlassMatrix);
+        // Стекло полупрозрачное: заметность = кривая factor^0.65 * сила блюра.
+        // Сила 0 = стекла нет вовсе. Альфа своя per-cell (alphaInternal * view alpha) —
+        // без общих полей drawable.
+        float strength01 = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, strength)) / 100f);
+        oeGlassPaint.setAlpha((int) (255 * alphaInternal * getAlpha() * (float) Math.pow(factor, 0.65f) * strength01));
+        canvas.drawPath(path, oeGlassPaint);
         canvas.restore();
     }
 
