@@ -76,6 +76,13 @@ public class RadialProgress {
         return animatedProgressValue;
     }
 
+    // DiveLite: волнистый индикатор загрузки в стиле Material 3 Expressive —
+    // синусоида, «бегущая» по дуге прогресса вместо плоского кругового кольца.
+    private static final float OE_WAVE_SPEED = 1f / 1400f; // оборотов волны в мс
+    private static final int OE_WAVE_SAMPLES = 12;
+    private float oeWavePhase = 0f;
+    private final Path oeWavePath = new Path();
+
     public void copyParams(RadialProgress radialProgressUpload) {
         currentProgress = radialProgressUpload.currentProgress;
         animatedProgressValue = radialProgressUpload.animatedProgressValue;
@@ -218,6 +225,8 @@ public class RadialProgress {
         if (progress) {
             if (animatedProgressValue != 1) {
                 radOffset += 360 * dt / rotationSpeed;
+                // DiveLite: волна «бежит» по дуге, пока идёт загрузка.
+                oeWavePhase += dt * OE_WAVE_SPEED;
                 float progressDiff = currentProgress - animationProgressStart;
                 if (progressDiff > 0) {
                     currentProgressTime += dt;
@@ -536,7 +545,12 @@ public class RadialProgress {
                     finalPaint = progressPaint;
                 }
                 cicleRect.set(progressRect.left + diff, progressRect.top + diff, progressRect.right - diff, progressRect.bottom - diff);
-                drawArc(canvas, cicleRect, -90 + radOffset, Math.max(4, 360 * animatedProgressValue), false, finalPaint);
+                if (roundRectProgress) {
+                    drawArc(canvas, cicleRect, -90 + radOffset, Math.max(4, 360 * animatedProgressValue), false, finalPaint);
+                } else {
+                    // DiveLite: волнистый индикатор M3 Expressive для загрузки фото/файлов.
+                    oeDrawWavyArc(canvas, cicleRect, -90 + radOffset, Math.max(4, 360 * animatedProgressValue), finalPaint);
+                }
                 updateAnimation(true);
             } else {
                 updateAnimation(false);
@@ -582,6 +596,43 @@ public class RadialProgress {
         } else {
             canvas.drawArc(oval, startAngle, sweepAngle, useCenter, paint);
         }
+    }
+
+    /**
+     * DiveLite: дуга прогресса в стиле Material 3 Expressive — по окружности
+     * бежит синусоидальная волна (амплитуда ~ толщина штриха), а не плоское кольцо.
+     * Используется для загрузки фото и файлов; мини-кольца и squircle-прогресс
+     * остаются прежними.
+     */
+    private void oeDrawWavyArc(Canvas canvas, RectF oval, float startAngle, float sweepAngle, Paint paint) {
+        float outerRadius = oval.width() / 2f;
+        if (outerRadius <= 0 || Math.abs(sweepAngle) <= 0.1f) {
+            drawArc(canvas, oval, startAngle, sweepAngle, false, paint);
+            return;
+        }
+        float strokeHalf = paint.getStrokeWidth() * 0.5f;
+        float baseRadius = outerRadius - strokeHalf;
+        float amp = Math.min(paint.getStrokeWidth() * 0.85f, baseRadius * 0.2f);
+        float cx = oval.centerX();
+        float cy = oval.centerY();
+        int waves = (int) Math.max(2, Math.round(sweepAngle / 55f));
+        float travel = oeWavePhase * (float) (2 * Math.PI);
+        int totalSamples = waves * OE_WAVE_SAMPLES;
+        oeWavePath.rewind();
+        for (int i = 0; i <= totalSamples; i++) {
+            float t = (float) i / (float) totalSamples;
+            double angle = Math.toRadians(startAngle + sweepAngle * t);
+            float mod = (float) Math.sin(Math.PI * 2 * (waves * t) + travel);
+            float r = baseRadius + amp * mod;
+            float x = cx + (float) (r * Math.cos(angle));
+            float y = cy + (float) (r * Math.sin(angle));
+            if (i == 0) {
+                oeWavePath.moveTo(x, y);
+            } else {
+                oeWavePath.lineTo(x, y);
+            }
+        }
+        canvas.drawPath(oeWavePath, paint);
     }
 
     public void setPaint(Paint paint) {
