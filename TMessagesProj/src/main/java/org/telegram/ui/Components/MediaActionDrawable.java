@@ -565,7 +565,12 @@ public class MediaActionDrawable extends Drawable {
                     canvas.drawArc(rect, 0, 360, false, paint);
                     paint.setAlpha(alpha);
                 }
-                canvas.drawArc(rect, downloadRadOffset, rad, false, paint);
+                if (isMini) {
+                    canvas.drawArc(rect, downloadRadOffset, rad, false, paint);
+                } else {
+                    // DiveLite: волнистый индикатор M3 Expressive для загрузки фото/файлов.
+                    oeDrawWavyArc(canvas, rect, downloadRadOffset, rad, paint);
+                }
             }
             if (progressScale != 1.0f) {
                 canvas.restore();
@@ -586,7 +591,12 @@ public class MediaActionDrawable extends Drawable {
                 float rad = Math.max(4, 360 * animatedDownloadProgress);
                 int diff = AndroidUtilities.dp(isMini ? 2 : 4);
                 rect.set(bounds.left + diff, bounds.top + diff, bounds.right - diff, bounds.bottom - diff);
-                canvas.drawArc(rect, downloadRadOffset, rad, false, paint);
+                if (isMini) {
+                    canvas.drawArc(rect, downloadRadOffset, rad, false, paint);
+                } else {
+                    // DiveLite: волнистый индикатор M3 Expressive.
+                    oeDrawWavyArc(canvas, rect, downloadRadOffset, rad, paint);
+                }
             }
         }
 
@@ -866,6 +876,8 @@ public class MediaActionDrawable extends Drawable {
         if (currentIcon == ICON_CANCEL || currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && nextIcon == ICON_CANCEL_FILL || currentIcon == ICON_EMPTY || currentIcon == ICON_CANCEL_PERCENT) {
             downloadRadOffset += 360 * dt / 2500.0f;
             downloadRadOffset = getCircleValue(downloadRadOffset);
+            // DiveLite: волна «бежит» по дуге прогресса.
+            oeWavePhase += dt / 1400f;
 
             if (nextIcon != ICON_DOWNLOAD) {
                 float progressDiff = downloadProgress - downloadProgressAnimationStart;
@@ -917,5 +929,42 @@ public class MediaActionDrawable extends Drawable {
     @Override
     public int getMinimumHeight() {
         return AndroidUtilities.dp(48);
+    }
+
+    // DiveLite: волнистый индикатор прогресса в стиле Material 3 Expressive —
+    // синусоида, бегущая по дуге, вместо плоского кругового кольца.
+    private float oeWavePhase = 0f;
+    private final Path oeWavePath = new Path();
+    private static final int OE_WAVE_SAMPLES = 12;
+
+    private void oeDrawWavyArc(Canvas canvas, RectF oval, float startAngle, float sweepAngle, Paint paint) {
+        float outerRadius = oval.width() / 2f;
+        if (outerRadius <= 0 || Math.abs(sweepAngle) <= 0.1f) {
+            canvas.drawArc(oval, startAngle, sweepAngle, false, paint);
+            return;
+        }
+        float strokeHalf = paint.getStrokeWidth() * 0.5f;
+        float baseRadius = outerRadius - strokeHalf;
+        float amp = Math.min(paint.getStrokeWidth() * 0.85f, baseRadius * 0.2f);
+        float cx = oval.centerX();
+        float cy = oval.centerY();
+        int waves = (int) Math.max(2, Math.round(sweepAngle / 55f));
+        float travel = oeWavePhase * (float) (2 * Math.PI);
+        int totalSamples = waves * OE_WAVE_SAMPLES;
+        oeWavePath.rewind();
+        for (int i = 0; i <= totalSamples; i++) {
+            float t = (float) i / (float) totalSamples;
+            double angle = Math.toRadians(startAngle + sweepAngle * t);
+            float mod = (float) Math.sin(Math.PI * 2 * (waves * t) + travel);
+            float r = baseRadius + amp * mod;
+            float x = cx + (float) (r * Math.cos(angle));
+            float y = cy + (float) (r * Math.sin(angle));
+            if (i == 0) {
+                oeWavePath.moveTo(x, y);
+            } else {
+                oeWavePath.lineTo(x, y);
+            }
+        }
+        canvas.drawPath(oeWavePath, paint);
     }
 }
