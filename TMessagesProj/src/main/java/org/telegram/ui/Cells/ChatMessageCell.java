@@ -27154,7 +27154,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             drawContact(canvas);
         }
 
-        if (drawImageButton && photoImage.getVisible() && !isSmallImage && !currentMessageObject.isRepostVideoPreview) {
+        if (drawImageButton && (photoImage.getVisible() || !drawPhotoImage) && !isSmallImage && !currentMessageObject.isRepostVideoPreview) {
             if (controlsAlpha != 1.0f) {
                 radialProgress.setOverrideAlpha(controlsAlpha);
             }
