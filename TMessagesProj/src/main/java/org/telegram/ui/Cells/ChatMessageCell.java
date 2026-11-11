@@ -15702,18 +15702,20 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 FileLog.e(e);
             }
 
-            // DiveLite: страховка для кнопки загрузки документов. Обычно кнопка
-            // рисуется в drawOverlays, но если по какой-то причине та ветка не
-            // отрабатывает (флаг видимости photoImage, стейт иконки) — рисуем
-            // здесь; повторная отрисовка безобидна (те же пиксели).
+            // DiveLite: страховка для кнопки загрузки документов (в т.ч. в
+            // группах документов). Кнопка рисуется в drawOverlays, но если тот
+            // путь не отработал (флаг видимости photoImage, стейт иконки) —
+            // рисуем здесь; повторная отрисовка безобидна (те же пиксели).
             if (
                 buttonState == 1 &&
                 documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT &&
                 !drawPhotoImage &&
                 !currentMessageObject.isSendError() &&
-                radialProgress.getIcon() == MediaActionDrawable.ICON_NONE &&
+                radialProgress.getIcon() != MediaActionDrawable.ICON_CANCEL &&
                 radialProgress.getTransitionProgress() >= 1f
             ) {
+                // Скачивание идёт, а иконка не соответствует стейту (NONE,
+                // залипшая стрелка и т.п.) — принудительно крестик отмены.
                 radialProgress.setIcon(MediaActionDrawable.ICON_CANCEL, false, false);
             }
             radialProgress.draw(canvas);
