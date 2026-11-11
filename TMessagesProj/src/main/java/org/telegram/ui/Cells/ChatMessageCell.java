@@ -15701,6 +15701,22 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             } catch (Exception e) {
                 FileLog.e(e);
             }
+
+            // DiveLite: страховка для кнопки загрузки документов. Обычно кнопка
+            // рисуется в drawOverlays, но если по какой-то причине та ветка не
+            // отрабатывает (флаг видимости photoImage, стейт иконки) — рисуем
+            // здесь; повторная отрисовка безобидна (те же пиксели).
+            if (
+                buttonState == 1 &&
+                documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT &&
+                !drawPhotoImage &&
+                !currentMessageObject.isSendError() &&
+                radialProgress.getIcon() == MediaActionDrawable.ICON_NONE &&
+                radialProgress.getTransitionProgress() >= 1f
+            ) {
+                radialProgress.setIcon(MediaActionDrawable.ICON_CANCEL, false, false);
+            }
+            radialProgress.draw(canvas);
         }
         if (currentMessageObject.type == MessageObject.TYPE_GEO && !(MessageObject.getMedia(currentMessageObject.messageOwner) instanceof TLRPC.TL_messageMediaGeoLive) && currentMapProvider == 2 && photoImage.hasNotThumb()) {
             Drawable redLocationIcon = sharedResources.getRedLocationIcon();
