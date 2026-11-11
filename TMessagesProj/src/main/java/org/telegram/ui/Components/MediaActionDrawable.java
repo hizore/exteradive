@@ -561,11 +561,8 @@ public class MediaActionDrawable extends Drawable {
                 int diff = AndroidUtilities.dp(isMini ? 2 : 4);
                 rect.set(bounds.left + diff, bounds.top + diff, bounds.right - diff, bounds.bottom - diff);
 
-                if (currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && nextIcon == ICON_CANCEL_FILL) {
-                    paint.setAlpha((int) (alpha * 0.15f * overrideAlpha));
-                    canvas.drawArc(rect, 0, 360, false, paint);
-                    paint.setAlpha(alpha);
-                }
+                // DiveLite: полупрозрачный серый круг в ветке CANCEL_FILL (загрузка
+                // видео) больше не рисуется — остаются только волна и крестик.
                 if (isMini) {
                     canvas.drawArc(rect, downloadRadOffset, rad, false, paint);
                 } else {
@@ -985,8 +982,13 @@ public class MediaActionDrawable extends Drawable {
         }
     }
 
-    /** DiveLite: акцентный цвет текущей темы (фолбэк — фирменный синий). */
+    /** DiveLite: акцентный цвет так, как его показывает сам клиент (кнопки, ссылки,
+     * переключатели) — через пайплайн темы, а не сырой accentColor. */
     private int oeGetAccentColor() {
+        int appliedAccent = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText);
+        if (appliedAccent != 0) {
+            return appliedAccent;
+        }
         Theme.ThemeAccent oeAccent = Theme.getCurrentTheme().getAccent(false);
         if (oeAccent != null && oeAccent.accentColor != 0) {
             return oeAccent.accentColor;
