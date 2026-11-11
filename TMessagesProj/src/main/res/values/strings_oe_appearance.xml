@@ -68,6 +68,19 @@
     <string name="OEAppearanceBubbleBlurStrengthMin">Light</string>
     <string name="OEAppearanceBubbleBlurStrengthMax">Strong</string>
 
+    <!-- DiveLite: wavy loading indicator -->
+    <string name="OEAppearanceLoaderWaveHeader">Photo &amp; File Loading Wave</string>
+    <string name="OEAppearanceLoaderWaveAccent">Accent Color</string>
+    <string name="OEAppearanceLoaderWaveAmplitude">Wave Amplitude</string>
+    <string name="OEAppearanceLoaderWaveMin">Calm</string>
+    <string name="OEAppearanceLoaderWaveMax">Expressive</string>
+    <string name="OEAppearanceLoaderWaveDensity">Wave Density</string>
+    <string name="OEAppearanceLoaderWaveDensityMin">Sparse</string>
+    <string name="OEAppearanceLoaderWaveDensityMax">Tight</string>
+    <string name="OEAppearanceLoaderWaveSpeed">Wave Speed</string>
+    <string name="OEAppearanceLoaderWaveSpeedMin">Slow</string>
+    <string name="OEAppearanceLoaderWaveSpeedMax">Fast</string>
+
     <string name="OEAppearanceRestartNow">Restart</string>
     <string name="OEAppearanceNeedRestart">Restart the app to apply this setting.</string>
 

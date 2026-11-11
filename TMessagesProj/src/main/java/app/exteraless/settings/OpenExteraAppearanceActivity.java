@@ -79,6 +79,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     /** DiveLite: слайдер непрозрачности баблов сообщений. */
     private static final int TYPE_BUBBLE_OPACITY = 107;
     private static final int TYPE_BUBBLE_BLUR_STRENGTH = 108;
+    private static final int TYPE_LOADER_WAVE_AMPLITUDE = 109;
+    private static final int TYPE_LOADER_WAVE_DENSITY = 110;
+    private static final int TYPE_LOADER_WAVE_SPEED = 111;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -107,6 +110,14 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int bubbleBlurStrengthRow;
     private int bubbleBlurRow;
     private int blurDividerRow;
+
+    // DiveLite: волнистый индикатор загрузки
+    private int loaderWaveHeaderRow;
+    private int loaderWaveAccentRow;
+    private int loaderWaveAmplitudeRow;
+    private int loaderWaveDensityRow;
+    private int loaderWaveSpeedRow;
+    private int loaderWaveDividerRow;
 
     // Avatar corners
     private int avatarCornersPreviewRow;
@@ -261,6 +272,14 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         bubbleBlurStrengthRow = addRow("bubbleBlurStrength");
         bubbleBlurRow = addRow("bubbleBlur");
         blurDividerRow = addRow();
+
+        // DiveLite: волнистый индикатор загрузки
+        loaderWaveHeaderRow = addRow("loaderWaveHeader");
+        loaderWaveAccentRow = addRow("loaderWaveAccent");
+        loaderWaveAmplitudeRow = addRow("loaderWaveAmplitude");
+        loaderWaveDensityRow = addRow("loaderWaveDensity");
+        loaderWaveSpeedRow = addRow("loaderWaveSpeed");
+        loaderWaveDividerRow = addRow();
 
     }
 
@@ -670,6 +689,11 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
             SharedConfig.setBubbleOpacityOut(!SharedConfig.bubbleOpacityOut);
             notifyRow(bubbleOpacityOutRow);
             return;
+        } else if (position == loaderWaveAccentRow) {
+            // DiveLite: красить волну индикатора загрузки акцентным цветом темы.
+            SharedConfig.setLoaderWaveAccent(!SharedConfig.loaderWaveAccent);
+            notifyRow(loaderWaveAccentRow);
+            return;
         } else if (position == tabTitleStyleRow) {
             if (getParentActivity() == null) {
                 return;
@@ -905,6 +929,47 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = blurStrengthSlider;
                     break;
                 }
+                case TYPE_LOADER_WAVE_AMPLITUDE: {
+                    // DiveLite: амплитуда волны индикатора загрузки (0 — плоское кольцо).
+                    AvatarCornersSeekBar waveAmpSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setLoaderWaveAmplitude(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceLoaderWaveAmplitude),
+                            getString(R.string.OEAppearanceLoaderWaveMin),
+                            getString(R.string.OEAppearanceLoaderWaveMax));
+                    waveAmpSlider.setValueSuffix("%");
+                    waveAmpSlider.setValue(SharedConfig.loaderWaveAmplitude);
+                    waveAmpSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = waveAmpSlider;
+                    break;
+                }
+                case TYPE_LOADER_WAVE_DENSITY: {
+                    // DiveLite: сколько гребней у волны (1..10).
+                    AvatarCornersSeekBar waveDensitySlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setLoaderWaveDensity(value),
+                            1, 10,
+                            getString(R.string.OEAppearanceLoaderWaveDensity),
+                            getString(R.string.OEAppearanceLoaderWaveDensityMin),
+                            getString(R.string.OEAppearanceLoaderWaveDensityMax));
+                    waveDensitySlider.setValue(SharedConfig.loaderWaveDensity);
+                    waveDensitySlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = waveDensitySlider;
+                    break;
+                }
+                case TYPE_LOADER_WAVE_SPEED: {
+                    // DiveLite: скорость бега волны по дуге.
+                    AvatarCornersSeekBar waveSpeedSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setLoaderWaveSpeed(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceLoaderWaveSpeed),
+                            getString(R.string.OEAppearanceLoaderWaveSpeedMin),
+                            getString(R.string.OEAppearanceLoaderWaveSpeedMax));
+                    waveSpeedSlider.setValueSuffix("%");
+                    waveSpeedSlider.setValue(SharedConfig.loaderWaveSpeed);
+                    waveSpeedSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = waveSpeedSlider;
+                    break;
+                }
                 case TYPE_DETAIL_SETTINGS: {
                     // Базовый класс делает такую же ячейку, но многострочной; exteraGram
                     // (asButtonWithSubtext(..., 64, 60) :456-458) держит ровно 64 dp.
@@ -945,6 +1010,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                         cell.setText(getString(R.string.OEAppearanceSections));
                     } else if (position == blurHeaderRow) {
                         cell.setText(getString(R.string.OEAppearanceBlur));
+                    } else if (position == loaderWaveHeaderRow) {
+                        // DiveLite: заголовок секции волны индикатора загрузки.
+                        cell.setText(getString(R.string.OEAppearanceLoaderWaveHeader));
                     } else if (position == chatListHeaderRow) {
                         cell.setText(getString(R.string.OEAppearanceChatList));
                     } else if (position == foldersHeaderRow) {
@@ -983,6 +1051,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     } else if (position == bubbleOpacityOutRow) {
                         // DiveLite: применять ли ползунок непрозрачности к своим сообщениям.
                         cell.setTextAndCheck(getString(R.string.OEAppearanceBubbleOpacityOut), SharedConfig.bubbleOpacityOut, false);
+                    } else if (position == loaderWaveAccentRow) {
+                        // DiveLite: красить волну акцентным цветом темы.
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceLoaderWaveAccent), SharedConfig.loaderWaveAccent, false);
                     } else if (position == singleCornerRadiusRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceSingleCornerRadius), AppearanceConfig.singleCornerRadius.Bool(), false);
                     } else if (position == forceSnowRow) {
@@ -1153,14 +1224,21 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_BUBBLE_OPACITY;
             } else if (position == bubbleBlurStrengthRow) {
                 return TYPE_BUBBLE_BLUR_STRENGTH;
+            } else if (position == loaderWaveAmplitudeRow) {
+                return TYPE_LOADER_WAVE_AMPLITUDE;
+            } else if (position == loaderWaveDensityRow) {
+                return TYPE_LOADER_WAVE_DENSITY;
+            } else if (position == loaderWaveSpeedRow) {
+                return TYPE_LOADER_WAVE_SPEED;
             } else if (position == appearanceHeaderRow || position == sectionsHeaderRow
                     || position == blurHeaderRow || position == chatListHeaderRow
-                    || position == foldersHeaderRow || position == linksHeaderRow) {
+                    || position == foldersHeaderRow || position == linksHeaderRow
+                    || position == loaderWaveHeaderRow) {
                 return TYPE_HEADER;
             } else if (position == appearanceDividerRow || position == sectionsDividerRow
                     || position == blurDividerRow || position == avatarsDividerRow
                     || position == chatListDividerRow || position == foldersDividerRow
-                    || position == linksDividerRow) {
+                    || position == linksDividerRow || position == loaderWaveDividerRow) {
                 return TYPE_INFO_PRIVACY;
             } else if (position == fabShapeRow) {
                 return TYPE_FAB_SHAPE;

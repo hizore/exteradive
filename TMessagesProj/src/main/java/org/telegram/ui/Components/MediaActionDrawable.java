@@ -17,6 +17,7 @@ import android.view.animation.DecelerateInterpolator;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.MessageDrawable;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.Theme;
 
 public class MediaActionDrawable extends Drawable {
@@ -876,8 +877,8 @@ public class MediaActionDrawable extends Drawable {
         if (currentIcon == ICON_CANCEL || currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && nextIcon == ICON_CANCEL_FILL || currentIcon == ICON_EMPTY || currentIcon == ICON_CANCEL_PERCENT) {
             downloadRadOffset += 360 * dt / 2500.0f;
             downloadRadOffset = getCircleValue(downloadRadOffset);
-            // DiveLite: волна «бежит» по дуге прогресса.
-            oeWavePhase += dt / 1400f;
+            // DiveLite: волна «бежит» по дуге прогресса; скорость из настроек.
+            oeWavePhase += dt / AndroidUtilities.lerp(2600f, 600f, SharedConfig.loaderWaveSpeed / 100f);
 
             if (nextIcon != ICON_DOWNLOAD) {
                 float progressDiff = downloadProgress - downloadProgressAnimationStart;
@@ -945,12 +946,25 @@ public class MediaActionDrawable extends Drawable {
         }
         float strokeHalf = paint.getStrokeWidth() * 0.5f;
         float baseRadius = outerRadius - strokeHalf;
-        float amp = Math.min(paint.getStrokeWidth() * 0.85f, baseRadius * 0.2f);
+        // Амплитуда 0 → плоское кольцо; 100% → очень выразительная волна.
+        float amp = AndroidUtilities.lerp(0f, paint.getStrokeWidth() * 1.7f, SharedConfig.loaderWaveAmplitude / 100f);
+        amp = Math.min(amp, baseRadius * 0.35f);
+        if (amp <= 0.05f) {
+            canvas.drawArc(oval, startAngle, sweepAngle, false, paint);
+            return;
+        }
         float cx = oval.centerX();
         float cy = oval.centerY();
-        int waves = (int) Math.max(2, Math.round(sweepAngle / 55f));
+        int waves = Math.max(2, SharedConfig.loaderWaveDensity);
         float travel = oeWavePhase * (float) (2 * Math.PI);
         int totalSamples = waves * OE_WAVE_SAMPLES;
+        int oldColor = paint.getColor();
+        int oldAlpha = paint.getAlpha();
+        if (SharedConfig.loaderWaveAccent) {
+            paint.setColor(oeGetAccentColor());
+            // Перекраска не должна сбрасывать override-альфу (переходы иконок).
+            paint.setAlpha(oldAlpha);
+        }
         oeWavePath.rewind();
         for (int i = 0; i <= totalSamples; i++) {
             float t = (float) i / (float) totalSamples;
@@ -966,5 +980,17 @@ public class MediaActionDrawable extends Drawable {
             }
         }
         canvas.drawPath(oeWavePath, paint);
+        if (SharedConfig.loaderWaveAccent) {
+            paint.setColor(oldColor);
+        }
+    }
+
+    /** DiveLite: акцентный цвет текущей темы (фолбэк — фирменный синий). */
+    private int oeGetAccentColor() {
+        Theme.ThemeAccent oeAccent = Theme.getCurrentTheme().getAccent(false);
+        if (oeAccent != null && oeAccent.accentColor != 0) {
+            return oeAccent.accentColor;
+        }
+        return 0xff3a94ff;
     }
 }

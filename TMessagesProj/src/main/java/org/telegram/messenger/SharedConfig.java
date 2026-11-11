@@ -274,6 +274,12 @@ public class SharedConfig {
     public static boolean bubbleOpacityOut = false;
     // Сила блюра баблов 0..100 (DiveGram). 0 — стекла почти нет, 100 — максимум.
     public static int bubbleBlurStrength = 80;
+    // Волнистый индикатор загрузки (M3 Expressive): амплитуда, густота гребней,
+    // скорость и цвет по акценту темы.
+    public static int loaderWaveAmplitude = 50;   // 0..100, dgLoaderWaveAmplitude
+    public static int loaderWaveDensity = 6;      // 1..10 гребней на круг
+    public static int loaderWaveSpeed = 40;       // 0..100, 0 — медленный бег
+    public static boolean loaderWaveAccent = false; // красить волну акцентом темы
 
     // Звуковой кодек и битрейт (DiveGram)
     public static final int AUDIO_CODEC_AUTO = 0;
@@ -735,6 +741,10 @@ public class SharedConfig {
             bubbleBlur = forkPrefs.getBoolean("dgBubbleBlur", false);
             bubbleOpacityOut = forkPrefs.getBoolean("dgBubbleOpacityOut", false);
             bubbleBlurStrength = forkPrefs.getInt("dgBubbleBlurStrength", 80);
+            loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
+            loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);
+            loaderWaveSpeed = forkPrefs.getInt("dgLoaderWaveSpeed", 40);
+            loaderWaveAccent = forkPrefs.getBoolean("dgLoaderWaveAccent", false);
             audioCodec = forkPrefs.getInt("dgAudioCodec", AUDIO_CODEC_AUTO);
             voiceRecordBitrate = forkPrefs.getInt("dgVoiceRecordBitrate", 0);
             // Сохранённые удалённые сообщения
@@ -1710,6 +1720,34 @@ public class SharedConfig {
         bubbleBlurStrength = Math.max(0, Math.min(100, value));
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgBubbleBlurStrength", bubbleBlurStrength)
+                .apply();
+    }
+
+    public static void setLoaderWaveAmplitude(int value) {
+        loaderWaveAmplitude = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgLoaderWaveAmplitude", loaderWaveAmplitude)
+                .apply();
+    }
+
+    public static void setLoaderWaveDensity(int value) {
+        loaderWaveDensity = Math.max(1, Math.min(10, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgLoaderWaveDensity", loaderWaveDensity)
+                .apply();
+    }
+
+    public static void setLoaderWaveSpeed(int value) {
+        loaderWaveSpeed = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgLoaderWaveSpeed", loaderWaveSpeed)
+                .apply();
+    }
+
+    public static void setLoaderWaveAccent(boolean value) {
+        loaderWaveAccent = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgLoaderWaveAccent", value)
                 .apply();
     }
 

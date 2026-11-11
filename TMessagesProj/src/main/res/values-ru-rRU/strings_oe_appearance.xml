@@ -53,6 +53,19 @@
     <string name="OEAppearanceBubbleBlurStrengthMin">Слабый</string>
     <string name="OEAppearanceBubbleBlurStrengthMax">Сильный</string>
 
+    <!-- DiveLite: волнистый индикатор загрузки -->
+    <string name="OEAppearanceLoaderWaveHeader">Загрузка фото и файлов</string>
+    <string name="OEAppearanceLoaderWaveAccent">Акцентный цвет</string>
+    <string name="OEAppearanceLoaderWaveAmplitude">Амплитуда волны</string>
+    <string name="OEAppearanceLoaderWaveMin">Спокойно</string>
+    <string name="OEAppearanceLoaderWaveMax">Выразительно</string>
+    <string name="OEAppearanceLoaderWaveDensity">Густота гребней</string>
+    <string name="OEAppearanceLoaderWaveDensityMin">Редко</string>
+    <string name="OEAppearanceLoaderWaveDensityMax">Часто</string>
+    <string name="OEAppearanceLoaderWaveSpeed">Скорость волны</string>
+    <string name="OEAppearanceLoaderWaveSpeedMin">Медленно</string>
+    <string name="OEAppearanceLoaderWaveSpeedMax">Быстро</string>
+
     <string name="OEAppearanceRestartNow">Перезапустить</string>
     <string name="OEAppearanceNeedRestart">Перезапустите приложение, чтобы применить настройку.</string>
 

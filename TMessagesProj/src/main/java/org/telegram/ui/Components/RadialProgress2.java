@@ -462,9 +462,14 @@ public class RadialProgress2 {
             miniDrawCanvas.scale(scaleMini, scaleMini, centerX, centerY);
         }
         if (drawCircle && drawBackground) {
+            // DiveLite: во время загрузки (крестик отмены) серый круг-подложка
+            // не рисуется — остаются только волна и иконка.
+            boolean oeHideCircle = currentIcon == MediaActionDrawable.ICON_CANCEL;
             if ((drawMiniIcon || circleCrossfadeColorKey >= 0) && miniDrawCanvas != null) {
-                miniDrawCanvas.drawCircle(centerX, centerY, circleRadius, circlePaint);
-            } else {
+                if (!oeHideCircle) {
+                    miniDrawCanvas.drawCircle(centerX, centerY, circleRadius, circlePaint);
+                }
+            } else if (!oeHideCircle) {
                 if (currentIcon != MediaActionDrawable.ICON_NONE || wholeAlpha != 0) {
                     if (backgroundStroke != 0) {
                         canvas.drawCircle(centerX, centerY, (circleRadius - AndroidUtilities.dp(3.5f)), circlePaint);
