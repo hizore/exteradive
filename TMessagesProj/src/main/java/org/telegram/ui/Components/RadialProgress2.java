@@ -464,7 +464,7 @@ public class RadialProgress2 {
         if (drawCircle && drawBackground) {
             // DiveLite: во время загрузки (крестик отмены) серый круг-подложка
             // не рисуется — остаются только волна и иконка.
-            boolean oeHideCircle = currentIcon == MediaActionDrawable.ICON_CANCEL;
+            boolean oeHideCircle = currentIcon == MediaActionDrawable.ICON_CANCEL || currentIcon == MediaActionDrawable.ICON_CANCEL_NOPROFRESS;
             if ((drawMiniIcon || circleCrossfadeColorKey >= 0) && miniDrawCanvas != null) {
                 if (!oeHideCircle) {
                     miniDrawCanvas.drawCircle(centerX, centerY, circleRadius, circlePaint);

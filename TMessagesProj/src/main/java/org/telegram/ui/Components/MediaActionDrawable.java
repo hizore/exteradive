@@ -454,6 +454,9 @@ public class MediaActionDrawable extends Drawable {
 
         if (currentIcon == ICON_CANCEL || currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && (nextIcon == ICON_CANCEL_FILL || nextIcon == ICON_CANCEL)) {
             applyShaderMatrix(false);
+            // DiveLite: во время загрузки крестик и волна рисуются белым (или
+            // акцентом с фолбэком) — themed-цвет иконки может сливаться с бабблом.
+            oeApplyLoadingColor();
             float d;
             float rotation;
             float iconScale = 1.0f, progressScale = 1.0f;
@@ -573,6 +576,8 @@ public class MediaActionDrawable extends Drawable {
             if (progressScale != 1.0f) {
                 canvas.restore();
             }
+            // DiveLite: возвращаем исходный цвет иконки (стрелка загрузки и др.).
+            oeRestoreLoadingColor();
         } else if (currentIcon == ICON_EMPTY || nextIcon == ICON_EMPTY || currentIcon == ICON_CANCEL_PERCENT) {
             int alpha;
             if (nextIcon == ICON_NONE || nextIcon == ICON_CHECK) {
@@ -654,6 +659,8 @@ public class MediaActionDrawable extends Drawable {
         }
         if (currentIcon == ICON_CANCEL_NOPROFRESS || nextIcon == ICON_CANCEL_NOPROFRESS) {
             applyShaderMatrix(false);
+            // DiveLite: крестик отмены при отправке файла — тем же цветом, что и волна.
+            oeApplyLoadingColor();
             float transition;
             if (currentIcon == nextIcon) {
                 transition = 1.0f;
@@ -675,9 +682,19 @@ public class MediaActionDrawable extends Drawable {
             canvas.drawLine(cx - d, cy - d, cx + d, cy + d, paint);
             canvas.drawLine(cx + d, cy - d, cx - d, cy + d, paint);
 
+            // DiveLite: волнистый индикатор вокруг крестика при отправке файлов.
+            if (!isMini) {
+                float rad = Math.max(4, 360 * animatedDownloadProgress);
+                int diff = AndroidUtilities.dp(isMini ? 2 : 4);
+                rect.set(bounds.left + diff, bounds.top + diff, bounds.right - diff, bounds.bottom - diff);
+                oeDrawWavyArc(canvas, rect, downloadRadOffset, rad, paint);
+            }
+
             if (currentIcon != nextIcon) {
                 canvas.restore();
             }
+            // DiveLite: возвращаем исходный цвет иконки.
+            oeRestoreLoadingColor();
         }
         if (currentIcon == ICON_CANCEL_PERCENT || nextIcon == ICON_CANCEL_PERCENT) {
             applyShaderMatrix(false);
@@ -871,7 +888,7 @@ public class MediaActionDrawable extends Drawable {
         }
         lastAnimationTime = newTime;
 
-        if (currentIcon == ICON_CANCEL || currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && nextIcon == ICON_CANCEL_FILL || currentIcon == ICON_EMPTY || currentIcon == ICON_CANCEL_PERCENT) {
+        if (currentIcon == ICON_CANCEL || currentIcon == ICON_CANCEL_FILL || currentIcon == ICON_NONE && nextIcon == ICON_CANCEL_FILL || currentIcon == ICON_EMPTY || currentIcon == ICON_CANCEL_PERCENT || currentIcon == ICON_CANCEL_NOPROFRESS) {
             downloadRadOffset += 360 * dt / 2500.0f;
             downloadRadOffset = getCircleValue(downloadRadOffset);
             // DiveLite: волна «бежит» по дуге прогресса; скорость из настроек.
@@ -955,13 +972,6 @@ public class MediaActionDrawable extends Drawable {
         int waves = Math.max(2, SharedConfig.loaderWaveDensity);
         float travel = oeWavePhase * (float) (2 * Math.PI);
         int totalSamples = waves * OE_WAVE_SAMPLES;
-        int oldColor = paint.getColor();
-        int oldAlpha = paint.getAlpha();
-        if (SharedConfig.loaderWaveAccent) {
-            paint.setColor(oeGetAccentColor());
-            // Перекраска не должна сбрасывать override-альфу (переходы иконок).
-            paint.setAlpha(oldAlpha);
-        }
         oeWavePath.rewind();
         for (int i = 0; i <= totalSamples; i++) {
             float t = (float) i / (float) totalSamples;
@@ -977,9 +987,43 @@ public class MediaActionDrawable extends Drawable {
             }
         }
         canvas.drawPath(oeWavePath, paint);
+    }
+
+    /** DiveLite: цвет иконки отмены и волны во время загрузки. По умолчанию белый;
+     * с «Акцентным цветом» — акцент темы, а если он сливается с подложкой — белый. */
+    private int oeSavedColor;
+    private boolean oeColorOverridden;
+
+    private int oeGetLoadingColor() {
         if (SharedConfig.loaderWaveAccent) {
-            paint.setColor(oldColor);
+            int accent = oeGetAccentColor();
+            if (AndroidUtilities.getColorDistance(accent, backPaint.getColor()) < 40000) {
+                return 0xffffffff;
+            }
+            return accent;
         }
+        return 0xffffffff;
+    }
+
+    private void oeApplyLoadingColor() {
+        oeColorOverridden = true;
+        oeSavedColor = paint.getColor();
+        int color = oeGetLoadingColor();
+        paint.setColor(color);
+        paint2.setColor(color);
+        paint3.setColor(color);
+        textPaint.setColor(color);
+    }
+
+    private void oeRestoreLoadingColor() {
+        if (!oeColorOverridden) {
+            return;
+        }
+        oeColorOverridden = false;
+        paint.setColor(oeSavedColor);
+        paint2.setColor(oeSavedColor);
+        paint3.setColor(oeSavedColor);
+        textPaint.setColor(oeSavedColor);
     }
 
     /** DiveLite: акцентный цвет так, как его показывает сам клиент (кнопки, ссылки,
