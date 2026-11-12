@@ -48,6 +48,16 @@ public final class CrashLog {
             if (thread != null) {
                 report.append("thread: ").append(thread.getName()).append('\n');
             }
+            // exteradive: динамика памяти перед крашем — хвост журнала watchdog.
+            // Ставим ПЕРЕД стеком: конец отчёта обрезается, стек важнее памяти,
+            // но переполнения 64KB обычно не бывает.
+            try {
+                String mem = app.exteraless.crash.HeapWatchdog.tail(4096);
+                if (mem != null) {
+                    report.append("\n--- memory watchdog (recent) ---\n").append(mem);
+                }
+            } catch (Throwable ignore) {
+            }
             report.append('\n').append(stack);
 
             String text = report.toString();

@@ -237,6 +237,9 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         // Раньше падение в инициализации конфигов ниже происходило до установки
         // обработчика — приложение умирало молча, без диалога и без записи.
         installCrashReportFilter();
+        // exteradive: ежеминутный watchdog памяти — хвост журнала прикладывается
+        // к краш-отчётам, чтобы по OOM было видно динамику роста кучи.
+        app.exteraless.crash.HeapWatchdog.install();
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
 
         try {
