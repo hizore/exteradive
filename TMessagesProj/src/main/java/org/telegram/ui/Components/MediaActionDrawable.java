@@ -456,7 +456,10 @@ public class MediaActionDrawable extends Drawable {
             applyShaderMatrix(false);
             // DiveLite: во время загрузки крестик и волна рисуются белым (или
             // акцентом с фолбэком) — themed-цвет иконки может сливаться с бабблом.
-            oeApplyLoadingColor();
+            // У файлов подложка остаётся, и перекраска не нужна.
+            if (oeOverrideLoadingColor) {
+                oeApplyLoadingColor();
+            }
             float d;
             float rotation;
             float iconScale = 1.0f, progressScale = 1.0f;
@@ -660,7 +663,9 @@ public class MediaActionDrawable extends Drawable {
         if (currentIcon == ICON_CANCEL_NOPROFRESS || nextIcon == ICON_CANCEL_NOPROFRESS) {
             applyShaderMatrix(false);
             // DiveLite: крестик отмены при отправке файла — тем же цветом, что и волна.
-            oeApplyLoadingColor();
+            if (oeOverrideLoadingColor) {
+                oeApplyLoadingColor();
+            }
             float transition;
             if (currentIcon == nextIcon) {
                 transition = 1.0f;
@@ -993,6 +998,10 @@ public class MediaActionDrawable extends Drawable {
      * с «Акцентным цветом» — акцент темы, а если он сливается с подложкой — белый. */
     private int oeSavedColor;
     private boolean oeColorOverridden;
+    /** DiveLite: принудительная белая/акцентная перекраска. Отключается для файлов,
+     * у которых при загрузке рисуется кружок-подложка — там themed-цвет иконки
+     * читается на подложке, как у скачанного файла. */
+    public boolean oeOverrideLoadingColor = true;
 
     private int oeGetLoadingColor() {
         if (SharedConfig.loaderWaveAccent) {

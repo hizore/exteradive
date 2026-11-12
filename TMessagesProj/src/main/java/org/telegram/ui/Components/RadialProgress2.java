@@ -249,6 +249,19 @@ public class RadialProgress2 {
         return mediaActionDrawable.getCurrentIcon();
     }
 
+    // DiveLite: при загрузке фото/видео подложка скрыта; у файлов остаётся —
+    // и тогда перекраска крестика/волны в белый не нужна (themed-цвет читается
+    // на подложке). Управляется ячейкой по типу сообщения.
+    public boolean oeDownloadingCircleHidden = true;
+
+    public void setOeDownloadingCircleHidden(boolean hidden) {
+        if (oeDownloadingCircleHidden == hidden) {
+            return;
+        }
+        oeDownloadingCircleHidden = hidden;
+        mediaActionDrawable.oeOverrideLoadingColor = !hidden;
+    }
+
     public int getMiniIcon() {
         return miniMediaActionDrawable.getCurrentIcon();
     }
@@ -462,9 +475,10 @@ public class RadialProgress2 {
             miniDrawCanvas.scale(scaleMini, scaleMini, centerX, centerY);
         }
         if (drawCircle && drawBackground) {
-            // DiveLite: во время загрузки (крестик отмены) серый круг-подложка
-            // не рисуется — остаются только волна и иконка.
-            boolean oeHideCircle = currentIcon == MediaActionDrawable.ICON_CANCEL || currentIcon == MediaActionDrawable.ICON_CANCEL_NOPROFRESS;
+            // DiveLite: при загрузке фото/видео круг-подложка не рисуется —
+            // остаются только волна и иконка. У файлов (документов) подложка
+            // остаётся — как у скачанного файла, с themed-цветом иконки.
+            boolean oeHideCircle = oeDownloadingCircleHidden && (currentIcon == MediaActionDrawable.ICON_CANCEL || currentIcon == MediaActionDrawable.ICON_CANCEL_NOPROFRESS);
             if ((drawMiniIcon || circleCrossfadeColorKey >= 0) && miniDrawCanvas != null) {
                 if (!oeHideCircle) {
                     miniDrawCanvas.drawCircle(centerX, centerY, circleRadius, circlePaint);

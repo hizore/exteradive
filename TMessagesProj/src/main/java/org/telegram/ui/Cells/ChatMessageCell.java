@@ -15723,6 +15723,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 }
                 radialProgress.setOverrideAlpha(1f);
             }
+            // DiveLite: файлы — с кружком-подложкой и themed-цветом (как у
+            // скачанного файла); остальное — без подложки, белая волна.
+            radialProgress.setOeDownloadingCircleHidden(!(documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT && !drawPhotoImage));
             radialProgress.draw(canvas);
         }
         if (currentMessageObject.type == MessageObject.TYPE_GEO && !(MessageObject.getMedia(currentMessageObject.messageOwner) instanceof TLRPC.TL_messageMediaGeoLive) && currentMapProvider == 2 && photoImage.hasNotThumb()) {
@@ -27541,6 +27544,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             drawPhotoBlurRect(canvas, radialProgress.getProgressRect());
         }
         radialProgress.iconScale = 1f;
+        // DiveLite: у файлов (документов без превью) при загрузке остаётся
+        // кружок-подложка с themed-цветом крестика и волны; у фото/видео
+        // подложка скрыта и волна рисуется поверх баббла белым.
+        radialProgress.setOeDownloadingCircleHidden(!(documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT && !drawPhotoImage));
         if (drawPhotoImage && currentMessageObject != null && currentMessageObject.hasMediaSpoilers() && currentMessageObject.isSensitive() && (!currentMessageObject.isMediaSpoilersRevealed || mediaSpoilerRevealProgress != 0 && mediaSpoilerRevealProgress < 1)) {
             radialProgress.iconScale *= mediaSpoilerRevealProgress;
         }
