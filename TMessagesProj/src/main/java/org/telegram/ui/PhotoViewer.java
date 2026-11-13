@@ -189,6 +189,7 @@ import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SecureDocument;
+import com.exteragram.messenger.utils.system.SystemUtils;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.TranslateController;
@@ -1008,6 +1009,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private CropTransform rightCropTransform = new CropTransform();
     private MediaController.CropState leftCropState;
     private MediaController.CropState rightCropState;
+    // exteradive: разовая отправка текущего видео «кружком» — выставляется
+    // пунктом меню перед sendPressed, применяется в oeApplyRoundVideoInfo.
+    private boolean oeSendAsRound;
     private PhotoFilterView photoFilterView;
     private AnimatorSet paintKeyboardAnimator;
     private KeyboardNotifier paintKeyboardNotifier;
@@ -7777,6 +7781,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             final boolean showSpoiler = canSpoiler && (!canEdit || canReplace);
             final boolean multipleSelected = placeProvider != null &&  placeProvider.getSelectedCount() > 1;
             final String languageText = Translator.getInputTranslateLangForChat(ChatsHelper.getChatId()).toUpperCase();
+            // exteradive: «отправить как кружок» — только для видео из галереи,
+            // в обычном режиме отправки (не аватар/стикер), без редактирования
+            // и только для одиночного выбора.
+            final boolean showSendAsRound = !canEdit && !multipleSelected
+                && sendPhotoType != SELECT_TYPE_AVATAR && sendPhotoType != SELECT_TYPE_STICKER
+                && currentObject instanceof MediaController.PhotoEntry && ((MediaController.PhotoEntry) currentObject).isVideo;
 
             final ItemOptions options = ItemOptions.makeOptions(containerView, new DarkThemeResourceProvider(), view)
                 .setGravity(Gravity.RIGHT);
@@ -7800,6 +7810,17 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     entry.hasSpoiler = !entry.hasSpoiler;
                     if (placeProvider != null) {
                         placeProvider.spoilerPressed();
+                    }
+                })
+                .addIf(showSendAsRound, R.drawable.input_video, getString(R.string.OESendAsRound), () -> {
+                    if (placeProvider != null && !placeProvider.isPhotoChecked(currentIndex)) {
+                        setPhotoChecked();
+                    }
+                    oeSendAsRound = true;
+                    try {
+                        sendPressed(!silentByDefault, 0, 0);
+                    } finally {
+                        oeSendAsRound = false;
                     }
                 });
 
@@ -8498,6 +8519,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
             VideoEditedInfo videoEditedInfo = getCurrentVideoEditedInfo();
+            // exteradive: «отправить как кружок» — квадратный центр-кроп и атрибут
+            // round_message. Применяем к текущему видео до записи editedInfo.
+            if (oeSendAsRound && videoEditedInfo != null) {
+                oeApplyRoundVideoInfo(videoEditedInfo);
+            }
             if (!imagesArrLocals.isEmpty() && currentIndex >= 0 && currentIndex < imagesArrLocals.size()) {
                 Object entry = imagesArrLocals.get(currentIndex);
                 if (entry instanceof MediaController.MediaEditState) {
@@ -10405,6 +10431,65 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
         videoEditedInfo.muted = muteVideo || sendPhotoType == SELECT_TYPE_AVATAR;
         return videoEditedInfo;
+    }
+
+    // exteradive: отправка галерейного видео «кружком». Механизм тот же, что у
+    // stories (CropState.useMatrix): матрица отображает сырой кадр видео (с
+    // учётом поворота из метаданных) в квадратный вывод, заполняя его по центру
+    // (center-crop). В matrix-пути конвертора размер энкодера = resultWidth ×
+    // resultHeight, поэтому результат — квадрат roundVideoSize × roundVideoSize.
+    // VideoEditedInfo.roundVideo включает round_message у отправляемого
+    // документа и блюр превью (SendMessagesHelper).
+    private void oeApplyRoundVideoInfo(VideoEditedInfo videoEditedInfo) {
+        if (videoEditedInfo.cropState != null) {
+            // пользовательский поворот уже слит в rotationValue — убираем его:
+            // кроп заменяется на квадратный центр-кроп, а поворот метаданных
+            // накладывается матрицей ниже
+            videoEditedInfo.rotationValue -= videoEditedInfo.cropState.transformRotation;
+            if (videoEditedInfo.rotationValue < 0) {
+                videoEditedInfo.rotationValue += 360;
+            }
+            videoEditedInfo.rotationValue %= 360;
+        }
+        int size = SystemUtils.getRoundVideoResolution();
+        int w = videoEditedInfo.originalWidth;
+        int h = videoEditedInfo.originalHeight;
+        if (w <= 0 || h <= 0) {
+            w = videoEditedInfo.resultWidth;
+            h = videoEditedInfo.resultHeight;
+        }
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        Matrix matrix = new Matrix();
+        if (videoEditedInfo.rotationValue == 90 || videoEditedInfo.rotationValue == 270) {
+            matrix.postTranslate(-w / 2f, -h / 2f);
+            matrix.postRotate(videoEditedInfo.rotationValue);
+            int temp = w;
+            w = h;
+            h = temp;
+            matrix.postTranslate(w / 2f, h / 2f);
+        } else if (videoEditedInfo.rotationValue == 180) {
+            matrix.postRotate(180, w / 2f, h / 2f);
+        }
+        // заполняем квадрат по меньшей стороне (center-crop)
+        float scale = Math.max((float) size / w, (float) size / h);
+        matrix.postScale(scale, scale);
+        matrix.postTranslate((size - w * scale) / 2f, (size - h * scale) / 2f);
+
+        MediaController.CropState cropState = new MediaController.CropState();
+        cropState.useMatrix = matrix;
+        // для атрибутов документа (SendMessagesHelper берёт transformWidth/Height)
+        cropState.transformWidth = size;
+        cropState.transformHeight = size;
+        videoEditedInfo.cropState = cropState;
+        videoEditedInfo.resultWidth = size;
+        videoEditedInfo.resultHeight = size;
+        videoEditedInfo.roundVideo = true;
+        videoEditedInfo.bitrate = SystemUtils.getRoundVideoBitrate();
+        if (videoEditedInfo.estimatedDuration > 0) {
+            videoEditedInfo.estimatedSize = (long) (videoEditedInfo.bitrate / 8f * videoEditedInfo.estimatedDuration / 1000f);
+        }
     }
 
     private boolean supportsSendingNewEntities() {

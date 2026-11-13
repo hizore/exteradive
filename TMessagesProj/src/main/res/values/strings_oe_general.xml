@@ -255,4 +255,7 @@
     <string name="OEDiveRemoveSavedDeletedTitle">Delete for myself</string>
     <string name="OEDiveRemoveSavedDeletedText">Remove the saved copy of this deleted message from your chat?</string>
     <string name="OEDiveDeletedInfo">Messages deleted by the other person do not disappear: they are marked with a trash icon and stay quotable. When the option is turned off, all saved deleted messages are removed from chats.</string>
+
+    <!-- Send as round video -->
+    <string name="OESendAsRound">Send as round video</string>
 </resources>

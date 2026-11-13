@@ -230,4 +230,7 @@
     <string name="OEAutoReplyTextTitle">Текст ответа</string>
     <string name="OEAutoReplyTextHint">Введите текст ответа:</string>
     <string name="OEAutoReplyCooldownTitle">Пауза между ответами</string>
+
+    <!-- Send as round video -->
+    <string name="OESendAsRound">Отправить как кружок</string>
 </resources>
