@@ -11530,6 +11530,13 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                     attributeVideo.supports_streaming = true;
                                 }
                                 document.attributes.add(attributeVideo);
+                                // exteradive: round-видео через панель медиа —
+                                // атрибут round_message здесь не выставлялся
+                                // (в отличие от prepareSendingVideo), поэтому
+                                // сообщение уходило обычным квадратным видео
+                                if (videoEditedInfo != null && videoEditedInfo.roundVideo) {
+                                    attributeVideo.round_message = true;
+                                }
 
                                 // na: Fix filename
                                 TLRPC.TL_documentAttributeFilename fileName = new TLRPC.TL_documentAttributeFilename();
