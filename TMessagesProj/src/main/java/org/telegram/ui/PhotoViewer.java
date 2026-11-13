@@ -10435,22 +10435,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     // exteradive: отправка галерейного видео «кружком». Механизм тот же, что у
     // stories (CropState.useMatrix): матрица отображает сырой кадр видео (с
-    // учётом поворота из метаданных) в квадратный вывод, заполняя его по центру
+    // учётом отображаемого поворота) в квадратный вывод, заполняя его по центру
     // (center-crop). В matrix-пути конвертора размер энкодера = resultWidth ×
     // resultHeight, поэтому результат — квадрат roundVideoSize × roundVideoSize.
+    // useMatrix переживает передачу VideoEditedInfo через params["ve"]: getString
+    // сериализует его (версия 12), parseString восстанавливает.
     // VideoEditedInfo.roundVideo включает round_message у отправляемого
     // документа и блюр превью (SendMessagesHelper).
     private void oeApplyRoundVideoInfo(VideoEditedInfo videoEditedInfo) {
-        if (videoEditedInfo.cropState != null) {
-            // пользовательский поворот уже слит в rotationValue — убираем его:
-            // кроп заменяется на квадратный центр-кроп, а поворот метаданных
-            // накладывается матрицей ниже
-            videoEditedInfo.rotationValue -= videoEditedInfo.cropState.transformRotation;
-            if (videoEditedInfo.rotationValue < 0) {
-                videoEditedInfo.rotationValue += 360;
-            }
-            videoEditedInfo.rotationValue %= 360;
-        }
         int size = SystemUtils.getRoundVideoResolution();
         int w = videoEditedInfo.originalWidth;
         int h = videoEditedInfo.originalHeight;
@@ -10461,15 +10453,21 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (w <= 0 || h <= 0) {
             return;
         }
+        // rotationValue здесь уже содержит весь отображаемый поворот
+        // (метаданные + пользовательский из кропа — getCurrentVideoEditedInfo
+        // прибавляет cropState.transformRotation). Печём его целиком в матрицу,
+        // как это делают stories: декодер поворот метаданных не применяет,
+        // а в matrix-пути конвертора rotationValue на геометрию не влияет.
+        int rotation = videoEditedInfo.rotationValue % 360;
         Matrix matrix = new Matrix();
-        if (videoEditedInfo.rotationValue == 90 || videoEditedInfo.rotationValue == 270) {
+        if (rotation == 90 || rotation == 270) {
             matrix.postTranslate(-w / 2f, -h / 2f);
-            matrix.postRotate(videoEditedInfo.rotationValue);
+            matrix.postRotate(rotation);
             int temp = w;
             w = h;
             h = temp;
             matrix.postTranslate(w / 2f, h / 2f);
-        } else if (videoEditedInfo.rotationValue == 180) {
+        } else if (rotation == 180) {
             matrix.postRotate(180, w / 2f, h / 2f);
         }
         // заполняем квадрат по меньшей стороне (center-crop)

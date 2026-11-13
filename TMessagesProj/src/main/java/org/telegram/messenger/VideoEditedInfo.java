@@ -438,7 +438,7 @@ public class VideoEditedInfo {
                 blurPathBytes = null;
             }
             SerializedData serializedData = new SerializedData(len);
-            serializedData.writeInt32(11);
+            serializedData.writeInt32(12);
             serializedData.writeInt64(avatarStartTime);
             serializedData.writeInt32(originalBitrate);
             if (filterState != null) {
@@ -539,6 +539,19 @@ public class VideoEditedInfo {
                 }
             } else {
                 serializedData.writeInt32(TLRPC.TL_null.constructor);
+            }
+            // exteradive: сохраняем useMatrix кропа (механизм stories), иначе
+            // матрица теряется при передаче VideoEditedInfo через params["ve"]
+            // и конвертор уходит в нематричный путь
+            if (cropState != null && cropState.useMatrix != null) {
+                serializedData.writeByte(1);
+                float[] useMatrixValues = new float[9];
+                cropState.useMatrix.getValues(useMatrixValues);
+                for (int i = 0; i < useMatrixValues.length; ++i) {
+                    serializedData.writeFloat(useMatrixValues[i]);
+                }
+            } else {
+                serializedData.writeByte(0);
             }
             filters = Utilities.bytesToHex(serializedData.toByteArray());
             serializedData.cleanup();
@@ -687,6 +700,18 @@ public class VideoEditedInfo {
                                     part.readParams(serializedData, false);
                                     collageParts.add(part);
                                 }
+                            }
+                        }
+                        if (version >= 12) {
+                            // exteradive: восстанавливаем useMatrix кропа
+                            has = serializedData.readByte(false);
+                            if (has != 0 && cropState != null) {
+                                float[] useMatrixValues = new float[9];
+                                for (int i = 0; i < useMatrixValues.length; ++i) {
+                                    useMatrixValues[i] = serializedData.readFloat(false);
+                                }
+                                cropState.useMatrix = new Matrix();
+                                cropState.useMatrix.setValues(useMatrixValues);
                             }
                         }
                         serializedData.cleanup();
