@@ -66,6 +66,7 @@ public final class CrashLog {
             }
 
             final OutputStreamWriter writer = new OutputStreamWriter(
+            final OutputStreamWriter writer = new OutputStreamWriter(
                     new FileOutputStream(file(context)), StandardCharsets.UTF_8);
             try {
                 writer.write(text);

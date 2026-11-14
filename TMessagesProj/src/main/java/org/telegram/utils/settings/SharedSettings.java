@@ -1,6 +1,12 @@
 package org.telegram.utils.settings;
 
 import org.telegram.messenger.BuildVars;
+import org.telegram.ui.ActionBar.SimpleActionBarDoneButton;
+// exteradive: roundVideo* сеттинги читают форк-классы (InstantCameraView2,
+// RoundVideoSettingsActivity) из org.telegram.utils.camera.roundvideo;
+// upstream-система recorder.round их не использует, поэтому импортируем
+// только форк-RoundVideoSession (enum'ы OutputResolution/CameraResolution/
+// FrameRate/CameraFacing у обеих систем идентичны).
 import org.telegram.utils.camera.roundvideo.RoundVideoSession;
 import org.telegram.utils.recorder.audio.AudioRecordingSession;
 
@@ -35,6 +41,12 @@ public final class SharedSettings {
 
     public static final EnumSetting<RoundVideoSession.CameraFacing> roundVideoLastCamera =
         EnumSetting.of("round_video_last_camera", RoundVideoSession.CameraFacing.FRONT);
+
+    public static final EnumSetting<SimpleActionBarDoneButton.Style> headerDoneButtonStyle =
+        EnumSetting.of("header_done_button_style", SimpleActionBarDoneButton.Style.GLASS);
+
+    public static final EnumSetting<SimpleActionBarDoneButton.Shape> headerDoneButtonShape =
+        EnumSetting.of("header_done_button_shape", SimpleActionBarDoneButton.Shape.TEXT);
 
     private SharedSettings() {
     }

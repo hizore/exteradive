@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ╨б╤В╤А╨╛╨║╨╕ ╤Н╨║╤А╨░╨╜╨░ ┬лChats┬╗ ╤А╨░╨╖╨┤╨╡╨╗╨░ exteradive. -->
+<!-- Строки экрана «Chats» раздела exteraless. -->
 <resources>
     <string name="OEChatsStickerTime">Time on Stickers</string>
     <string name="OEChatsStickerTimeSide">On the Side</string>
@@ -53,8 +53,8 @@
     <string name="OEChatsUnlimitedGifs">GIFs</string>
     <string name="OEChatsAdminShortcuts">Quick Admin Shortcuts</string>
     <string name="OEChatsDisableGreetingSticker">Disable Greeting Sticker</string>
-    <string name="OEChatsHideSendAsPeer">Hide \"Send asтАж\" Button</string>
-    <string name="OEChatsHideSendAsPeerInfo">You can still access the \"Send asтАж\" menu by long pressing the Emojis/Stickers/GIFs button.</string>
+    <string name="OEChatsHideSendAsPeer">Hide \"Send as…\" Button</string>
+    <string name="OEChatsHideSendAsPeerInfo">You can still access the \"Send as…\" menu by long pressing the Emojis/Stickers/GIFs button.</string>
     <string name="OEChatsDisableGlobalSearch">Disable Global Search</string>
     <string name="OEChatsTapToSwitchRecord">Tap to Switch Voice and Video</string>
     <string name="OEChatsKeepAttachButton">Keep the Attach Button While Typing</string>
@@ -118,7 +118,7 @@
     <string name="OEDetailsDuration">Duration</string>
     <string name="OEDetailsDatacenter">Datacenter</string>
     <string name="ReplyToDeletedAsQuote">Reply to deleted as a quote</string>
-    <string name="ReplyToDeletedAsQuoteInfo">When the message you reply to is already deleted, its text goes into your message as a quote тАФ the server would drop the reply.</string>
+    <string name="ReplyToDeletedAsQuoteInfo">When the message you reply to is already deleted, its text goes into your message as a quote — the server would drop the reply.</string>
     <string name="SaveDeletedInPrivateChats">Save deleted in private chats</string>
     <string name="SaveDeletedInGroups">Save deleted in groups</string>
     <string name="SaveDeletedInChannels">Save deleted in channels</string>
@@ -154,12 +154,32 @@
     <string name="OEChatsTranslateInSheet">Telegram Translation Window</string>
     <string name="OEChatsTranslateInSheetInfo">Translate opens the sheet from the official app with a provider switch</string>
     <string name="OEChatsInlineMath">Inline math results</string>
-    <string name="OEChatsInlineMathInfo">Type an expression and тАЬ=тАЭ to see the result, press Space to insert it.</string>
-    <string name="OEChatsInlineMathCurrency">Currencies via @calcmulabot</string>
-    <string name="OEChatsInlineMathCurrencyInfo">Expressions with currencies like тАЬ10 usd to rub =тАЭ are sent to @calcmulabot to get the rate.</string>
+    <string name="OEChatsInlineMathInfo">Type an expression and “=” to see the result, press Space to insert it.</string>
+    <string name="OEChatsInlineMathCurrency">Other currencies via @calcmulabot</string>
+    <string name="OEChatsInlineMathCurrencyInfo">Common currencies are converted on this device. Expressions with the rest, like “10 sek to rub =”, are sent to @calcmulabot.</string>
+    <string name="OEInlineTitle">Inline results</string>
+    <string name="OEInlineTitleInfo">Calculator, currencies, units and time zones</string>
+    <string name="OEInlineShow">Show results</string>
+    <string name="OEInlineFeatures">Features</string>
+    <string name="OEInlineCalculator">Calculator</string>
+    <string name="OEInlineCurrencies">Currencies</string>
+    <string name="OEInlineUnits">Units</string>
+    <string name="OEInlineTimeZones">Time zones</string>
+    <string name="OEInlineGrouping">Group digits</string>
+    <string name="OEInlineAngle">Angles in sin, cos, tan</string>
+    <string name="OEInlineAngleDegrees">Degrees</string>
+    <string name="OEInlineAngleRadians">Radians</string>
+    <string name="OEInlineMeasure">Measurement system</string>
+    <string name="OEInlineMeasureMetric">Metric</string>
+    <string name="OEInlineMeasureImperial">Imperial</string>
+    <string name="OEInlineTargetCurrency">Default currency</string>
+    <string name="OEInlineAuto">Auto</string>
+    <string name="OEInlineDocArithmetic">Arithmetic and functions</string>
+    <string name="OEInlineDocPercent">Percentages and shorthands</string>
+    <string name="OEInlineTapToCopy">Tap an example to copy it.</string>
     <string name="OEChatsInlineMathAnnouncement">Result: %1$s</string>
-    <string name="OELocalPremiumInfo">Premium emoji are sent as links that exteradive and other clients that support this show as the real emoji. Other Premium features work only on this device.</string>
-    <string name="OELocalPremiumEmojiHint">You don\'t have **Telegram Premium**, so this emoji is sent as a link: only users of **exteradive** and clients that support this will see it.</string>
+    <string name="OELocalPremiumInfo">Premium emoji are sent as links that exteraless and other clients that support this show as the real emoji. Other Premium features work only on this device.</string>
+    <string name="OELocalPremiumEmojiHint">You don\'t have **Telegram Premium**, so this emoji is sent as a link: only users of **exteraless** and clients that support this will see it.</string>
     <string name="OEChatsSections">Sections</string>
     <string name="OEChatsMenus">Menus and Buttons</string>
     <string name="OEChatsMenusInfo">Chat, message and media viewer menus</string>
@@ -172,4 +192,10 @@
     <string name="OEChatsVoiceHeader">Voice Messages</string>
     <string name="OEDoubleTapSaveToDevice">Save to device</string>
     <string name="OESendAfterSlowMode">Send when slow mode ends</string>
+    <string name="OEChatsDontAutoplayWidgets">Don\'t autoplay widgets</string>
+    <string name="OEChatsDontAutoplayWidgetsInfo">Interactive widgets in messages only start after you tap them</string>
+    <string name="OEChatsWidgetPlaceholderTitle">Interactive widget</string>
+    <string name="OEChatsWidgetPlaceholderTap">Tap to load</string>
+    <string name="OEChatsWidgetPlaceholderLoading">Loading…</string>
+    <string name="OEChatsWidgetPlaceholderPreview">Preview disabled</string>
 </resources>
