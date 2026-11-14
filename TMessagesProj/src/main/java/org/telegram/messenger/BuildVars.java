@@ -47,7 +47,9 @@ public class BuildVars {
     public static boolean SUPPORTS_PASSKEYS = Build.VERSION.SDK_INT >= 34;
     // the second main tab: News, or Contacts as before them
 
-    public static boolean SUPPORTS_FPNV = true;
+    // exteradive: firebase-pnv в форке не используется (firebase 22.0.0, pnv даёт 403),
+    // silent-верификация номера недоступна - верификация идёт через SMS/passkey.
+    public static boolean SUPPORTS_FPNV = false;
 
     static {
         APP_ID = BuildConfig.APP_ID;

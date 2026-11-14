@@ -331,7 +331,7 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
     private boolean themeColorsApplied;
     private int lastGradientColor, lastEdgeEffectColor;
 
-    @Override
+    // exteradive: Theme.Colorable (13.2.2) не подключён — обновление цветов вручную
     public void updateColors() {
         try {
             final int color = Theme.getColor(Theme.key_windowBackgroundWhite);

@@ -7102,7 +7102,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         MediaController.getInstance().pauseInBackgroundIfNeeded();
         super.onPause();
         isResumed = false;
-        pipActivityHandler.onPause();
         WidgetMedia.onAppPaused(true);
         PipCoordinator.getInstance().onActivityPause(this);
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
