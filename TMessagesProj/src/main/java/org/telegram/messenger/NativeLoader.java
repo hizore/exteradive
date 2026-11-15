@@ -86,6 +86,14 @@ public class NativeLoader {
                 nativeLoaded = true;
             } catch (Error e) {
                 FileLog.e(e);
+                // exteradive: не маскируем неудачную загрузку — иначе процесс
+                // остаётся без натива и падает где-то дальше с SIGABRT.
+                // Удаляем битую копию и сообщаем о неудаче.
+                try {
+                    destLocalFile.delete();
+                } catch (Throwable ignore) {
+                }
+                return false;
             }
             return true;
         } catch (Exception e) {
@@ -159,6 +167,9 @@ public class NativeLoader {
                 } catch (Error e) {
                     log.append(e).append("\n");
                     FileLog.e(e);
+                    // exteradive: старая копия не загрузилась — выбрасываем её,
+                    // чтобы ниже извлечь свежую из APK, а не остаться с мусором.
+                    app.exteraless.crash.DiagLog.mark("NativeLoader.stale-lib-failed");
                 }
                 destLocalFile.delete();
             }
