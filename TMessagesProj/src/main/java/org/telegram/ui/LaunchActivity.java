@@ -414,6 +414,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     public boolean voipLaunchedInBackground;
 
+    // exteradive (диагностика): true, пока onCreate показал ранний экран отчёта о сбое
+    private boolean diagCrashScreenActive;
+
     public WindowAnimatedInsetsProvider getRootAnimatedInsetsListener() {
         return rootAnimatedInsetsListener;
     }
@@ -436,6 +439,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onCreate(Bundle savedInstanceState) {
         isActive = true;
         activeInstanceCount++;
+        app.exteraless.crash.DiagLog.mark("LaunchActivity.onCreate");
         if (BuildVars.DEBUG_VERSION) {
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
                 .detectLeakedClosableObjects()
@@ -447,6 +451,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         }
 
         instance = this;
+        // exteradive (диагностика): показать сохранённый отчёт о сбое ДО инициализации
+        // Telegram-UI — краш может происходить внутри самой инициализации.
+        if (showPendingDiagCrashScreen(savedInstanceState)) {
+            return;
+        }
         ApplicationLoader.postInitApplication();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
         currentAccount = UserConfig.selectedAccount;
@@ -6471,6 +6480,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): интенты не обрабатываем на раннем экране отчёта
+            return;
+        }
         // a fold / unfold in the background may already have switched isTablet() (the application gets the new
         // configuration first) while this activity's layouts are still the old ones: switch them before opening anything
         invalidateTabletMode();
@@ -6480,6 +6493,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     public void onNewIntent(Intent intent, Browser.Progress progress) {
         super.onNewIntent(intent);
+        if (diagCrashScreenActive) {
+            return;
+        }
         invalidateTabletMode();
         checkLayout();
         handleIntent(intent, true, false, false, progress, true, false);
@@ -6985,6 +7001,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): результаты активити не обрабатываем на раннем экране
+            return;
+        }
         if (SharedConfig.passcodeHash.length() != 0 && SharedConfig.lastPauseTime != 0) {
             SharedConfig.lastPauseTime = 0;
             if (BuildVars.LOGS_ENABLED) {
@@ -7096,6 +7116,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onPause() {
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): обычная пауза не готова на раннем экране отчёта
+            super.onPause();
+            isResumed = false;
+            return;
+        }
         // Пауза голосовых и кружков при сворачивании приложения.
         // exteraGram зовёт это из didReceivedNotification по stopAllHeavyOperations(4096);
         // у нас такой ветки нет, а onPause наступает ровно в тот же момент.
@@ -7297,11 +7323,17 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onDestroy() {
+        isActive = false;
+        activeInstanceCount--;
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): разрушение раннего экрана отчёта —
+            // обычная очистка не готова (компоненты не создавались)
+            super.onDestroy();
+            return;
+        }
         app.exteraless.icons.picker.IconPickerController.onDestroy();
         GramWalletStorageAuth.onActivityDestroyed(this);
         PipCoordinator.getInstance().onActivityDestroy(this);
-        isActive = false;
-        activeInstanceCount--;
         if (debugThemeReceiver != null) {
             unregisterReceiver(debugThemeReceiver);
             debugThemeReceiver = null;
@@ -7419,11 +7451,126 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     View feedbackView;
 
+    /**
+     * exteradive (диагностика): ранний экран отчёта о сбое. Показывается до
+     * postInitApplication/Telegram-UI, чтобы сработал даже когда краш — внутри
+     * самой инициализации. Один показ на каждый вариант файлов (ключ — время
+     * изменения в prefs, чтобы после просмотра не зацикливаться). Возвращает
+     * true, если экран показан и остальную инициализацию onCreate пропускаем.
+     */
+    private boolean showPendingDiagCrashScreen(Bundle savedInstanceState) {
+        try {
+            Context appContext = ApplicationLoader.applicationContext;
+            if (appContext == null) {
+                appContext = getApplicationContext();
+            }
+            if (appContext == null) {
+                return false;
+            }
+            File filesDir = appContext.getFilesDir();
+            if (filesDir == null) {
+                return false;
+            }
+            StringBuilder report = new StringBuilder();
+            File javaCrash = new File(filesDir, "last_crash.txt");
+            File nativeCrash = new File(filesDir, "oe_native_crash.txt");
+            appendDiagFileText(report, javaCrash, "=== Java crash (last_crash.txt) ===\n");
+            appendDiagFileText(report, nativeCrash, "=== Native crash (oe_native_crash.txt) ===\n");
+            if (report.length() == 0) {
+                return false;
+            }
+            SharedPreferences prefs = appContext.getSharedPreferences("oe_diag", Context.MODE_PRIVATE);
+            String shownKey = "shown:" + javaCrash.lastModified() + ":" + nativeCrash.lastModified();
+            if (prefs.getBoolean(shownKey, false)) {
+                return false;
+            }
+            prefs.edit().putBoolean(shownKey, true).apply();
+            diagCrashScreenActive = true;
+
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            super.onCreate(savedInstanceState);
+
+            float density = getResources().getDisplayMetrics().density;
+            int pad = (int) (16 * density);
+
+            android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+            android.widget.TextView textView = new android.widget.TextView(this);
+            textView.setText(report.toString());
+            textView.setTextSize(12f);
+            textView.setTypeface(android.graphics.Typeface.MONOSPACE);
+            textView.setTextIsSelectable(true);
+            textView.setPadding(pad, pad, pad, pad);
+            scrollView.addView(textView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            android.widget.Button copy = new android.widget.Button(this);
+            copy.setText("Скопировать");
+            copy.setOnClickListener(v -> {
+                try {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("crash", report.toString()));
+                        Toast.makeText(this, "Скопировано", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Throwable ignore) {
+                }
+            });
+            android.widget.Button close = new android.widget.Button(this);
+            close.setText("Понятно");
+            close.setOnClickListener(v -> finish());
+
+            LinearLayout buttons = new LinearLayout(this);
+            buttons.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            int buttonMargin = (int) (8 * density);
+            buttonParams.setMargins(buttonMargin, 0, buttonMargin, buttonMargin);
+            buttons.addView(copy, buttonParams);
+            buttons.addView(close, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            LinearLayout root = new LinearLayout(this);
+            root.setOrientation(LinearLayout.VERTICAL);
+            root.addView(scrollView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+            root.addView(buttons, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            setContentView(root);
+            app.exteraless.crash.DiagLog.mark("LaunchActivity.diag-crash-screen");
+            return true;
+        } catch (Throwable ignore) {
+            // даже экран отчёта не смог показаться — продолжаем обычный запуск
+        }
+        return false;
+    }
+
+    private static void appendDiagFileText(StringBuilder report, File file, String header) {
+        try {
+            if (file == null || !file.exists() || file.length() == 0) {
+                return;
+            }
+            java.io.FileInputStream in = new java.io.FileInputStream(file);
+            try {
+                byte[] data = new byte[(int) Math.min(file.length(), 200_000)];
+                int off = 0, read;
+                while (off < data.length && (read = in.read(data, off, data.length - off)) > 0) {
+                    off += read;
+                }
+                report.append(header);
+                report.append(new String(data, 0, off, java.nio.charset.StandardCharsets.UTF_8));
+                report.append("\n");
+            } finally {
+                in.close();
+            }
+        } catch (Throwable ignore) {
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): остальное onResume не готово без инициализации
+            return;
+        }
         WidgetMedia.onAppPaused(false);
         isResumed = true;
+        app.exteraless.crash.DiagLog.mark("LaunchActivity.onResume");
         app.exteraless.crash.CrashReportDialog.showIfPending(this);
         PipCoordinator.getInstance().onActivityResume(this);
         if (onResumeStaticCallback != null) {
@@ -8825,6 +8972,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     public boolean onBackPressed(boolean invoked) {
+        if (diagCrashScreenActive) {
+            // exteradive (диагностика): на раннем экране отчёта «назад» закрывает приложение
+            finish();
+            return false;
+        }
         if (app.exteraless.icons.picker.IconPickerController.onBackPressed(invoked)) {
             return false;
         }

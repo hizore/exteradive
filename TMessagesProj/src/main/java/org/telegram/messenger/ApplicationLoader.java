@@ -356,6 +356,8 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
         // frame does not wait for it.
         AndroidUtilities.runOnUIThread(() -> Utilities.globalQueue.postRunnable(
                 () -> org.telegram.utils.twidget.WidgetSandboxSession.prewarmEngine(applicationContext)), 3000);
+        // exteradive (диагностика): метка завершения клиентской инициализации
+        app.exteraless.crash.DiagLog.mark("Application.client-init-done");
     }
 
     public ApplicationLoader() {
@@ -378,10 +380,23 @@ public class ApplicationLoader extends Application implements CameraXConfig.Prov
 
         super.onCreate();
 
+        // exteradive (диагностика): перехват нативных сигналов до всего остального.
+        // libtmessages.49 грузится в статическом инициализаторе, так что символ доступен.
+        try {
+            File oeCrashFile = new File(applicationContext.getFilesDir(), "oe_native_crash.txt");
+            org.telegram.messenger.NativeCrashHook.install(oeCrashFile.getAbsolutePath());
+        } catch (Throwable ignore) {
+        }
+        // exteradive (диагностика): вынести отчёт о нативном сбое прошлой сессии наружу
+        app.exteraless.crash.DiagLog.mirror("oe_native_crash.txt");
+        app.exteraless.crash.DiagLog.mark("Application.onCreate");
+
         // The widget engine's isolated process has no files, network or accounts: none of the client starts there.
         if (org.telegram.utils.twidget.WidgetEngineService.isEngineProcess()) {
+            app.exteraless.crash.DiagLog.mark("Application.engine-process");
             return;
         }
+        app.exteraless.crash.DiagLog.mark("Application.client-init");
         installCrashReportFilter();
 
         // AndroidUtilities must be initialized before FileLog

@@ -73,6 +73,9 @@ public final class CrashLog {
             } finally {
                 writer.close();
             }
+            // exteradive (диагностика): зеркало отчёта во внешнюю папку (видна с ПК по USB)
+            app.exteraless.crash.DiagLog.mirror(FILE_NAME);
+            app.exteraless.crash.DiagLog.mirror(app.exteraless.crash.HeapWatchdog.fileTailName());
         } catch (Throwable ignore) {
         }
     }

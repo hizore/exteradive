@@ -105,6 +105,11 @@ public final class HeapWatchdog {
         }
     }
 
+    /** exteradive (диагностика): имя файла watchdog-сводки для зеркалирования. */
+    public static String fileTailName() {
+        return FILE_NAME;
+    }
+
     private static File file(Context context) {
         return new File(context.getFilesDir(), FILE_NAME);
     }
