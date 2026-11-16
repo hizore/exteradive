@@ -616,12 +616,19 @@ public class MessageDrawable extends Drawable {
             Drawable background = getBackgroundDrawable();
             if (background != null) {
                 // exteradive: «стекло» под полупрозрачным баблом (текст не задевается).
+                // Путь берём из makePath(): при drawCached актуальный путь лежит в
+                // pathDrawCacheParams.path, а this.path устарел (иначе «стекло»
+                // рисуется по геометрии чужого/старого бабла — бабл-призрак).
+                // Клип по bounds: хвост пути in-бабла вылезает на ~5dp левее
+                // ninepatch-бабла и подсвечивался стеклом.
                 Paint oeGlass = oeBuildGlassPaint(canvas);
                 if (oeGlass != null) {
-                    makePath();
                     oeGlassPath.reset();
-                    oeGlassPath.addPath(this.path);
+                    oeGlassPath.addPath(makePath());
+                    canvas.save();
+                    canvas.clipRect(bounds);
                     canvas.drawPath(oeGlassPath, oeGlass);
+                    canvas.restore();
                 }
                 background.setBounds(bounds);
                 background.draw(canvas);
@@ -708,6 +715,10 @@ public class MessageDrawable extends Drawable {
     private Paint oeBuildGlassPaint(Canvas canvas) {
         // При factor 0 бабла не видно вовсе, при 100% — обои скрыты: стекло не нужно.
         if (oeGlassSource == null || oeOpacityFactor < 0.001f || oeOpacityFactor >= 0.999f || alpha <= 0) {
+            return null;
+        }
+        if (renderingBackgroundCache) {
+            // Не запекаем стекло в ninepatch-шаблоны баблов и теней.
             return null;
         }
         if (canvas instanceof SizeNotifierFrameLayout.SimplerCanvas) {
