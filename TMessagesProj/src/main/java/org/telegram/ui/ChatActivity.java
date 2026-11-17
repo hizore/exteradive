@@ -1942,8 +1942,10 @@ public class ChatActivity extends BaseFragment implements
                 if (messageObject == null) return false;
                 showMenu = messageObject.messageOwner.action instanceof TLRPC.TL_messageActionSetMessagesTTL || actionCell.getMessageObject().type == MessageObject.TYPE_SUGGEST_PHOTO || actionCell.getMessageObject().isWallpaperAction() || actionCell.getMessageObject().type == MessageObject.TYPE_GIFT_STARS;
             }
+            boolean menuOpened = false;
             if (!actionBar.isActionModeShowed() && (!isReport() || showMenu)) {
                 result = createMenu(view, false, true, x, y, true);
+                menuOpened = result;
             } else {
                 boolean outside = false;
                 if (view instanceof ChatMessageCell) {
@@ -1952,7 +1954,11 @@ public class ChatActivity extends BaseFragment implements
                 processRowSelect(view, outside, x, y);
             }
             if (view instanceof ChatMessageCell && (((ChatMessageCell) view).getMessageObject() != null && ((ChatMessageCell) view).getMessageObject().type != MessageObject.TYPE_JOINED_CHANNEL)) {
-                startMultiselect(position);
+                // при зажатии открывается то же всплывающее меню, что и по клику;
+                // жестовое выделение включаем только если меню открыть не удалось
+                if (!menuOpened) {
+                    startMultiselect(position);
+                }
                 result = true;
             }
             return result;
@@ -20055,9 +20061,20 @@ public class ChatActivity extends BaseFragment implements
                             viewClipBottom = Math.min(viewClipBottom, chatListView.getY() + cell.getY() + cell.getPollButtonBottom(index));
                         }
 
-                        if (viewClipTop < viewClipBottom) {
+                        boolean liftBubble = cell != null && child == scrimView && scrimViewReaction == null;
+                        float exClipLeft = viewClipLeft, exClipTop = viewClipTop, exClipRight = viewClipRight, exClipBottom = viewClipBottom;
+                        if (liftBubble) {
+                            // оригинальный бабл при открытом меню приподнимается вверх —
+                            // расширяем клип, чтобы подъём и масштаб не обрезали его
+                            exClipTop = Math.max(0, exClipTop - dp(44));
+                            exClipBottom = Math.min(getMeasuredHeight(), exClipBottom + dp(24));
+                            exClipLeft = Math.max(0, exClipLeft - dp(20));
+                            exClipRight = Math.min(getMeasuredWidth(), exClipRight + dp(20));
+                        }
+
+                        if (viewClipTop < viewClipBottom || (liftBubble && exClipTop < exClipBottom)) {
                             if (child.getAlpha() != 1f) {
-                                canvas.saveLayerAlpha(viewClipLeft, viewClipTop, viewClipRight, viewClipBottom, (int) (255 * child.getAlpha()), Canvas.ALL_SAVE_FLAG);
+                                canvas.saveLayerAlpha(exClipLeft, exClipTop, exClipRight, exClipBottom, (int) (255 * child.getAlpha()), Canvas.ALL_SAVE_FLAG);
                             } else {
                                 canvas.save();
                             }
@@ -20068,8 +20085,13 @@ public class ChatActivity extends BaseFragment implements
                                 actionCell.setInvalidatesParent(true);
                                 actionCell.setScrimReaction(scrimViewReaction);
                             }
-                            canvas.clipRect(viewClipLeft, viewClipTop, viewClipRight, viewClipBottom);
+                            canvas.clipRect(exClipLeft, exClipTop, exClipRight, exClipBottom);
                             canvas.translate(chatListView.getLeft() + child.getX(), chatListView.getY() + child.getY());
+                            if (liftBubble && scrimViewProgress > 0f) {
+                                canvas.translate(0, -dp(28) * scrimViewProgress);
+                                float popScale = 1f + 0.04f * scrimViewProgress;
+                                canvas.scale(popScale, popScale, child.getMeasuredWidth() / 2f, child.getMeasuredHeight() / 2f);
+                            }
                             if (cell != null && scrimGroup == null && cell.drawBackgroundInParent()) {
                                 canvas.save();
                                 canvas.translate(0, cell.getPaddingTop());
