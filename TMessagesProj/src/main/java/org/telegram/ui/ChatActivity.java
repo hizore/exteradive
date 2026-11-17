@@ -1944,14 +1944,13 @@ public class ChatActivity extends BaseFragment implements
             }
             boolean menuOpened = false;
             if (!actionBar.isActionModeShowed() && (!isReport() || showMenu)) {
-                if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
-                    // зажатие = то же всплывающее меню, что и по одинарному клику;
-                    // ветка попапа в createMenu живёт под if (single), поэтому single=true
-                    result = createMenu(view, true, false, x, y, false);
-                } else {
-                    result = createMenu(view, false, true, x, y, true);
-                }
+                result = createMenu(view, false, true, x, y, true);
                 menuOpened = result;
+                if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && !menuOpened && view instanceof ChatMessageCell) {
+                    // зажатие: выделение + приподнятие — попап не открылся, поэтому
+                    // скармливаем ячейку скриму (поднимется над блюром вместе с выделением)
+                    dimBehindView(view, true, true);
+                }
             } else {
                 boolean outside = false;
                 if (view instanceof ChatMessageCell) {
@@ -1960,8 +1959,7 @@ public class ChatActivity extends BaseFragment implements
                 processRowSelect(view, outside, x, y);
             }
             if (view instanceof ChatMessageCell && (((ChatMessageCell) view).getMessageObject() != null && ((ChatMessageCell) view).getMessageObject().type != MessageObject.TYPE_JOINED_CHANNEL)) {
-                // при зажатии открывается то же всплывающее меню, что и по клику;
-                // жестовое выделение включаем только если меню открыть не удалось
+                // жестовое выделение включаем, только если всплывающее меню открыть не удалось
                 if (!menuOpened) {
                     startMultiselect(position);
                 }
@@ -6791,7 +6789,13 @@ public class ChatActivity extends BaseFragment implements
                             skipDraw = false;
                         }
                     }*/
-                    skipDraw = false;
+                    // DiveLite: при включённом приподнятии ячейка скрима (и её медиа-группа)
+                    // не рисуется в общем проходе и не попадает в блюр-снимок — она
+                    // перерисовывается поверх затемнения, иначе под приподнятым
+                    // баблом остаётся призрак оригинала
+                    if (!NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
+                        skipDraw = false;
+                    }
                 }
 
                 boolean result;
@@ -33612,6 +33616,11 @@ public class ChatActivity extends BaseFragment implements
     }
 
     public void hideActionMode() {
+        if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && scrimPopupWindow == null
+                && scrimViewReaction == null && scrimView instanceof ChatMessageCell) {
+            // выделение закрыто — снимаем скрим с приподнятого сообщения
+            dimBehindView(false);
+        }
         if (actionBar != null) {
             if (!actionBar.isActionModeShowed()) {
                 return;
@@ -35710,12 +35719,13 @@ public class ChatActivity extends BaseFragment implements
             }
             chatListView.stopScroll();
             chatLayoutManager.setCanScrollVertically(false);
-            // openExtera: снимок экрана как источник блюра для меню
-            // dimBehindView(v, true) идёт без блюра, поэтому scrimBlur3SourceBitmap иначе остался бы пустым.
+            // openExtera: снимок экрана как источник блюра для меню.
+            // DiveLite: скрим под меню снова с блюром — обычное затемнение оставляло
+            // видимый оригинал бабла под приподнятым.
             if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
                 GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
             }
-            dimBehindView(v, true);
+            dimBehindView(v, true, true);
             hideHints(false);
             if (topUndoView != null) {
                 topUndoView.hide(true, 1);

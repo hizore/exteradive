@@ -107,6 +107,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int blurHeaderRow;
     private int glassOutlineRow;
     private int glassMessageMenuRow;
+    private int messageMenuLiftRow;
     private int forceBlurRow;
     private int disableAvatarBlurRow;
     // DiveLite: непрозрачность баблов и их блюр
@@ -271,6 +272,7 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         blurHeaderRow = addRow("blurHeader");
         glassOutlineRow = addRow("glassOutline");
         glassMessageMenuRow = addRow("glassMessageMenu");
+        messageMenuLiftRow = addRow("messageMenuLift");
         forceBlurRow = addRow("forceBlur");
         disableAvatarBlurRow = addRow("disableAvatarBlur");
         // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
@@ -871,6 +873,12 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 showPowerSaverNotice();
             }
             return;
+        } else if (position == messageMenuLiftRow) {
+            boolean enabled = NaConfig.INSTANCE.getMessageMenuLiftBubble().toggleConfigBool();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(enabled);
+            }
+            return;
         } else if (position == separateHeadersRow
                 && AppearanceConfig.sectionsSeparatedHeadersForced()) {
             // При «Сегментах» строка нарисована выключенной,
@@ -1108,6 +1116,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceSeparateHeaders), AppearanceConfig.sectionsSeparatedHeaders(), true);
                     } else if (position == glassMessageMenuRow) {
                         cell.setTextAndValueAndCheck(getString(R.string.OEAppearanceGlassMessageMenu), getString(R.string.OEAppearanceGlassMessageMenuInfo), AppearanceConfig.glassMessageMenu.Bool(), true, true);
+                    } else if (position == messageMenuLiftRow) {
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleOnMenu), NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool(), true);
                     } else if (position == forceBlurRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceForceBlur), LiteMode.isEnabledSetting(LiteMode.FLAG_CHAT_BLUR), true);
                     } else if (position == disableAvatarBlurRow) {
