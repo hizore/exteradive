@@ -1944,7 +1944,13 @@ public class ChatActivity extends BaseFragment implements
             }
             boolean menuOpened = false;
             if (!actionBar.isActionModeShowed() && (!isReport() || showMenu)) {
-                result = createMenu(view, false, true, x, y, true);
+                if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
+                    // зажатие = то же всплывающее меню, что и по одинарному клику;
+                    // ветка попапа в createMenu живёт под if (single), поэтому single=true
+                    result = createMenu(view, true, false, x, y, false);
+                } else {
+                    result = createMenu(view, false, true, x, y, true);
+                }
                 menuOpened = result;
             } else {
                 boolean outside = false;
@@ -19949,6 +19955,22 @@ public class ChatActivity extends BaseFragment implements
                     }
                 } else {
                     float listTop = chatListView.getY() + chatListViewPaddingTop - chatListViewPaddingVisibleOffset - AndroidUtilities.dp(4);
+                    // при открытом меню оригинальный бабл приподнимается на передний план:
+                    // трансформ применяется ко ВСЕЙ перерисовке скрима (фон группы, ячейки,
+                    // время, подписи, реакции), поэтому весь бабл уходит вверх целиком и
+                    // на старом месте ничего не остаётся
+                    boolean liftBubble = NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()
+                            && scrimView instanceof ChatMessageCell && scrimViewReaction == null
+                            && scrimViewTask == null && scrimViewProgress > 0f;
+                    float liftPivotX = 0, liftPivotY = 0;
+                    if (liftBubble) {
+                        liftPivotX = chatListView.getLeft() + scrimView.getX() + scrimView.getMeasuredWidth() / 2f;
+                        liftPivotY = chatListView.getY() + scrimView.getY() + scrimView.getMeasuredHeight() / 2f;
+                        canvas.save();
+                        canvas.translate(0, -dp(28) * scrimViewProgress);
+                        float liftScale = 1f + 0.04f * scrimViewProgress;
+                        canvas.scale(liftScale, liftScale, liftPivotX, liftPivotY);
+                    }
                     MessageObject.GroupedMessages scrimGroup;
                     if (scrimView instanceof ChatMessageCell) {
                         scrimGroup = ((ChatMessageCell) scrimView).getCurrentMessagesGroup();
@@ -20061,20 +20083,9 @@ public class ChatActivity extends BaseFragment implements
                             viewClipBottom = Math.min(viewClipBottom, chatListView.getY() + cell.getY() + cell.getPollButtonBottom(index));
                         }
 
-                        boolean liftBubble = cell != null && child == scrimView && scrimViewReaction == null;
-                        float exClipLeft = viewClipLeft, exClipTop = viewClipTop, exClipRight = viewClipRight, exClipBottom = viewClipBottom;
-                        if (liftBubble) {
-                            // оригинальный бабл при открытом меню приподнимается вверх —
-                            // расширяем клип, чтобы подъём и масштаб не обрезали его
-                            exClipTop = Math.max(0, exClipTop - dp(44));
-                            exClipBottom = Math.min(getMeasuredHeight(), exClipBottom + dp(24));
-                            exClipLeft = Math.max(0, exClipLeft - dp(20));
-                            exClipRight = Math.min(getMeasuredWidth(), exClipRight + dp(20));
-                        }
-
-                        if (viewClipTop < viewClipBottom || (liftBubble && exClipTop < exClipBottom)) {
+                        if (viewClipTop < viewClipBottom) {
                             if (child.getAlpha() != 1f) {
-                                canvas.saveLayerAlpha(exClipLeft, exClipTop, exClipRight, exClipBottom, (int) (255 * child.getAlpha()), Canvas.ALL_SAVE_FLAG);
+                                canvas.saveLayerAlpha(viewClipLeft, viewClipTop, viewClipRight, viewClipBottom, (int) (255 * child.getAlpha()), Canvas.ALL_SAVE_FLAG);
                             } else {
                                 canvas.save();
                             }
@@ -20085,13 +20096,8 @@ public class ChatActivity extends BaseFragment implements
                                 actionCell.setInvalidatesParent(true);
                                 actionCell.setScrimReaction(scrimViewReaction);
                             }
-                            canvas.clipRect(exClipLeft, exClipTop, exClipRight, exClipBottom);
+                            canvas.clipRect(viewClipLeft, viewClipTop, viewClipRight, viewClipBottom);
                             canvas.translate(chatListView.getLeft() + child.getX(), chatListView.getY() + child.getY());
-                            if (liftBubble && scrimViewProgress > 0f) {
-                                canvas.translate(0, -dp(28) * scrimViewProgress);
-                                float popScale = 1f + 0.04f * scrimViewProgress;
-                                canvas.scale(popScale, popScale, child.getMeasuredWidth() / 2f, child.getMeasuredHeight() / 2f);
-                            }
                             if (cell != null && scrimGroup == null && cell.drawBackgroundInParent()) {
                                 canvas.save();
                                 canvas.translate(0, cell.getPaddingTop());
@@ -20264,6 +20270,9 @@ public class ChatActivity extends BaseFragment implements
                             drawChildElement(canvas, listTop, cell, 4);
                         }
                         drawReactionsAfter.clear();
+                    }
+                    if (liftBubble) {
+                        canvas.restore();
                     }
                 }
 
@@ -35644,6 +35653,28 @@ public class ChatActivity extends BaseFragment implements
                     chatListView.getLocationInWindow(location);
                     minY = dp(24);
                     maxY = Math.min(location[1] + chatListView.getMeasuredHeight(), AndroidUtilities.displaySize.y) - dp(8) - height;
+                } else if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && v instanceof ChatMessageCell) {
+                    // меню не должно перекрывать приподнятый бабл: ставим его целиком под
+                    // баблом, а если не влезает — целиком над баблом (с учётом подъёма на dp(28))
+                    float bubbleTop, bubbleBottom;
+                    ChatMessageCell liftCell = (ChatMessageCell) v;
+                    MessageObject.GroupedMessages liftGroup = liftCell.getCurrentMessagesGroup();
+                    if (liftGroup != null && liftGroup.transitionParams.cell != null) {
+                        MessageObject.GroupedMessages.TransitionParams tp = liftGroup.transitionParams;
+                        bubbleTop = chatListView.getY() + tp.top + tp.offsetTop;
+                        bubbleBottom = chatListView.getY() + tp.bottom + tp.offsetBottom;
+                        if (!tp.backgroundChangeBounds) {
+                            bubbleTop += tp.cell.getTranslationY();
+                            bubbleBottom += tp.cell.getTranslationY();
+                        }
+                    } else {
+                        bubbleTop = chatListView.getY() + v.getY();
+                        bubbleBottom = bubbleTop + v.getMeasuredHeight();
+                    }
+                    popupY = (int) (bubbleBottom - dp(28) + dp(10));
+                    if (popupY + height > maxY) {
+                        popupY = (int) (bubbleTop - dp(28) - height - dp(10));
+                    }
                 } else if (height - backgroundPaddings.top - backgroundPaddings.bottom > AndroidUtilities.dp(240)) {
                     popupY += AndroidUtilities.dp(240) - height;
                 }
