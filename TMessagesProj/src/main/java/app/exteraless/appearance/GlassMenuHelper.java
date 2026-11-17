@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.ReactionsContainerLayout;
@@ -44,9 +45,12 @@ public abstract class GlassMenuHelper {
      * обводки нет совсем.
      */
     private static BlurredBackgroundProviderBuilder scrimMenuGlass(Theme.ResourcesProvider resourcesProvider) {
+        // exteradive: панель меню и реакций следует за прозрачностью баблов —
+        // при bubbleOpacity < 100% сквозь неё виден заблюренный фон под меню
+        final float opacity = SharedConfig.bubbleOpacity / 100f;
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
             .setBackgroundColor((r, isDark) -> Theme.multAlpha(
-                Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground), isDark ? 0.85f : 0.76f))
+                Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground), isDark ? 0.85f : 0.76f), opacity))
             .setStrokeColorTop(0, 0)
             .setStrokeColorBottom(0, 0)
             .setStrokeColorFull(0, 0)

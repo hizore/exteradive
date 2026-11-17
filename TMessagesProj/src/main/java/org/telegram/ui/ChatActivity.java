@@ -1946,11 +1946,6 @@ public class ChatActivity extends BaseFragment implements
             if (!actionBar.isActionModeShowed() && (!isReport() || showMenu)) {
                 result = createMenu(view, false, true, x, y, true);
                 menuOpened = result;
-                if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && !menuOpened && view instanceof ChatMessageCell) {
-                    // зажатие: выделение + приподнятие — попап не открылся, поэтому
-                    // скармливаем ячейку скриму (поднимется над блюром вместе с выделением)
-                    dimBehindView(view, true, true);
-                }
             } else {
                 boolean outside = false;
                 if (view instanceof ChatMessageCell) {
@@ -33616,11 +33611,6 @@ public class ChatActivity extends BaseFragment implements
     }
 
     public void hideActionMode() {
-        if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && scrimPopupWindow == null
-                && scrimViewReaction == null && scrimView instanceof ChatMessageCell) {
-            // выделение закрыто — снимаем скрим с приподнятого сообщения
-            dimBehindView(false);
-        }
         if (actionBar != null) {
             if (!actionBar.isActionModeShowed()) {
                 return;
@@ -35663,8 +35653,8 @@ public class ChatActivity extends BaseFragment implements
                     minY = dp(24);
                     maxY = Math.min(location[1] + chatListView.getMeasuredHeight(), AndroidUtilities.displaySize.y) - dp(8) - height;
                 } else if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && v instanceof ChatMessageCell) {
-                    // меню не должно перекрывать приподнятый бабл: ставим его целиком под
-                    // баблом, а если не влезает — целиком над баблом (с учётом подъёма на dp(28))
+                    // меню не должно перекрывать приподнятый бабл: если сообщение высоко —
+                    // меню уезжает вниз, если низко — поднимается над баблом
                     float bubbleTop, bubbleBottom;
                     ChatMessageCell liftCell = (ChatMessageCell) v;
                     MessageObject.GroupedMessages liftGroup = liftCell.getCurrentMessagesGroup();
@@ -35680,9 +35670,17 @@ public class ChatActivity extends BaseFragment implements
                         bubbleTop = chatListView.getY() + v.getY();
                         bubbleBottom = bubbleTop + v.getMeasuredHeight();
                     }
-                    popupY = (int) (bubbleBottom - dp(28) + dp(10));
-                    if (popupY + height > maxY) {
-                        popupY = (int) (bubbleTop - dp(28) - height - dp(10));
+                    int belowY = (int) (bubbleBottom - dp(28) + dp(10));
+                    int aboveY = (int) (bubbleTop - dp(28) - height - dp(10));
+                    if (belowY + height <= totalHeight - dp(8)) {
+                        // влезает снизу
+                        popupY = belowY;
+                    } else if (aboveY >= minY) {
+                        // влезает сверху
+                        popupY = aboveY;
+                    } else {
+                        // не влезает нигде — снизу, прижать к экрану
+                        popupY = belowY;
                     }
                 } else if (height - backgroundPaddings.top - backgroundPaddings.bottom > AndroidUtilities.dp(240)) {
                     popupY += AndroidUtilities.dp(240) - height;
@@ -35719,13 +35717,16 @@ public class ChatActivity extends BaseFragment implements
             }
             chatListView.stopScroll();
             chatLayoutManager.setCanScrollVertically(false);
-            // openExtera: снимок экрана как источник блюра для меню.
-            // DiveLite: скрим под меню снова с блюром — обычное затемнение оставляло
-            // видимый оригинал бабла под приподнятым.
+            // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
+            // видимый оригинал бабла под приподнятым. Только при включённом тумблере.
             if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
                 GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
             }
-            dimBehindView(v, true, true);
+            if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
+                dimBehindView(v, true, true);
+            } else {
+                dimBehindView(v, true);
+            }
             hideHints(false);
             if (topUndoView != null) {
                 topUndoView.hide(true, 1);
