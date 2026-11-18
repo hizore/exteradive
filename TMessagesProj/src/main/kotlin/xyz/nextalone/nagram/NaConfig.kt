@@ -183,6 +183,20 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // DiveLite: скрыть контекстное меню (Копировать/Закрепить/...) при клике на сообщение
+    val hideMessageMenu =
+        addConfig(
+            "HideMessageMenu",
+            ConfigItem.configTypeBool,
+            false
+        )
+    // DiveLite: скрыть панель реакций при клике на сообщение
+    val hideReactionsBar =
+        addConfig(
+            "HideReactionsBar",
+            ConfigItem.configTypeBool,
+            false
+        )
     // Заголовок списка чатов. Значение по умолчанию видно на самом видном месте —
     // в шапке главного экрана и в превью на экране «Внешний вид», — поэтому это
     // имя форка, а не апстрима.

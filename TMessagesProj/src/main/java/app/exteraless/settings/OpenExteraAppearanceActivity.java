@@ -87,6 +87,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private static final int TYPE_LOADER_WAVE_AMPLITUDE = 109;
     private static final int TYPE_LOADER_WAVE_DENSITY = 110;
     private static final int TYPE_LOADER_WAVE_SPEED = 111;
+    // DiveLite: слайдеры стекла меню
+    private static final int TYPE_MENU_OPACITY = 112;
+    private static final int TYPE_MENU_BLUR_STRENGTH = 113;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -115,6 +118,12 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int bubbleOpacityOutRow;
     private int bubbleBlurStrengthRow;
     private int bubbleBlurRow;
+    // DiveLite: те же настройки для стекла меню + тумблеры скрытия
+    private int menuOpacityRow;
+    private int menuBlurStrengthRow;
+    private int menuBlurRow;
+    private int hideMessageMenuRow;
+    private int hideReactionsRow;
     private int blurDividerRow;
 
     // DiveLite: волнистый индикатор загрузки
@@ -273,6 +282,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         glassOutlineRow = addRow("glassOutline");
         glassMessageMenuRow = addRow("glassMessageMenu");
         messageMenuLiftRow = addRow("messageMenuLift");
+        // DiveLite: тумблеры скрытия частей меню — сразу под «Приподнимать сообщение»
+        hideMessageMenuRow = addRow("hideMessageMenu");
+        hideReactionsRow = addRow("hideReactions");
         forceBlurRow = addRow("forceBlur");
         disableAvatarBlurRow = addRow("disableAvatarBlur");
         // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
@@ -280,6 +292,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         bubbleOpacityOutRow = addRow("bubbleOpacityOut");
         bubbleBlurStrengthRow = addRow("bubbleBlurStrength");
         bubbleBlurRow = addRow("bubbleBlur");
+        // DiveLite: настройки стекла меню и тумблеры скрытия частей меню
+        menuOpacityRow = addRow("menuOpacity");
+        menuBlurStrengthRow = addRow("menuBlurStrength");
+        menuBlurRow = addRow("menuBlur");
         blurDividerRow = addRow();
 
         // DiveLite: волнистый индикатор загрузки
@@ -755,6 +771,21 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
             SharedConfig.setBubbleOpacityOut(!SharedConfig.bubbleOpacityOut);
             notifyRow(bubbleOpacityOutRow);
             return;
+        } else if (position == hideMessageMenuRow) {
+            // DiveLite: убрать контекстное меню (Копировать/Закрепить/...) при клике на сообщение
+            NaConfig.INSTANCE.getHideMessageMenu().toggleConfigBool();
+            notifyRow(hideMessageMenuRow);
+            return;
+        } else if (position == hideReactionsRow) {
+            // DiveLite: убрать панель реакций при клике на сообщение
+            NaConfig.INSTANCE.getHideReactionsBar().toggleConfigBool();
+            notifyRow(hideReactionsRow);
+            return;
+        } else if (position == menuBlurRow) {
+            // DiveLite: тумблер блюра стекла меню и реакций
+            SharedConfig.setMenuBlur(!SharedConfig.menuBlur);
+            notifyRow(menuBlurRow);
+            return;
         } else if (position == loaderWaveAccentRow) {
             // DiveLite: красить волну индикатора загрузки акцентным цветом темы.
             SharedConfig.setLoaderWaveAccent(!SharedConfig.loaderWaveAccent);
@@ -1004,6 +1035,34 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = blurStrengthSlider;
                     break;
                 }
+                case TYPE_MENU_OPACITY: {
+                    // DiveLite: ползунок непрозрачности стекла меню и реакций.
+                    AvatarCornersSeekBar menuOpacitySlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setMenuOpacity(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceMenuOpacity),
+                            getString(R.string.OEAppearanceMenuOpacityMin),
+                            getString(R.string.OEAppearanceMenuOpacityMax));
+                    menuOpacitySlider.setValueSuffix("%");
+                    menuOpacitySlider.setValue(SharedConfig.menuOpacity);
+                    menuOpacitySlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = menuOpacitySlider;
+                    break;
+                }
+                case TYPE_MENU_BLUR_STRENGTH: {
+                    // DiveLite: сила блюра стекла меню и реакций.
+                    AvatarCornersSeekBar menuBlurStrengthSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setMenuBlurStrength(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceMenuBlurStrength),
+                            getString(R.string.OEAppearanceMenuBlurStrengthMin),
+                            getString(R.string.OEAppearanceMenuBlurStrengthMax));
+                    menuBlurStrengthSlider.setValueSuffix("%");
+                    menuBlurStrengthSlider.setValue(SharedConfig.menuBlurStrength);
+                    menuBlurStrengthSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = menuBlurStrengthSlider;
+                    break;
+                }
                 case TYPE_LOADER_WAVE_AMPLITUDE: {
                     // DiveLite: амплитуда волны индикатора загрузки (0 — плоское кольцо).
                     AvatarCornersSeekBar waveAmpSlider = new AvatarCornersSeekBar(mContext,
@@ -1128,6 +1187,15 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     } else if (position == bubbleOpacityOutRow) {
                         // DiveLite: применять ли ползунок непрозрачности к своим сообщениям.
                         cell.setTextAndCheck(getString(R.string.OEAppearanceBubbleOpacityOut), SharedConfig.bubbleOpacityOut, false);
+                    } else if (position == hideMessageMenuRow) {
+                        // DiveLite: убрать контекстное меню сообщения
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleHideMenu), NaConfig.INSTANCE.getHideMessageMenu().Bool(), true);
+                    } else if (position == hideReactionsRow) {
+                        // DiveLite: убрать панель реакций
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleHideReactions), NaConfig.INSTANCE.getHideReactionsBar().Bool(), true);
+                    } else if (position == menuBlurRow) {
+                        // DiveLite: тумблер блюра стекла меню и реакций
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceMenuBlur), SharedConfig.menuBlur, false);
                     } else if (position == loaderWaveAccentRow) {
                         // DiveLite: красить волну акцентным цветом темы.
                         cell.setTextAndCheck(getString(R.string.OEAppearanceLoaderWaveAccent), SharedConfig.loaderWaveAccent, false);
@@ -1303,6 +1371,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_BUBBLE_OPACITY;
             } else if (position == bubbleBlurStrengthRow) {
                 return TYPE_BUBBLE_BLUR_STRENGTH;
+            } else if (position == menuOpacityRow) {
+                return TYPE_MENU_OPACITY;
+            } else if (position == menuBlurStrengthRow) {
+                return TYPE_MENU_BLUR_STRENGTH;
             } else if (position == loaderWaveAmplitudeRow) {
                 return TYPE_LOADER_WAVE_AMPLITUDE;
             } else if (position == loaderWaveDensityRow) {

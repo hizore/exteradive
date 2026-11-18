@@ -68,6 +68,15 @@
     <string name="OEAppearanceBubbleBlurStrengthMin">Light</string>
     <string name="OEAppearanceBubbleBlurStrengthMax">Strong</string>
 
+    <!-- DiveLite: glass message menu opacity &amp; blur -->
+    <string name="OEAppearanceMenuOpacity">Menu Opacity</string>
+    <string name="OEAppearanceMenuOpacityMin">Transparent</string>
+    <string name="OEAppearanceMenuOpacityMax">Opaque</string>
+    <string name="OEAppearanceMenuBlur">Blur Menu &amp; Reactions</string>
+    <string name="OEAppearanceMenuBlurStrength">Menu Blur Strength</string>
+    <string name="OEAppearanceMenuBlurStrengthMin">Light</string>
+    <string name="OEAppearanceMenuBlurStrengthMax">Strong</string>
+
     <!-- DiveLite: wavy loading indicator -->
     <string name="OEAppearanceLoaderWaveHeader">Photo &amp; File Loading Wave</string>
     <string name="OEAppearanceLoaderWaveAccent">Accent Color</string>

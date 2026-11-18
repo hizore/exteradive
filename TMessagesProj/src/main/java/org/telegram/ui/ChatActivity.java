@@ -35618,6 +35618,15 @@ public class ChatActivity extends BaseFragment implements
             scrimPopupWindow.getContentView().setFocusableInTouchMode(true);
             popupLayout.setFitItems(true);
 
+            // DiveLite: тумблеры скрытия контекстного меню и панели реакций —
+            // GONE до измерения, чтобы контейнер занял размер только оставшейся части
+            if (NaConfig.INSTANCE.getHideMessageMenu().Bool()) {
+                popupLayout.setVisibility(View.GONE);
+            }
+            if (reactionsLayout != null && NaConfig.INSTANCE.getHideReactionsBar().Bool()) {
+                reactionsLayout.setVisibility(View.GONE);
+            }
+
             ItemOptions.setGapBackgroundColor(popupLayout, Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultSubmenuItem), 0.06f));
 
             int popupX = v.getLeft() + (int) x - scrimPopupContainerLayout.getMeasuredWidth() + backgroundPaddings.left - AndroidUtilities.dp(28);
@@ -35642,6 +35651,8 @@ public class ChatActivity extends BaseFragment implements
             int popupY;
             int minY = (int) (chatListView.getY() + dp(24));
             int maxY = totalHeight - height - dp(8);
+            // DiveLite: прокрутка обрезанного бабла к центру перед открытием меню
+            int menuScrollDy = 0;
             if (height < totalHeight) {
                 popupY = (int) (chatListView.getY() + v.getTop() + y);
                 if (isInsideContainer) {
@@ -35670,6 +35681,30 @@ public class ChatActivity extends BaseFragment implements
                         bubbleTop = chatListView.getY() + v.getY();
                         bubbleBottom = bubbleTop + v.getMeasuredHeight();
                     }
+                    // DiveLite: бабл частично за экраном — не обрезаем его, а прокручиваем
+                    // к центру (обрезан снизу — встанет чуть ниже центра, сверху — чуть выше);
+                    // меню, скрим и блюр-снимок открываются только после прокрутки
+                    float bubbleCenter = (bubbleTop + bubbleBottom) / 2f;
+                    if (bubbleBottom > totalHeight - dp(8)) {
+                        menuScrollDy = (int) (bubbleCenter - (totalHeight * 0.5f + dp(24)));
+                    } else if (bubbleTop < minY) {
+                        menuScrollDy = (int) (bubbleCenter - (totalHeight * 0.5f - dp(24)));
+                    }
+                    if (menuScrollDy != 0) {
+                        int maxDown = chatListView.computeVerticalScrollRange()
+                            - chatListView.computeVerticalScrollExtent()
+                            - chatListView.computeVerticalScrollOffset();
+                        int maxUp = -chatListView.computeVerticalScrollOffset();
+                        if (maxDown > 0 || maxUp < 0) {
+                            menuScrollDy = Utilities.clamp(menuScrollDy, maxDown, maxUp);
+                        } else {
+                            menuScrollDy = 0;
+                        }
+                    }
+                    if (menuScrollDy != 0) {
+                        bubbleTop -= menuScrollDy;
+                        bubbleBottom -= menuScrollDy;
+                    }
                     int belowY = (int) (bubbleBottom - dp(28) + dp(10));
                     int aboveY = (int) (bubbleTop - dp(28) - height - dp(10));
                     if (belowY + height <= totalHeight - dp(8)) {
@@ -35691,6 +35726,7 @@ public class ChatActivity extends BaseFragment implements
             }
             final int finalPopupX = scrimPopupX = popupX;
             final int finalPopupY = scrimPopupY = popupY;
+            final int finalScrollDy = menuScrollDy;
             scrimPopupContainerLayout.setMaxHeight(maxY + height - popupY);
             ReactionsContainerLayout finalReactionsLayout = reactionsLayout;
             Runnable showMenu = () -> {
@@ -35710,32 +35746,42 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }, 420);
             };
-            if (waitForLangDetection.get()) {
-                onLangDetectionDone.set(showMenu);
+            Runnable openMenuNow = () -> {
+                if (waitForLangDetection.get()) {
+                    onLangDetectionDone.set(showMenu);
+                } else {
+                    showMenu.run();
+                }
+                chatListView.stopScroll();
+                chatLayoutManager.setCanScrollVertically(false);
+                // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
+                // видимый оригинал бабла под приподнятым. Только при включённом тумблере.
+                if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
+                    GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
+                }
+                if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
+                    dimBehindView(v, true, true);
+                } else {
+                    dimBehindView(v, true);
+                }
+                hideHints(false);
+                if (topUndoView != null) {
+                    topUndoView.hide(true, 1);
+                }
+                if (undoView != null) {
+                    undoView.hide(true, 1);
+                }
+                if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
+                    chatActivityEnterView.getEditField().setAllowDrawCursor(false);
+                }
+            };
+            if (finalScrollDy != 0) {
+                // прокрутка доедет — и только затем откроется меню:
+                // блюр-снимок и скрим должны снять экран уже после прокрутки
+                chatListView.smoothScrollBy(0, finalScrollDy);
+                AndroidUtilities.runOnUIThread(openMenuNow, 300);
             } else {
-                showMenu.run();
-            }
-            chatListView.stopScroll();
-            chatLayoutManager.setCanScrollVertically(false);
-            // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
-            // видимый оригинал бабла под приподнятым. Только при включённом тумблере.
-            if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
-                GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
-            }
-            if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
-                dimBehindView(v, true, true);
-            } else {
-                dimBehindView(v, true);
-            }
-            hideHints(false);
-            if (topUndoView != null) {
-                topUndoView.hide(true, 1);
-            }
-            if (undoView != null) {
-                undoView.hide(true, 1);
-            }
-            if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
-                chatActivityEnterView.getEditField().setAllowDrawCursor(false);
+                openMenuNow.run();
             }
             return true;
         }

@@ -45,16 +45,36 @@ public abstract class GlassMenuHelper {
      * обводки нет совсем.
      */
     private static BlurredBackgroundProviderBuilder scrimMenuGlass(Theme.ResourcesProvider resourcesProvider) {
-        // exteradive: панель меню и реакций следует за прозрачностью баблов —
-        // при bubbleOpacity < 100% сквозь неё виден заблюренный фон под меню
-        final float opacity = SharedConfig.bubbleOpacity / 100f;
+        // DiveLite: цвет панели меню и реакций = цвет чужих сообщений в теме
+        // (тянется динамически, при смене темы панель перекрашивается).
+        // Прозрачность и блюр — отдельные настройки (как у баблов), не общие с ними.
+        final float opacity = SharedConfig.menuOpacity / 100f;
+        final boolean blur = SharedConfig.menuBlur;
+        final float tintAlpha = opacity * (blur ? (isDarkTheme(resourcesProvider) ? 0.85f : 0.76f) : 1f);
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
             .setBackgroundColor((r, isDark) -> Theme.multAlpha(
-                Theme.multAlpha(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground), isDark ? 0.85f : 0.76f), opacity))
+                Theme.getColor(Theme.key_chat_inBubble, r), tintAlpha))
             .setStrokeColorTop(0, 0)
             .setStrokeColorBottom(0, 0)
             .setStrokeColorFull(0, 0)
             .setStrokeWidth(0.0f, 0.0f);
+    }
+
+    private static boolean isDarkTheme(Theme.ResourcesProvider resourcesProvider) {
+        return resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
+    }
+
+    /**
+     * DiveLite: заметность блюра под стеклом меню — как у баблов:
+     * сила блюра (0.15..1) × прозрачность панели.
+     */
+    private static float menuBitmapAlphaFactor() {
+        if (!SharedConfig.menuBlur) {
+            return 0f;
+        }
+        final float strength01 = AndroidUtilities.lerp(0.15f, 1f,
+            Math.max(0, Math.min(100, SharedConfig.menuBlurStrength)) / 100f);
+        return strength01 * (SharedConfig.menuOpacity / 100f);
     }
 
     public static BlurredBackgroundProvider scrimMenuBackground(Theme.ResourcesProvider resourcesProvider) {
@@ -75,6 +95,7 @@ public abstract class GlassMenuHelper {
                                                                   View view) {
         return factory.create(view, true)
             .setColorProvider(scrimMenuBackground(resourcesProvider))
+            .setBitmapAlphaFactor(menuBitmapAlphaFactor())
             .setRadius(AndroidUtilities.dp(12.0f))
             .setPadding(AndroidUtilities.dp(8.0f))
             .setHasPadding(true);
@@ -83,7 +104,9 @@ public abstract class GlassMenuHelper {
     public static BlurredBackgroundDrawable createFill(BlurredBackgroundDrawableViewFactory factory,
                                                        Theme.ResourcesProvider resourcesProvider,
                                                        View view) {
-        return factory.create(view, true).setColorProvider(scrimMenuBackgroundFill(resourcesProvider));
+        return factory.create(view, true)
+            .setColorProvider(scrimMenuBackgroundFill(resourcesProvider))
+            .setBitmapAlphaFactor(menuBitmapAlphaFactor());
     }
 
     public static void draw(BlurredBackgroundDrawable drawable, Canvas canvas, RectF rect, float radius, int alpha) {
@@ -147,6 +170,10 @@ public abstract class GlassMenuHelper {
                                         Theme.ResourcesProvider resourcesProvider,
                                         ReactionsContainerLayout reactionsContainerLayout) {
         reactionsContainerLayout.setGlassBackground(factory, scrimMenuBackgroundFill(resourcesProvider));
+        final BlurredBackgroundDrawable background = reactionsContainerLayout.getGlassBackground();
+        if (background != null) {
+            background.setBitmapAlphaFactor(menuBitmapAlphaFactor());
+        }
     }
 
     /**

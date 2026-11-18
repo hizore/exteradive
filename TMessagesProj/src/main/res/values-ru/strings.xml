@@ -264,4 +264,6 @@
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
     <string name="LiftBubbleOnMenu">Приподнимать сообщение</string>
+    <string name="LiftBubbleHideMenu">Убрать контекстное меню</string>
+    <string name="LiftBubbleHideReactions">Убрать панель реакций</string>
 </resources>

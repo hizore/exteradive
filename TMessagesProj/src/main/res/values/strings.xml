@@ -5447,6 +5447,8 @@
     <string name="Reacted_other">%1$s Reacted</string>
     <string name="Reactions">Reactions</string>
     <string name="LiftBubbleOnMenu">Raise message bubble</string>
+    <string name="LiftBubbleHideMenu">Hide Context Menu</string>
+    <string name="LiftBubbleHideReactions">Hide Reactions Bar</string>
     <string name="ReactionsOff">Off</string>
     <string name="ReactionsCount">%1$s/%2$s</string>
     <string name="EnableReactions">Enable Reactions</string>

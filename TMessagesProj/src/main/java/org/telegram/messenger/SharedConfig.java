@@ -274,6 +274,10 @@ public class SharedConfig {
     public static boolean bubbleOpacityOut = false;
     // Сила блюра баблов 0..100 (DiveGram). 0 — стекла почти нет, 100 — максимум.
     public static int bubbleBlurStrength = 80;
+    // Те же настройки для стекла контекстного меню и панели реакций (DiveLite)
+    public static int menuOpacity = 100;
+    public static boolean menuBlur = false;
+    public static int menuBlurStrength = 80;
     // Волнистый индикатор загрузки (M3 Expressive): амплитуда, густота гребней,
     // скорость и цвет по акценту темы.
     public static int loaderWaveAmplitude = 50;   // 0..100, dgLoaderWaveAmplitude
@@ -743,6 +747,9 @@ public class SharedConfig {
             bubbleBlur = forkPrefs.getBoolean("dgBubbleBlur", false);
             bubbleOpacityOut = forkPrefs.getBoolean("dgBubbleOpacityOut", false);
             bubbleBlurStrength = forkPrefs.getInt("dgBubbleBlurStrength", 80);
+            menuOpacity = forkPrefs.getInt("dgMenuOpacity", 100);
+            menuBlur = forkPrefs.getBoolean("dgMenuBlur", false);
+            menuBlurStrength = forkPrefs.getInt("dgMenuBlurStrength", 80);
             loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
             loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);
             loaderWaveSpeed = forkPrefs.getInt("dgLoaderWaveSpeed", 40);
@@ -1729,6 +1736,28 @@ public class SharedConfig {
         bubbleBlurStrength = Math.max(0, Math.min(100, value));
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgBubbleBlurStrength", bubbleBlurStrength)
+                .apply();
+    }
+
+    // DiveLite: непрозрачность (0..100) и блюр стекла меню/реакций
+    public static void setMenuOpacity(int value) {
+        menuOpacity = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgMenuOpacity", menuOpacity)
+                .apply();
+    }
+
+    public static void setMenuBlur(boolean value) {
+        menuBlur = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgMenuBlur", value)
+                .apply();
+    }
+
+    public static void setMenuBlurStrength(int value) {
+        menuBlurStrength = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgMenuBlurStrength", menuBlurStrength)
                 .apply();
     }
 

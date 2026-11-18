@@ -746,6 +746,22 @@ public class BlurredBackgroundDrawable extends GlassDrawable implements Theme.Co
         shadowAlpha = alpha;
     }
 
+    // DiveLite: множитель альфы блюр-слоя (источника-битмапа) — так «сила блюра»
+    // меню работает как у баблов: чем меньше, тем слабее виден заблюренный фон
+    private float bitmapAlphaFactor = 1.0f;
+
+    public BlurredBackgroundDrawable setBitmapAlphaFactor(float factor) {
+        final float clamped = MathUtils.clamp(factor, 0f, 1f);
+        if (bitmapAlphaFactor != clamped) {
+            bitmapAlphaFactor = clamped;
+            if (renderNodeImpl != null) {
+                renderNodeImpl.invalidate();
+            }
+            invalidateSelf();
+        }
+        return this;
+    }
+
     public void setStrokeWidth(float strokeWidthTop, float strokeWidthBottom) {
         boundProps.strokeWidthTop = strokeWidthTop;
         boundProps.strokeWidthBottom = strokeWidthBottom;
@@ -1096,11 +1112,11 @@ public class BlurredBackgroundDrawable extends GlassDrawable implements Theme.Co
                 colorImpl.drawFill(canvas, 0);
             }
 
-            if (bitmapShader != null && newBitmap != null && !newBitmap.isRecycled() && alpha > 0) {
+            if (bitmapShader != null && newBitmap != null && !newBitmap.isRecycled() && alpha > 0 && bitmapAlphaFactor > 0) {
                 shaderMatrix.set(source.getMatrix());
                 shaderMatrix.postTranslate(-getSourceOffsetX(), -getSourceOffsetY());
                 bitmapShader.setLocalMatrix(shaderMatrix);
-                bitmapPaint.setAlpha(alpha);
+                bitmapPaint.setAlpha((int) Math.min(255, alpha * bitmapAlphaFactor));
                 boundProps.draw(canvas, bitmapPaint);
             }
 

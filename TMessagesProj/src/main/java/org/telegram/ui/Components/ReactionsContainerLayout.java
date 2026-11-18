@@ -1822,6 +1822,11 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         return glassBackgroundColorProvider;
     }
 
+    /** DiveLite: доступ к drawable стекла — для настройки силы блюра меню. */
+    public BlurredBackgroundDrawable getGlassBackground() {
+        return glassBackground;
+    }
+
     public void setFragment(BaseFragment lastFragment) {
         fragment = lastFragment;
     }
