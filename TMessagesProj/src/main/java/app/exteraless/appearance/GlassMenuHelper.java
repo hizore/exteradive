@@ -48,11 +48,10 @@ public abstract class GlassMenuHelper {
         // DiveLite: цвет панели меню и реакций = цвет чужих сообщений в теме
         // (тянется динамически, при смене темы панель перекрашивается).
         // Прозрачность и блюр — отдельные настройки (как у баблов), не общие с ними.
-        // При включённом блюре тон заметно прозрачнее — иначе блюр под стеклом
-        // не виден (85% заливки съедают размытие целиком).
+        // При включённом блюре тон втрое слабее — иначе заливка съедает размытие.
         final float opacity = SharedConfig.menuOpacity / 100f;
         final boolean blur = SharedConfig.menuBlur;
-        final float tintAlpha = opacity * (blur ? (isDarkTheme(resourcesProvider) ? 0.62f : 0.55f) : 1f);
+        final float tintAlpha = opacity * (blur ? (isDarkTheme(resourcesProvider) ? 0.21f : 0.18f) : 1f);
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
             .setBackgroundColor((r, isDark) -> Theme.multAlpha(
                 Theme.getColor(Theme.key_chat_inBubble, r), tintAlpha))
@@ -70,6 +69,7 @@ public abstract class GlassMenuHelper {
      * DiveLite: заметность блюра под стеклом меню — как у баблов:
      * сила блюра (0.15..1) × прозрачность панели. Публично: используется
      * также развёрнутой панелью реакций (CustomEmojiReactionsWindow).
+     * Усиление ×3 по просьбе пользователя (клампится до 1.0).
      */
     public static float menuBitmapAlphaFactor() {
         if (!SharedConfig.menuBlur) {
@@ -77,7 +77,7 @@ public abstract class GlassMenuHelper {
         }
         final float strength01 = AndroidUtilities.lerp(0.15f, 1f,
             Math.max(0, Math.min(100, SharedConfig.menuBlurStrength)) / 100f);
-        return strength01 * (SharedConfig.menuOpacity / 100f);
+        return Math.min(1f, strength01 * (SharedConfig.menuOpacity / 100f) * 3f);
     }
 
     public static BlurredBackgroundProvider scrimMenuBackground(Theme.ResourcesProvider resourcesProvider) {

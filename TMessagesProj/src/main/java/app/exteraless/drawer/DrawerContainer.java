@@ -546,7 +546,8 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             return;
         }
         final boolean isDark = Theme.isCurrentThemeDark();
-        final float tintAlpha = opacity * (SharedConfig.drawerBlur ? (isDark ? 0.62f : 0.55f) : 1f);
+        // DiveLite: тон втрое слабее при блюре — размытие теперь заметно втрое сильнее
+        final float tintAlpha = opacity * (SharedConfig.drawerBlur ? (isDark ? 0.21f : 0.18f) : 1f);
         if (SharedConfig.drawerBlur && glassBitmap != null && !glassBitmap.isRecycled()) {
             final float sx = AndroidUtilities.displaySize.x / (float) glassBitmap.getWidth();
             final float sy = (AndroidUtilities.displaySize.y + AndroidUtilities.statusBarHeight + AndroidUtilities.navigationBarHeight)
@@ -557,7 +558,8 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             glassMatrix.postTranslate(-panel.getX(), -panel.getY());
             final float strength = AndroidUtilities.lerp(0.15f, 1.0f,
                     Math.max(0, Math.min(100, SharedConfig.drawerBlurStrength)) / 100f);
-            glassBitmapPaint.setAlpha((int) (255.0f * strength * opacity));
+            // DiveLite: блюр шторки усилен ×3 — иначе снимок слишком блёклый под тоном
+            glassBitmapPaint.setAlpha((int) Math.min(255.0f, 255.0f * strength * opacity * 3.0f));
             canvas.drawBitmap(glassBitmap, glassMatrix, glassBitmapPaint);
         }
         glassTintPaint.setColor(Theme.multAlpha(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND), tintAlpha));
