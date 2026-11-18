@@ -64,7 +64,7 @@ $env:NATIVE_TARGET = "armeabi-v7a"  # повторить команду выше
 
 ## Пуш-уведомления
 
-ExteraDive использует отдельный Firebase-проект. Для работы пушей вайти:
+ExteraDive использует отдельный Firebase-проект. Для работы пушей нужно:
 
 1. Создать свой Firebase-проект, скачать `google-services.json` и положить в
    `TMessagesProj/`. Файл не коммитить.
