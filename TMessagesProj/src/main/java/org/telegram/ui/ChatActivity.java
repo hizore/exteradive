@@ -1244,6 +1244,15 @@ public class ChatActivity extends BaseFragment implements
     public ActionBarPopupWindow scrimPopupWindow;
     private boolean scrimPopupWindowHideDimOnDismiss = true;
     private int scrimPopupX, scrimPopupY;
+    // DiveLite: скролл raised message оставляет меню живым, но прячет его на время drag.
+    private boolean scrimLiftPopupScrollEnabled;
+    private View scrimLiftPopupScrollView;
+    private final Paint scrimLiftSenderGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private final Paint scrimLiftSenderTintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Matrix scrimLiftSenderGlassMatrix = new Matrix();
+    private final RectF scrimLiftSenderPillRect = new RectF();
+    private Bitmap scrimLiftSenderGlassBitmap;
+    private BitmapShader scrimLiftSenderGlassShader;
     public ActionBarMenuSubItem[] scrimPopupWindowItems;
     private ActionBarMenuSubItem menuDeleteItem;
     private final Runnable updateDeleteItemRunnable = new Runnable() {
@@ -1927,6 +1936,9 @@ public class ChatActivity extends BaseFragment implements
     RecyclerListView.OnItemLongClickListenerExtended onItemLongClickListener = new RecyclerListView.OnItemLongClickListenerExtended() {
         @Override
         public boolean onItemClick(View view, int position, float x, float y) {
+            if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+                return true;
+            }
             if (isTryingTextSelection() || hasTextSelection() || inPreviewMode || isInsideContainer) {
                 return false;
             }
@@ -2100,6 +2112,10 @@ public class ChatActivity extends BaseFragment implements
     RecyclerListView.OnItemClickListenerExtended onItemClickListener = new RecyclerListView.OnItemClickListenerExtended() {
         @Override
         public void onItemClick(View view, int position, float x, float y) {
+            if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+                closeMenu();
+                return;
+            }
             if (inPreviewMode) {
                 return;
             }
@@ -5729,6 +5745,11 @@ public class ChatActivity extends BaseFragment implements
             }
 
             private void processTouchEvent(MotionEvent e) {
+                // В поднятом сообщении жесты отданы вертикальной прокрутке списка,
+                // а не свайпу ответа на конкретный бабл.
+                if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+                    return;
+                }
                 if (e != null) {
                     wasManualScroll = true;
                 }
@@ -7543,6 +7564,11 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+                    // Скролл скрывает обе панели; отпускание пальца (settling/idle)
+                    // плавно возвращает меню и реакции.
+                    setLiftPopupScrollHidden(newState == RecyclerView.SCROLL_STATE_DRAGGING);
+                }
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     if (pollHintCell != null) {
                         showPollHintForCell(pollHintCell, -1, pollHintX, pollHintY);
@@ -7602,6 +7628,12 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null
+                        && scrimPopupWindow.isShowing() && dy != 0) {
+                    // Попап остаётся привязан к поднятому сообщению, пока список движется.
+                    scrimPopupY -= dy;
+                    scrimPopupWindow.update(scrimPopupX, scrimPopupY, -1, -1);
+                }
                 final ChatActivity chatToUpdate = parentChatActivity != null ? parentChatActivity : ChatActivity.this;
 
                 chatListView.invalidate();
@@ -20293,24 +20325,26 @@ public class ChatActivity extends BaseFragment implements
                             && scrimLiftSenderNamePaint != null) {
                         ChatMessageCell liftCell = (ChatMessageCell) scrimView;
                         float bgLeft = liftCell.getBackgroundDrawableLeft();
-                        float bgRight = liftCell.getBackgroundDrawableRight();
                         float bgTop = liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop();
                         float avatarSize = dp(32);
-                        float rowGap = dp(6);
-                        boolean outgoing = liftCell.getMessageObject() != null && liftCell.getMessageObject().isOutOwner();
-                        float avatarX = outgoing ? bgRight - avatarSize : bgLeft;
+                        float rowGap = dp(10);
+                        // Чужое сообщение: ряд автора слегка сдвинут вправо от края бабла.
+                        float avatarX = bgLeft + dp(12);
                         float avatarY = bgTop - rowGap - avatarSize;
-                        float nameX = outgoing
-                                ? avatarX - dp(8) - scrimLiftSenderNameLayout.getWidth()
-                                : avatarX + avatarSize + dp(8);
+                        float nameX = avatarX + avatarSize + dp(8);
                         canvas.save();
                         canvas.clipRect(chatListView.getLeft(), listTop, chatListView.getRight(), getMeasuredHeight());
                         canvas.translate(chatListView.getLeft() + scrimView.getX(), chatListView.getY() + scrimView.getY());
+                        scrimLiftSenderPillRect.set(
+                                Math.min(avatarX, nameX) - dp(8),
+                                avatarY - dp(6),
+                                Math.max(avatarX + avatarSize, nameX + scrimLiftSenderNameLayout.getWidth()) + dp(8),
+                                avatarY + avatarSize + dp(6));
                         int rowSave = canvas.saveLayerAlpha(
-                                Math.min(avatarX, nameX) - dp(2), avatarY - dp(2),
-                                Math.max(avatarX + avatarSize, nameX + scrimLiftSenderNameLayout.getWidth()) + dp(2),
-                                avatarY + avatarSize + dp(2),
+                                scrimLiftSenderPillRect.left, scrimLiftSenderPillRect.top,
+                                scrimLiftSenderPillRect.right, scrimLiftSenderPillRect.bottom,
                                 (int) (255 * scrimViewProgress), Canvas.ALL_SAVE_FLAG);
+                        drawLiftSenderPill(canvas, liftCell, scrimLiftSenderPillRect);
                         scrimLiftSenderImage.setVisible(true, false);
                         scrimLiftSenderImage.setImageCoords(avatarX, avatarY, avatarSize, avatarSize);
                         scrimLiftSenderImage.setRoundRadius((int) (avatarSize / 2));
@@ -33752,6 +33786,43 @@ public class ChatActivity extends BaseFragment implements
         root.requestApplyInsets();
     }
 
+    private void setLiftPopupScrollHidden(boolean hidden) {
+        final View popupView = scrimLiftPopupScrollView;
+        if (popupView == null || scrimPopupWindow == null || !scrimPopupWindow.isShowing()) {
+            return;
+        }
+        popupView.animate().cancel();
+        popupView.animate()
+                .alpha(hidden ? 0f : 1f)
+                .setDuration(hidden ? 110 : 180)
+                .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+                .start();
+    }
+
+    /** Allow the chat behind the raised-message popup to receive scroll gestures. */
+    private void setPopupTouchModal(ActionBarPopupWindow popupWindow, boolean touchModal) {
+        if (popupWindow == null) {
+            return;
+        }
+        try {
+            Class<?> type = popupWindow.getClass();
+            java.lang.reflect.Method method = null;
+            while (type != null && method == null) {
+                try {
+                    method = type.getDeclaredMethod("setTouchModal", boolean.class);
+                } catch (NoSuchMethodException ignored) {
+                    type = type.getSuperclass();
+                }
+            }
+            if (method != null) {
+                method.setAccessible(true);
+                method.invoke(popupWindow, touchModal);
+            }
+        } catch (Throwable ignored) {
+            // Older Android releases may not expose this PopupWindow API.
+        }
+    }
+
     private CharSequence getMessageCaption(MessageObject messageObject, MessageObject.GroupedMessages group) {
         return getMessageCaption(messageObject, group, null);
     }
@@ -34273,7 +34344,8 @@ public class ChatActivity extends BaseFragment implements
                     && v instanceof ChatMessageCell) {
                 ChatMessageCell liftCell = (ChatMessageCell) v;
                 MessageObject liftMessage = liftCell.getMessageObject();
-                if (liftMessage != null) {
+                boolean broadcastChannel = currentChat != null && ChatObject.isChannelAndNotMegaGroup(currentChat);
+                if (liftMessage != null && !liftMessage.isOutOwner() && !broadcastChannel) {
                     scrimLiftSenderNameLayout = buildLiftSenderInfo(liftMessage, liftCell);
                 }
             }
@@ -35690,6 +35762,12 @@ public class ChatActivity extends BaseFragment implements
                     scrimPopupWindow = null;
                     menuDeleteItem = null;
                     scrimPopupWindowItems = null;
+                    scrimLiftPopupScrollEnabled = false;
+                    if (scrimLiftPopupScrollView != null) {
+                        scrimLiftPopupScrollView.animate().cancel();
+                        scrimLiftPopupScrollView.setAlpha(1f);
+                    }
+                    scrimLiftPopupScrollView = null;
                     chatLayoutManager.setCanScrollVertically(true);
                     if (scrimPopupWindowHideDimOnDismiss) {
                         dimBehindView(false);
@@ -35711,7 +35789,11 @@ public class ChatActivity extends BaseFragment implements
             };
             scrimPopupWindow.setPauseNotifications(true);
             scrimPopupWindow.setDismissAnimationDuration(220);
-            scrimPopupWindow.setOutsideTouchable(true);
+            final boolean allowRaisedMessageScroll = NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()
+                    && v instanceof ChatMessageCell;
+            // Non-modal popup пропускает жесты в чат за его границами; обычный popup
+            // сохраняет прежнее поведение и закрывается по нажатию снаружи.
+            scrimPopupWindow.setOutsideTouchable(!allowRaisedMessageScroll);
             scrimPopupWindow.setClippingEnabled(true);
             if (!isReactionsAvailable || reactionsLayout == null || !ReactionsContainerLayout.allowSmoothEnterTransition()) {
                 scrimPopupWindow.setAnimationStyle(R.style.PopupContextAnimation);
@@ -35719,6 +35801,9 @@ public class ChatActivity extends BaseFragment implements
                 scrimPopupWindow.setAnimationStyle(0);
             }
             scrimPopupWindow.setFocusable(true);
+            if (allowRaisedMessageScroll) {
+                setPopupTouchModal(scrimPopupWindow, false);
+            }
             scrimPopupContainerLayout.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
             scrimPopupWindow.setInputMethodMode(ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
             scrimPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
@@ -35798,7 +35883,7 @@ public class ChatActivity extends BaseFragment implements
                     float scrollTop = bubbleTop;
                     if (scrimLiftSenderNameLayout != null) {
                         float senderRowTop = chatListView.getY() + v.getY()
-                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(6 + 32);
+                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(10 + 32 + 6);
                         scrollTop = Math.min(scrollTop, senderRowTop);
                     }
                     float bubbleCenter = (scrollTop + bubbleBottom) / 2f;
@@ -35832,7 +35917,7 @@ public class ChatActivity extends BaseFragment implements
                     float liftedBottom = liftPivotY + (bubbleBottom - liftPivotY) * 1.04f - dp(28);
                     if (scrimLiftSenderNameLayout != null) {
                         float senderRowTop = chatListView.getY() + v.getY()
-                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(6 + 32)
+                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(10 + 32 + 6)
                                 - menuScrollDy;
                         liftedTop = Math.min(liftedTop,
                                 liftPivotY + (senderRowTop - liftPivotY) * 1.04f - dp(28));
@@ -35866,6 +35951,11 @@ public class ChatActivity extends BaseFragment implements
                     return;
                 }
                 scrimPopupWindow.showAtLocation(chatListView, Gravity.LEFT | Gravity.TOP, finalPopupX, finalPopupY);
+                scrimLiftPopupScrollEnabled = allowRaisedMessageScroll;
+                scrimLiftPopupScrollView = allowRaisedMessageScroll ? scrimPopupContainerLayout : null;
+                if (scrimLiftPopupScrollView != null) {
+                    scrimLiftPopupScrollView.setAlpha(1f);
+                }
                 keepScrimPopupAboveKeyboard(scrimPopupWindow);
                 if (isReactionsAvailableFinal && finalReactionsLayout != null) {
                     finalReactionsLayout.startEnterAnimation(true);
@@ -35885,7 +35975,7 @@ public class ChatActivity extends BaseFragment implements
                     showMenu.run();
                 }
                 chatListView.stopScroll();
-                chatLayoutManager.setCanScrollVertically(false);
+                chatLayoutManager.setCanScrollVertically(!allowRaisedMessageScroll);
                 // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
                 // видимый оригинал бабла под приподнятым. При стекле снимок уже сделан
                 // до показа попапа (чистый) — повторный собрал бы в битмап само меню.
@@ -36196,6 +36286,45 @@ public class ChatActivity extends BaseFragment implements
             return message.messageOwner.post_author;
         }
         return DialogObject.getShortName(message.getDialogId());
+    }
+
+    /**
+     * Плашка автора использует ту же пару слоёв, что и входящие баблы:
+     * заблюренные обои (тот же bitmap, strength и alpha-кривая) под tint-цветом бабла.
+     */
+    private void drawLiftSenderPill(Canvas canvas, ChatMessageCell cell, RectF bounds) {
+        MessageDrawable bubble = cell.currentBackgroundDrawable;
+        float opacity = bubble != null
+                ? Math.max(0f, Math.min(1f, bubble.oeOpacityFactor))
+                : cell.oeComputeOpacityFactor();
+        float radius = bounds.height() * 0.5f;
+
+        Bitmap bitmap = contentView != null && SharedConfig.bubbleBlur
+                ? contentView.oeGetBlurredWallpaper()
+                : null;
+        if (bitmap != null && !bitmap.isRecycled() && opacity > 0f && opacity < 0.999f
+                && SharedConfig.bubbleBlurStrength > 0) {
+            if (scrimLiftSenderGlassBitmap != bitmap || scrimLiftSenderGlassShader == null) {
+                scrimLiftSenderGlassBitmap = bitmap;
+                scrimLiftSenderGlassShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                scrimLiftSenderGlassPaint.setShader(scrimLiftSenderGlassShader);
+            }
+            canvas.getMatrix(scrimLiftSenderGlassMatrix);
+            scrimLiftSenderGlassMatrix.preScale(
+                    AndroidUtilities.displaySize.x / (float) bitmap.getWidth(),
+                    AndroidUtilities.displaySize.y / (float) bitmap.getHeight());
+            scrimLiftSenderGlassShader.setLocalMatrix(scrimLiftSenderGlassMatrix);
+            float strength = AndroidUtilities.lerp(0.15f, 1f,
+                    Math.max(0, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
+            scrimLiftSenderGlassPaint.setAlpha((int) (255f * (float) Math.pow(opacity, 0.65f) * strength));
+            canvas.drawRoundRect(bounds, radius, radius, scrimLiftSenderGlassPaint);
+        }
+
+        int tintColor = bubble != null
+                ? bubble.getPaint().getColor()
+                : Theme.getColor(Theme.key_chat_inBubble, resourceProvider);
+        scrimLiftSenderTintPaint.setColor(Theme.multAlpha(tintColor, opacity));
+        canvas.drawRoundRect(bounds, radius, radius, scrimLiftSenderTintPaint);
     }
 
     // DiveLite: цвет имени — как у ChatMessageCell для имени над баблом
