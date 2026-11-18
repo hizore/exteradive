@@ -1234,6 +1234,11 @@ public class ChatActivity extends BaseFragment implements
     private boolean scrimViewReactionAnimated;
     // DiveLite: дата нового дня над приподнятым баблом — прячется на время скрима
     private View scrimLiftHiddenDateCell;
+    // DiveLite: ник и аватарка отправителя над приподнятым баблом
+    private ImageReceiver scrimLiftSenderImage;
+    private StaticLayout scrimLiftSenderNameLayout;
+    private TextPaint scrimLiftSenderNamePaint;
+    private int scrimLiftSenderNameColor;
     private int popupAnimationIndex = -1;
     private AnimatorSet scrimAnimatorSet;
     public ActionBarPopupWindow scrimPopupWindow;
@@ -12370,6 +12375,13 @@ public class ChatActivity extends BaseFragment implements
                     setScrimView(null);
                     scrimViewTask = null;
                     scrimViewReaction = null;
+                    // DiveLite: убрать ник и аватарку приподнятого бабла
+                    if (scrimLiftSenderImage != null) {
+                        scrimLiftSenderImage.onDetachedFromWindow();
+                        scrimLiftSenderImage = null;
+                    }
+                    scrimLiftSenderNameLayout = null;
+                    scrimLiftSenderNamePaint = null;
                     contentView.invalidate();
                     chatListView.invalidate();
                 }
@@ -20271,6 +20283,42 @@ public class ChatActivity extends BaseFragment implements
                             drawChildElement(canvas, listTop, cell, 4);
                         }
                         drawReactionsAfter.clear();
+                    }
+
+                    // DiveLite: ник и аватарка отправителя над приподнятым баблом —
+                    // рисуются внутри того же трансформа, двигаются вместе с баблом
+                    if (liftBubble && NaConfig.INSTANCE.getShowLiftSenderInfo().Bool()
+                            && scrimView instanceof ChatMessageCell
+                            && scrimLiftSenderNameLayout != null && scrimLiftSenderImage != null
+                            && scrimLiftSenderNamePaint != null) {
+                        ChatMessageCell liftCell = (ChatMessageCell) scrimView;
+                        float bgLeft = liftCell.getBackgroundDrawableLeft();
+                        float bgRight = liftCell.getBackgroundDrawableRight();
+                        float bgTop = liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop();
+                        float avatarSize = dp(32);
+                        float rowGap = dp(6);
+                        boolean outgoing = liftCell.getMessageObject() != null && liftCell.getMessageObject().isOutOwner();
+                        float avatarX = outgoing ? bgRight - avatarSize : bgLeft;
+                        float avatarY = bgTop - rowGap - avatarSize;
+                        float nameX = outgoing
+                                ? avatarX - dp(8) - scrimLiftSenderNameLayout.getWidth()
+                                : avatarX + avatarSize + dp(8);
+                        canvas.save();
+                        canvas.clipRect(chatListView.getLeft(), listTop, chatListView.getRight(), getMeasuredHeight());
+                        canvas.translate(chatListView.getLeft() + scrimView.getX(), chatListView.getY() + scrimView.getY());
+                        int rowSave = canvas.saveLayerAlpha(
+                                Math.min(avatarX, nameX) - dp(2), avatarY - dp(2),
+                                Math.max(avatarX + avatarSize, nameX + scrimLiftSenderNameLayout.getWidth()) + dp(2),
+                                avatarY + avatarSize + dp(2),
+                                (int) (255 * scrimViewProgress), Canvas.ALL_SAVE_FLAG);
+                        scrimLiftSenderImage.setVisible(true, false);
+                        scrimLiftSenderImage.setImageCoords(avatarX, avatarY, avatarSize, avatarSize);
+                        scrimLiftSenderImage.setRoundRadius((int) (avatarSize / 2));
+                        scrimLiftSenderImage.draw(canvas);
+                        canvas.translate(nameX, avatarY + avatarSize / 2f - scrimLiftSenderNameLayout.getHeight() / 2f);
+                        scrimLiftSenderNameLayout.draw(canvas);
+                        canvas.restoreToCount(rowSave);
+                        canvas.restore();
                     }
                     if (liftBubble) {
                         canvas.restore();
@@ -34212,6 +34260,24 @@ public class ChatActivity extends BaseFragment implements
                 }
             }
 
+            // DiveLite: ник и аватарка отправителя у приподнятого бабла —
+            // готовим заранее, рисует dispatchDraw внутри трансформа приподнятия
+            if (scrimLiftSenderImage != null) {
+                scrimLiftSenderImage.onDetachedFromWindow();
+            }
+            scrimLiftSenderImage = null;
+            scrimLiftSenderNameLayout = null;
+            scrimLiftSenderNamePaint = null;
+            if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()
+                    && NaConfig.INSTANCE.getShowLiftSenderInfo().Bool()
+                    && v instanceof ChatMessageCell) {
+                ChatMessageCell liftCell = (ChatMessageCell) v;
+                MessageObject liftMessage = liftCell.getMessageObject();
+                if (liftMessage != null) {
+                    scrimLiftSenderNameLayout = buildLiftSenderInfo(liftMessage, liftCell);
+                }
+            }
+
             // DiveLite: снимок экрана ДО показа попапа — чистый, без самого меню.
             // Из него и источник стекла меню, и размытый фон под скримом;
             // dimBehindView при открытии больше не переснимает (иначе в битмап
@@ -35729,10 +35795,16 @@ public class ChatActivity extends BaseFragment implements
                     // (экшн-бар, закреплённое, поиск) и панель ввода сообщения
                     float visibleTop = chatListView.getY() + chatListView.getPaddingTop();
                     float visibleBottom = chatListView.getY() + chatListView.getMeasuredHeight() - chatListView.getPaddingBottom();
-                    float bubbleCenter = (bubbleTop + bubbleBottom) / 2f;
+                    float scrollTop = bubbleTop;
+                    if (scrimLiftSenderNameLayout != null) {
+                        float senderRowTop = chatListView.getY() + v.getY()
+                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(6 + 32);
+                        scrollTop = Math.min(scrollTop, senderRowTop);
+                    }
+                    float bubbleCenter = (scrollTop + bubbleBottom) / 2f;
                     if (bubbleBottom > visibleBottom - dp(8)) {
                         menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f + dp(24)));
-                    } else if (bubbleTop < visibleTop + dp(8)) {
+                    } else if (scrollTop < visibleTop + dp(8)) {
                         menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f - dp(24)));
                     }
                     if (menuScrollDy != 0) {
@@ -35758,6 +35830,13 @@ public class ChatActivity extends BaseFragment implements
                     float liftPivotY = (chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f) - menuScrollDy;
                     float liftedTop = liftPivotY + (bubbleTop - liftPivotY) * 1.04f - dp(28);
                     float liftedBottom = liftPivotY + (bubbleBottom - liftPivotY) * 1.04f - dp(28);
+                    if (scrimLiftSenderNameLayout != null) {
+                        float senderRowTop = chatListView.getY() + v.getY()
+                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(6 + 32)
+                                - menuScrollDy;
+                        liftedTop = Math.min(liftedTop,
+                                liftPivotY + (senderRowTop - liftPivotY) * 1.04f - dp(28));
+                    }
                     int belowY = (int) (liftedBottom + dp(6));
                     int aboveY = (int) (liftedTop - height - dp(6));
                     if (belowY + height <= totalHeight - dp(8)) {
@@ -36094,6 +36173,96 @@ public class ChatActivity extends BaseFragment implements
         } else {
             greetingsViewContainer.resetPremiumLock();
         }
+    }
+
+    // DiveLite: имя отправителя для ряда над приподнятым баблом
+    private String getLiftSenderName(MessageObject message) {
+        long senderId = message.getSenderId();
+        if (senderId > 0) {
+            TLRPC.User user = getMessagesController().getUser(senderId);
+            if (user != null) {
+                return UserObject.getUserName(user);
+            }
+        } else if (senderId < 0) {
+            TLRPC.Chat chat = getMessagesController().getChat(-senderId);
+            if (chat != null) {
+                return chat.title;
+            }
+        }
+        if (message.messageOwner.fwd_from != null && !TextUtils.isEmpty(message.messageOwner.fwd_from.from_name)) {
+            return message.messageOwner.fwd_from.from_name;
+        }
+        if (!TextUtils.isEmpty(message.messageOwner.post_author)) {
+            return message.messageOwner.post_author;
+        }
+        return DialogObject.getShortName(message.getDialogId());
+    }
+
+    // DiveLite: цвет имени — как у ChatMessageCell для имени над баблом
+    private int getLiftSenderNameColor(TLRPC.User user, TLRPC.Chat chat) {
+        int colorId = -1;
+        if (user != null) {
+            colorId = UserObject.getColorId(user);
+        } else if (chat != null) {
+            colorId = ChatObject.getColorId(chat);
+        }
+        if (colorId >= 0) {
+            if (colorId < 7) {
+                return getThemedColor(Theme.keys_avatar_nameInMessage[colorId]);
+            }
+            MessagesController.PeerColors peerColors = MessagesController.getInstance(currentAccount).peerColors;
+            MessagesController.PeerColor peerColor = peerColors != null ? peerColors.getColor(colorId) : null;
+            if (peerColor != null) {
+                return peerColor.getColor(0, resourceProvider);
+            }
+        }
+        return getThemedColor(Theme.key_chat_inForwardedNameText);
+    }
+
+    // DiveLite: аватарка отправителя — ImageReceiver с AvatarDrawable-заглушкой
+    private ImageReceiver getLiftSenderImage(MessageObject message, TLRPC.User user, TLRPC.Chat chat, ChatMessageCell cell) {
+        AvatarDrawable avatarDrawable;
+        if (user != null) {
+            avatarDrawable = new AvatarDrawable(user, false);
+        } else if (chat != null) {
+            avatarDrawable = new AvatarDrawable(chat, false);
+        } else {
+            String name = getLiftSenderName(message);
+            avatarDrawable = new AvatarDrawable();
+            avatarDrawable.setInfo(0, name, null, null);
+        }
+        ImageReceiver imageReceiver = new ImageReceiver(cell);
+        imageReceiver.onAttachedToWindow();
+        if (message.customAvatarDrawable != null) {
+            imageReceiver.setImageBitmap(message.customAvatarDrawable);
+        } else if (user != null || chat != null) {
+            imageReceiver.setForUserOrChat(user != null ? user : chat, avatarDrawable);
+        } else {
+            // Для анонимных/пересланных сообщений показываем хотя бы аватар-заглушку.
+            imageReceiver.setImage(null, null, avatarDrawable, null, message, 0);
+        }
+        return imageReceiver;
+    }
+
+    // DiveLite: собрать StaticLayout с ником отправителя и запомнить аватарку/цвет
+    private StaticLayout buildLiftSenderInfo(MessageObject message, ChatMessageCell cell) {
+        long senderId = message.getSenderId();
+        TLRPC.User user = senderId > 0 ? getMessagesController().getUser(senderId) : null;
+        TLRPC.Chat chat = senderId < 0 ? getMessagesController().getChat(-senderId) : null;
+        String name = getLiftSenderName(message);
+        if (TextUtils.isEmpty(name)) {
+            return null;
+        }
+        if (scrimLiftSenderImage != null) {
+            scrimLiftSenderImage.onDetachedFromWindow();
+        }
+        scrimLiftSenderImage = getLiftSenderImage(message, user, chat, cell);
+        scrimLiftSenderNameColor = getLiftSenderNameColor(user, chat);
+        int nameWidth = (int) Math.min(dp(240), Math.max(dp(24), chatListView.getMeasuredWidth() - dp(70)));
+        scrimLiftSenderNamePaint = new TextPaint(Theme.chat_namePaint);
+        scrimLiftSenderNamePaint.setColor(scrimLiftSenderNameColor);
+        CharSequence displayedName = TextUtils.ellipsize(name, scrimLiftSenderNamePaint, nameWidth, TextUtils.TruncateAt.END);
+        return new StaticLayout(displayedName, scrimLiftSenderNamePaint, nameWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
     }
 
     public void closeMenu() {

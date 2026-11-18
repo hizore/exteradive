@@ -5447,6 +5447,7 @@
     <string name="Reacted_other">%1$s Reacted</string>
     <string name="Reactions">Reactions</string>
     <string name="LiftBubbleOnMenu">Raise message bubble</string>
+    <string name="LiftBubbleShowSenderInfo">Show sender name and avatar on raised message</string>
     <string name="LiftBubbleHideMenu">Hide Context Menu</string>
     <string name="LiftBubbleHideReactions">Hide Reactions Bar</string>
     <string name="ReactionsOff">Off</string>

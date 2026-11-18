@@ -183,6 +183,13 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    // DiveLite: показывать ник и аватарку отправителя над приподнятым баблом
+    val showLiftSenderInfo =
+        addConfig(
+            "ShowLiftSenderInfo",
+            ConfigItem.configTypeBool,
+            true
+        )
     // DiveLite: скрыть контекстное меню (Копировать/Закрепить/...) при клике на сообщение
     val hideMessageMenu =
         addConfig(
