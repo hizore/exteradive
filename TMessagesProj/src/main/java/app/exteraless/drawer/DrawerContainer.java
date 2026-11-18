@@ -6,8 +6,10 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -39,6 +41,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stars;
@@ -51,6 +54,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.ScrimOptions;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.MainTabsActivity;
@@ -107,6 +111,12 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     private final Path clipPath = new Path();
     private final float[] radii = new float[8];
 
+    // DiveLite: стекло шторки — снимок экрана под панелью + полупрозрачный тон
+    private Bitmap glassBitmap;
+    private final Matrix glassMatrix = new Matrix();
+    private final Paint glassBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private final Paint glassTintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     private float cachedTopRightRadius = -1.0f;
     private float cachedBottomRightRadius = -1.0f;
 
@@ -140,7 +150,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         drawerWidth = calculateDrawerWidth();
 
         drawerPanel = new FrameLayout(context);
-        drawerPanel.setBackgroundColor(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND));
+        updateDrawerPanelBackground();
         drawerPanel.setTranslationX(-drawerWidth);
         addView(drawerPanel, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT));
         final FrameLayout.LayoutParams panelParams = (FrameLayout.LayoutParams) drawerPanel.getLayoutParams();
@@ -188,6 +198,9 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         }
         isOpen = true;
         updateDrawerWidth();
+        // DiveLite: снимок экрана под шторкой — строго ДО того, как панель станет
+        // видимой, иначе в битмап попадёт сама шторка
+        captureGlassBitmap();
         super.setVisibility(View.VISIBLE);
         applyDrawerPanelPadding();
         refreshContents();
@@ -475,28 +488,87 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     /** В неиммерсивном режиме правый край скруглён. */
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
-        if (child != drawerPanel || AppearanceConfig.immersiveDrawerAnimation()) {
+        if (child != drawerPanel) {
             return super.drawChild(canvas, child, drawingTime);
         }
-        final float topRight = cachedTopRightRadius < 0.0f ? AndroidUtilities.dp(24.0f) : cachedTopRightRadius;
-        final float bottomRight = cachedBottomRightRadius < 0.0f ? AndroidUtilities.dp(24.0f) : cachedBottomRightRadius;
-        radii[0] = 0.0f;
-        radii[1] = 0.0f;
-        radii[2] = topRight;
-        radii[3] = topRight;
-        radii[4] = bottomRight;
-        radii[5] = bottomRight;
-        radii[6] = 0.0f;
-        radii[7] = 0.0f;
-        final RectF bounds = AndroidUtilities.rectTmp;
-        bounds.set(child.getX(), child.getY(), child.getX() + child.getWidth(), child.getY() + child.getHeight());
-        clipPath.rewind();
-        clipPath.addRoundRect(bounds, radii, Path.Direction.CW);
-        final int save = canvas.save();
-        canvas.clipPath(clipPath);
+        final boolean clip = !AppearanceConfig.immersiveDrawerAnimation();
+        final int save;
+        if (clip) {
+            final float topRight = cachedTopRightRadius < 0.0f ? AndroidUtilities.dp(24.0f) : cachedTopRightRadius;
+            final float bottomRight = cachedBottomRightRadius < 0.0f ? AndroidUtilities.dp(24.0f) : cachedBottomRightRadius;
+            radii[0] = 0.0f;
+            radii[1] = 0.0f;
+            radii[2] = topRight;
+            radii[3] = topRight;
+            radii[4] = bottomRight;
+            radii[5] = bottomRight;
+            radii[6] = 0.0f;
+            radii[7] = 0.0f;
+            final RectF bounds = AndroidUtilities.rectTmp;
+            bounds.set(child.getX(), child.getY(), child.getX() + child.getWidth(), child.getY() + child.getHeight());
+            clipPath.rewind();
+            clipPath.addRoundRect(bounds, radii, Path.Direction.CW);
+            save = canvas.save();
+            canvas.clipPath(clipPath);
+        } else {
+            save = -1;
+        }
+        drawGlassBackground(canvas, child);
         final boolean result = super.drawChild(canvas, child, drawingTime);
-        canvas.restoreToCount(save);
+        if (clip) {
+            canvas.restoreToCount(save);
+        }
         return result;
+    }
+
+    // ---- DiveLite: стекло шторки ----
+
+    /**
+     * Снимок экрана под панелью. Вызывается до того, как панель станет видимой,
+     * иначе в битмап попадёт сама шторка. Битмап уже прогнан через ту же
+     * цветокоррекцию (насыщенность/яркость), что и у остальных стёкол.
+     */
+    private void captureGlassBitmap() {
+        if (!SharedConfig.drawerGlass || !SharedConfig.drawerBlur) {
+            glassBitmap = null;
+            return;
+        }
+        ScrimOptions.makeGlobalBlurBitmaps((bitmapBg, bitmapOptions) -> glassBitmap = bitmapBg);
+    }
+
+    /** Фон панели: размытый снимок экрана + полупрозрачный тон цвета темы. */
+    private void drawGlassBackground(Canvas canvas, View panel) {
+        if (!SharedConfig.drawerGlass) {
+            return;
+        }
+        final float opacity = SharedConfig.drawerOpacity / 100f;
+        if (opacity <= 0.001f) {
+            return;
+        }
+        final boolean isDark = Theme.isCurrentThemeDark();
+        final float tintAlpha = opacity * (SharedConfig.drawerBlur ? (isDark ? 0.62f : 0.55f) : 1f);
+        if (SharedConfig.drawerBlur && glassBitmap != null && !glassBitmap.isRecycled()) {
+            final float sx = AndroidUtilities.displaySize.x / (float) glassBitmap.getWidth();
+            final float sy = (AndroidUtilities.displaySize.y + AndroidUtilities.statusBarHeight + AndroidUtilities.navigationBarHeight)
+                    / (float) glassBitmap.getHeight();
+            glassMatrix.reset();
+            glassMatrix.setScale(sx, sy);
+            // выравниваем снимок по экрану: пиксель (0,0) битмапа — угол экрана
+            glassMatrix.postTranslate(-panel.getX(), -panel.getY());
+            final float strength = AndroidUtilities.lerp(0.15f, 1.0f,
+                    Math.max(0, Math.min(100, SharedConfig.drawerBlurStrength)) / 100f);
+            glassBitmapPaint.setAlpha((int) (255.0f * strength * opacity));
+            canvas.drawBitmap(glassBitmap, glassMatrix, glassBitmapPaint);
+        }
+        glassTintPaint.setColor(Theme.multAlpha(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND), tintAlpha));
+        canvas.drawRect(0.0f, 0.0f, panel.getWidth(), panel.getHeight(), glassTintPaint);
+    }
+
+    private void updateDrawerPanelBackground() {
+        // при стекле фон прозрачный — стекло рисуется в drawChild под контентом
+        drawerPanel.setBackgroundColor(SharedConfig.drawerGlass
+                ? Color.TRANSPARENT
+                : Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND));
     }
 
     /** Системные радиусы углов, API 31+. */
@@ -812,6 +884,8 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         if (isAnimating) {
             cancelAnimations();
         }
+        // DiveLite: снимок экрана под шторкой — строго до того, как панель станет видимой
+        captureGlassBitmap();
         super.setVisibility(View.VISIBLE);
         applyDrawerPanelPadding();
         refreshContents();
@@ -971,7 +1045,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     }
 
     private void updateColors() {
-        drawerPanel.setBackgroundColor(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND));
+        updateDrawerPanelBackground();
         headerView.updateColors();
         accountPickerView.updateColors();
         menuView.updateColors();

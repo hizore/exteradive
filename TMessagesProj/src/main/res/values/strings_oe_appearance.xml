@@ -77,6 +77,16 @@
     <string name="OEAppearanceMenuBlurStrengthMin">Light</string>
     <string name="OEAppearanceMenuBlurStrengthMax">Strong</string>
 
+    <!-- DiveLite: glass side drawer -->
+    <string name="OEAppearanceDrawerGlass">Glass Side Menu</string>
+    <string name="OEAppearanceDrawerOpacity">Side Menu Opacity</string>
+    <string name="OEAppearanceDrawerOpacityMin">Transparent</string>
+    <string name="OEAppearanceDrawerOpacityMax">Opaque</string>
+    <string name="OEAppearanceDrawerBlur">Blur Side Menu</string>
+    <string name="OEAppearanceDrawerBlurStrength">Side Menu Blur Strength</string>
+    <string name="OEAppearanceDrawerBlurStrengthMin">Light</string>
+    <string name="OEAppearanceDrawerBlurStrengthMax">Strong</string>
+
     <!-- DiveLite: wavy loading indicator -->
     <string name="OEAppearanceLoaderWaveHeader">Photo &amp; File Loading Wave</string>
     <string name="OEAppearanceLoaderWaveAccent">Accent Color</string>

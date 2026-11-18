@@ -17,7 +17,6 @@ import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundProvider;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundProviderBuilder;
-import org.telegram.ui.Components.blur3.drawable.color.impl.BlurredBackgroundProviderImpl;
 import org.telegram.utils.glass.source.GlassSourceBitmap;
 import org.telegram.ui.Components.blur3.utils.Blur3Utils;
 
@@ -25,10 +24,8 @@ import org.telegram.ui.Components.blur3.utils.Blur3Utils;
  * Матовое стекло под меню сообщения и панелью реакций.
  *
  * <p>Ключ — {@link AppearanceConfig#glassMessageMenu()} (дефолт true, как в exteraGram).
- * Стекло включается только когда блюр реально доступен: тот же гейт, что и в exteraGram —
- * {@code BlurredBackgroundProviderImpl.checkBlurEnabled} (SharedConfig.chatBlurEnabled плюс
- * серверные флаги disableBlurInLight/DarkTheme). Если блюр недоступен — вызывающий код
- * должен оставить обычный popup, поведение при этом ровно прежнее.
+ * DiveLite: гейт только по тумблеру — снимок-блюр работает независимо от LiteMode
+ * «Блюр в чате» и серверных флагов disableBlurInLight/DarkTheme.
  */
 public abstract class GlassMenuHelper {
 
@@ -36,8 +33,11 @@ public abstract class GlassMenuHelper {
     }
 
     public static boolean isEnabled(int currentAccount, Theme.ResourcesProvider resourcesProvider) {
-        return AppearanceConfig.glassMessageMenu()
-            && BlurredBackgroundProviderImpl.checkBlurEnabled(currentAccount, resourcesProvider);
+        // DiveLite: гейт только по тумблеру "Стекло меню". Не зависим от LiteMode
+        // "Блюр в чате" и серверных флагов disableBlurInLight/DarkTheme — они гасили
+        // стекло целиком, из-за чего попап и панель реакций оставались непрозрачными.
+        // Снимок-блюр (makeGlobalBlurBitmaps) работает независимо от них.
+        return AppearanceConfig.glassMessageMenu();
     }
 
     /**
@@ -48,9 +48,11 @@ public abstract class GlassMenuHelper {
         // DiveLite: цвет панели меню и реакций = цвет чужих сообщений в теме
         // (тянется динамически, при смене темы панель перекрашивается).
         // Прозрачность и блюр — отдельные настройки (как у баблов), не общие с ними.
+        // При включённом блюре тон заметно прозрачнее — иначе блюр под стеклом
+        // не виден (85% заливки съедают размытие целиком).
         final float opacity = SharedConfig.menuOpacity / 100f;
         final boolean blur = SharedConfig.menuBlur;
-        final float tintAlpha = opacity * (blur ? (isDarkTheme(resourcesProvider) ? 0.85f : 0.76f) : 1f);
+        final float tintAlpha = opacity * (blur ? (isDarkTheme(resourcesProvider) ? 0.62f : 0.55f) : 1f);
         return new BlurredBackgroundProviderBuilder(resourcesProvider)
             .setBackgroundColor((r, isDark) -> Theme.multAlpha(
                 Theme.getColor(Theme.key_chat_inBubble, r), tintAlpha))

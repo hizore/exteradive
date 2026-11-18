@@ -62,6 +62,16 @@
     <string name="OEAppearanceMenuBlurStrengthMin">Слабый</string>
     <string name="OEAppearanceMenuBlurStrengthMax">Сильный</string>
 
+    <!-- DiveLite: стекло бокового меню -->
+    <string name="OEAppearanceDrawerGlass">Стеклянное боковое меню</string>
+    <string name="OEAppearanceDrawerOpacity">Прозрачность бокового меню</string>
+    <string name="OEAppearanceDrawerOpacityMin">Прозрачно</string>
+    <string name="OEAppearanceDrawerOpacityMax">Непрозрачно</string>
+    <string name="OEAppearanceDrawerBlur">Блюр бокового меню</string>
+    <string name="OEAppearanceDrawerBlurStrength">Сила блюра бокового меню</string>
+    <string name="OEAppearanceDrawerBlurStrengthMin">Слабый</string>
+    <string name="OEAppearanceDrawerBlurStrengthMax">Сильный</string>
+
     <!-- DiveLite: волнистый индикатор загрузки -->
     <string name="OEAppearanceLoaderWaveHeader">Загрузка фото и файлов</string>
     <string name="OEAppearanceLoaderWaveAccent">Акцентный цвет</string>

@@ -90,6 +90,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     // DiveLite: слайдеры стекла меню
     private static final int TYPE_MENU_OPACITY = 112;
     private static final int TYPE_MENU_BLUR_STRENGTH = 113;
+    // DiveLite: слайдеры стекла бокового меню
+    private static final int TYPE_DRAWER_OPACITY = 114;
+    private static final int TYPE_DRAWER_BLUR_STRENGTH = 115;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -124,6 +127,11 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int menuBlurRow;
     private int hideMessageMenuRow;
     private int hideReactionsRow;
+    // DiveLite: стекло бокового меню (шторки)
+    private int drawerGlassRow;
+    private int drawerOpacityRow;
+    private int drawerBlurStrengthRow;
+    private int drawerBlurRow;
     private int blurDividerRow;
 
     // DiveLite: волнистый индикатор загрузки
@@ -296,6 +304,11 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         menuOpacityRow = addRow("menuOpacity");
         menuBlurStrengthRow = addRow("menuBlurStrength");
         menuBlurRow = addRow("menuBlur");
+        // DiveLite: стекло бокового меню
+        drawerGlassRow = addRow("drawerGlass");
+        drawerOpacityRow = addRow("drawerOpacity");
+        drawerBlurStrengthRow = addRow("drawerBlurStrength");
+        drawerBlurRow = addRow("drawerBlur");
         blurDividerRow = addRow();
 
         // DiveLite: волнистый индикатор загрузки
@@ -786,6 +799,16 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
             SharedConfig.setMenuBlur(!SharedConfig.menuBlur);
             notifyRow(menuBlurRow);
             return;
+        } else if (position == drawerGlassRow) {
+            // DiveLite: стекло бокового меню
+            SharedConfig.setDrawerGlass(!SharedConfig.drawerGlass);
+            notifyRow(drawerGlassRow);
+            return;
+        } else if (position == drawerBlurRow) {
+            // DiveLite: тумблер блюра бокового меню
+            SharedConfig.setDrawerBlur(!SharedConfig.drawerBlur);
+            notifyRow(drawerBlurRow);
+            return;
         } else if (position == loaderWaveAccentRow) {
             // DiveLite: красить волну индикатора загрузки акцентным цветом темы.
             SharedConfig.setLoaderWaveAccent(!SharedConfig.loaderWaveAccent);
@@ -1063,6 +1086,34 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = menuBlurStrengthSlider;
                     break;
                 }
+                case TYPE_DRAWER_OPACITY: {
+                    // DiveLite: ползунок непрозрачности бокового меню.
+                    AvatarCornersSeekBar drawerOpacitySlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setDrawerOpacity(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceDrawerOpacity),
+                            getString(R.string.OEAppearanceDrawerOpacityMin),
+                            getString(R.string.OEAppearanceDrawerOpacityMax));
+                    drawerOpacitySlider.setValueSuffix("%");
+                    drawerOpacitySlider.setValue(SharedConfig.drawerOpacity);
+                    drawerOpacitySlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = drawerOpacitySlider;
+                    break;
+                }
+                case TYPE_DRAWER_BLUR_STRENGTH: {
+                    // DiveLite: сила блюра бокового меню.
+                    AvatarCornersSeekBar drawerBlurStrengthSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setDrawerBlurStrength(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceDrawerBlurStrength),
+                            getString(R.string.OEAppearanceDrawerBlurStrengthMin),
+                            getString(R.string.OEAppearanceDrawerBlurStrengthMax));
+                    drawerBlurStrengthSlider.setValueSuffix("%");
+                    drawerBlurStrengthSlider.setValue(SharedConfig.drawerBlurStrength);
+                    drawerBlurStrengthSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = drawerBlurStrengthSlider;
+                    break;
+                }
                 case TYPE_LOADER_WAVE_AMPLITUDE: {
                     // DiveLite: амплитуда волны индикатора загрузки (0 — плоское кольцо).
                     AvatarCornersSeekBar waveAmpSlider = new AvatarCornersSeekBar(mContext,
@@ -1196,6 +1247,12 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     } else if (position == menuBlurRow) {
                         // DiveLite: тумблер блюра стекла меню и реакций
                         cell.setTextAndCheck(getString(R.string.OEAppearanceMenuBlur), SharedConfig.menuBlur, false);
+                    } else if (position == drawerGlassRow) {
+                        // DiveLite: стекло бокового меню
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceDrawerGlass), SharedConfig.drawerGlass, true);
+                    } else if (position == drawerBlurRow) {
+                        // DiveLite: тумблер блюра бокового меню
+                        cell.setTextAndCheck(getString(R.string.OEAppearanceDrawerBlur), SharedConfig.drawerBlur, false);
                     } else if (position == loaderWaveAccentRow) {
                         // DiveLite: красить волну акцентным цветом темы.
                         cell.setTextAndCheck(getString(R.string.OEAppearanceLoaderWaveAccent), SharedConfig.loaderWaveAccent, false);
@@ -1375,6 +1432,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_MENU_OPACITY;
             } else if (position == menuBlurStrengthRow) {
                 return TYPE_MENU_BLUR_STRENGTH;
+            } else if (position == drawerOpacityRow) {
+                return TYPE_DRAWER_OPACITY;
+            } else if (position == drawerBlurStrengthRow) {
+                return TYPE_DRAWER_BLUR_STRENGTH;
             } else if (position == loaderWaveAmplitudeRow) {
                 return TYPE_LOADER_WAVE_AMPLITUDE;
             } else if (position == loaderWaveDensityRow) {

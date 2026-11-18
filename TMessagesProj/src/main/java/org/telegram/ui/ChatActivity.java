@@ -1232,6 +1232,8 @@ public class ChatActivity extends BaseFragment implements
     private Integer scrimViewTask;
     private int scrimViewReactionOffset;
     private boolean scrimViewReactionAnimated;
+    // DiveLite: дата нового дня над приподнятым баблом — прячется на время скрима
+    private View scrimLiftHiddenDateCell;
     private int popupAnimationIndex = -1;
     private AnimatorSet scrimAnimatorSet;
     public ActionBarPopupWindow scrimPopupWindow;
@@ -34189,7 +34191,42 @@ public class ChatActivity extends BaseFragment implements
             }
             MessageSeenView messageSeenView = null;
 
-            updateScrimSourceBitmap();
+            // DiveLite: дата нового дня над баблом — прячем ДО снимка, чтобы она не
+            // попала в размытый фон и не была видна рядом с приподнятым баблом
+            scrimLiftHiddenDateCell = null;
+            if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && v instanceof ChatMessageCell) {
+                for (int i = 0, N = chatListView.getChildCount(); i < N; i++) {
+                    if (chatListView.getChildAt(i) == v) {
+                        if (i > 0) {
+                            View prevCell = chatListView.getChildAt(i - 1);
+                            if (prevCell instanceof ChatActionCell) {
+                                MessageObject prevMessage = ((ChatActionCell) prevCell).getMessageObject();
+                                if (prevMessage != null && prevMessage.isDateObject) {
+                                    prevCell.setAlpha(0f);
+                                    scrimLiftHiddenDateCell = prevCell;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // DiveLite: снимок экрана ДО показа попапа — чистый, без самого меню.
+            // Из него и источник стекла меню, и размытый фон под скримом;
+            // dimBehindView при открытии больше не переснимает (иначе в битмап
+            // попадает уже открытое меню и блюр под стеклом съедается).
+            ScrimOptions.makeGlobalBlurBitmaps((bitmapBg, bitmapOptions) -> {
+                scrimBlur3SourceBitmap.setBitmap(bitmapOptions);
+                Blur3Utils.checkBitmapSourceMatrixScale(scrimBlur3SourceBitmap, fragmentView);
+                scrimBlur3Factory.invalidateAllLinkedViews();
+                if (glassMenu) {
+                    scrimBlurBitmap = bitmapBg;
+                    scrimBlurBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                    scrimBlurBitmapPaint.setShader(scrimBlurBitmapShader = new BitmapShader(scrimBlurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+                    scrimBlurMatrix = new Matrix();
+                }
+            });
 
             // DiveLite: апстримный провайдер перебивал наше стекло (цвет из темы,
             // прозрачность и сила блюра меню) — применяем его только без стекла
@@ -35713,12 +35750,14 @@ public class ChatActivity extends BaseFragment implements
                         bubbleTop -= menuScrollDy;
                         bubbleBottom -= menuScrollDy;
                     }
-                    // DiveLite: расстояние учитывает фактические границы приподнятого бабла:
-                    // подъём на dp(28) плюс раздатие от скейла 1.04 вокруг центра —
-                    // чем выше бабл, тем дальше его края выходят за исходные границы
-                    float liftHalfGrow = 0.02f * (bubbleBottom - bubbleTop);
-                    float liftedTop = bubbleTop - dp(28) - liftHalfGrow;
-                    float liftedBottom = bubbleBottom - dp(28) + liftHalfGrow;
+                    // DiveLite: расстояние по ТОЧНОЙ формуле трансформа перерисовки:
+                    // y' = pivotY + (y - pivotY) * 1.04 - dp(28), где pivotY — центр
+                    // ЯЧЕЙКИ (не группы): у сгруппированных сообщений границы группы
+                    // масштабируются вокруг центра ячейки, аппроксимация от высоты
+                    // группы давала неверный зазор.
+                    float liftPivotY = (chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f) - menuScrollDy;
+                    float liftedTop = liftPivotY + (bubbleTop - liftPivotY) * 1.04f - dp(28);
+                    float liftedBottom = liftPivotY + (bubbleBottom - liftPivotY) * 1.04f - dp(28);
                     int belowY = (int) (liftedBottom + dp(6));
                     int aboveY = (int) (liftedTop - height - dp(6));
                     if (belowY + height <= totalHeight - dp(8)) {
@@ -35769,12 +35808,15 @@ public class ChatActivity extends BaseFragment implements
                 chatListView.stopScroll();
                 chatLayoutManager.setCanScrollVertically(false);
                 // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
-                // видимый оригинал бабла под приподнятым. Только при включённом тумблере.
+                // видимый оригинал бабла под приподнятым. При стекле снимок уже сделан
+                // до показа попапа (чистый) — повторный собрал бы в битмап само меню.
                 if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
                     GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
                 }
                 if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()) {
-                    dimBehindView(v, true, true);
+                    dimBehindView(v, !glassMenu, true);
+                } else if (glassMenu) {
+                    dimBehindView(v, false, true);
                 } else {
                     dimBehindView(v, true);
                 }
@@ -36064,6 +36106,11 @@ public class ChatActivity extends BaseFragment implements
         scrimPopupWindowHideDimOnDismiss = hideDim;
         if (scrimPopupWindow != null) {
             scrimPopupWindow.dismiss();
+        }
+        // DiveLite: вернуть дату, спрятанную над приподнятым баблом
+        if (scrimLiftHiddenDateCell != null) {
+            scrimLiftHiddenDateCell.setAlpha(1f);
+            scrimLiftHiddenDateCell = null;
         }
 
         if (!hideDim) {

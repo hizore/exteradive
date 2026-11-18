@@ -278,6 +278,11 @@ public class SharedConfig {
     public static int menuOpacity = 100;
     public static boolean menuBlur = true;
     public static int menuBlurStrength = 80;
+    // Стекло бокового меню (шторки): прозрачность, блюр и его сила (DiveLite)
+    public static boolean drawerGlass = true;
+    public static int drawerOpacity = 100;
+    public static boolean drawerBlur = true;
+    public static int drawerBlurStrength = 80;
     // Волнистый индикатор загрузки (M3 Expressive): амплитуда, густота гребней,
     // скорость и цвет по акценту темы.
     public static int loaderWaveAmplitude = 50;   // 0..100, dgLoaderWaveAmplitude
@@ -750,6 +755,10 @@ public class SharedConfig {
             menuOpacity = forkPrefs.getInt("dgMenuOpacity", 100);
             menuBlur = forkPrefs.getBoolean("dgMenuBlur", true);
             menuBlurStrength = forkPrefs.getInt("dgMenuBlurStrength", 80);
+            drawerGlass = forkPrefs.getBoolean("dgDrawerGlass", true);
+            drawerOpacity = forkPrefs.getInt("dgDrawerOpacity", 100);
+            drawerBlur = forkPrefs.getBoolean("dgDrawerBlur", true);
+            drawerBlurStrength = forkPrefs.getInt("dgDrawerBlurStrength", 80);
             loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
             loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);
             loaderWaveSpeed = forkPrefs.getInt("dgLoaderWaveSpeed", 40);
@@ -1758,6 +1767,35 @@ public class SharedConfig {
         menuBlurStrength = Math.max(0, Math.min(100, value));
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgMenuBlurStrength", menuBlurStrength)
+                .apply();
+    }
+
+    // DiveLite: стекло бокового меню (шторки)
+    public static void setDrawerGlass(boolean value) {
+        drawerGlass = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgDrawerGlass", value)
+                .apply();
+    }
+
+    public static void setDrawerOpacity(int value) {
+        drawerOpacity = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgDrawerOpacity", drawerOpacity)
+                .apply();
+    }
+
+    public static void setDrawerBlur(boolean value) {
+        drawerBlur = value;
+        MessagesController.getGlobalMainSettings().edit()
+                .putBoolean("dgDrawerBlur", value)
+                .apply();
+    }
+
+    public static void setDrawerBlurStrength(int value) {
+        drawerBlurStrength = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgDrawerBlurStrength", drawerBlurStrength)
                 .apply();
     }
 
