@@ -66,9 +66,10 @@ public abstract class GlassMenuHelper {
 
     /**
      * DiveLite: заметность блюра под стеклом меню — как у баблов:
-     * сила блюра (0.15..1) × прозрачность панели.
+     * сила блюра (0.15..1) × прозрачность панели. Публично: используется
+     * также развёрнутой панелью реакций (CustomEmojiReactionsWindow).
      */
-    private static float menuBitmapAlphaFactor() {
+    public static float menuBitmapAlphaFactor() {
         if (!SharedConfig.menuBlur) {
             return 0f;
         }

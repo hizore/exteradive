@@ -276,7 +276,7 @@ public class SharedConfig {
     public static int bubbleBlurStrength = 80;
     // Те же настройки для стекла контекстного меню и панели реакций (DiveLite)
     public static int menuOpacity = 100;
-    public static boolean menuBlur = false;
+    public static boolean menuBlur = true;
     public static int menuBlurStrength = 80;
     // Волнистый индикатор загрузки (M3 Expressive): амплитуда, густота гребней,
     // скорость и цвет по акценту темы.
@@ -748,7 +748,7 @@ public class SharedConfig {
             bubbleOpacityOut = forkPrefs.getBoolean("dgBubbleOpacityOut", false);
             bubbleBlurStrength = forkPrefs.getInt("dgBubbleBlurStrength", 80);
             menuOpacity = forkPrefs.getInt("dgMenuOpacity", 100);
-            menuBlur = forkPrefs.getBoolean("dgMenuBlur", false);
+            menuBlur = forkPrefs.getBoolean("dgMenuBlur", true);
             menuBlurStrength = forkPrefs.getInt("dgMenuBlurStrength", 80);
             loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
             loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);

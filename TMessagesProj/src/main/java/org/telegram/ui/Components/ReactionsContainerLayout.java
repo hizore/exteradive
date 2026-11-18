@@ -526,7 +526,11 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
             return;
         }
         reactionsWindow = new CustomEmojiReactionsWindow(type, fragment, allReactionsList, selectedReactions, this, resourcesProvider, forceAttachToParent);
-        if (backgroundFactory != null) {
+        // DiveLite: развёрнутая панель реакций получает то же стекло (цвет из темы,
+        // прозрачность и сила блюра меню), что и сама панель реакций
+        if (glassBackgroundFactory != null && glassBackgroundColorProvider != null) {
+            reactionsWindow.setBackgroundFactory(glassBackgroundFactory, glassBackgroundColorProvider);
+        } else if (backgroundFactory != null) {
             reactionsWindow.setBackgroundFactory(backgroundFactory, backgroundColorProvider);
         }
         reactionsWindow.setLongPressEnabled(delegate == null || delegate.allowLongPress());

@@ -34191,10 +34191,14 @@ public class ChatActivity extends BaseFragment implements
 
             updateScrimSourceBitmap();
 
-            popupLayout.setBackground(scrimBlur3Factory.create(popupLayout, true)
-                .setColorProvider(BlurredBackgroundProviderImpl.messageMenuBackground(resourceProvider))
-                .setRadius(dp(12))
-                .setPadding(dp(8)));
+            // DiveLite: апстримный провайдер перебивал наше стекло (цвет из темы,
+            // прозрачность и сила блюра меню) — применяем его только без стекла
+            if (!glassMenu) {
+                popupLayout.setBackground(scrimBlur3Factory.create(popupLayout, true)
+                    .setColorProvider(BlurredBackgroundProviderImpl.messageMenuBackground(resourceProvider))
+                    .setRadius(dp(12))
+                    .setPadding(dp(8)));
+            }
 
             boolean addGap = false;
 
@@ -35683,12 +35687,16 @@ public class ChatActivity extends BaseFragment implements
                     }
                     // DiveLite: бабл частично за экраном — не обрезаем его, а прокручиваем
                     // к центру (обрезан снизу — встанет чуть ниже центра, сверху — чуть выше);
-                    // меню, скрим и блюр-снимок открываются только после прокрутки
+                    // меню, скрим и блюр-снимок открываются только после прокрутки.
+                    // Видимая область — по паддингам списка: они уже учитывают шапку чата
+                    // (экшн-бар, закреплённое, поиск) и панель ввода сообщения
+                    float visibleTop = chatListView.getY() + chatListView.getPaddingTop();
+                    float visibleBottom = chatListView.getY() + chatListView.getMeasuredHeight() - chatListView.getPaddingBottom();
                     float bubbleCenter = (bubbleTop + bubbleBottom) / 2f;
-                    if (bubbleBottom > totalHeight - dp(8)) {
-                        menuScrollDy = (int) (bubbleCenter - (totalHeight * 0.5f + dp(24)));
-                    } else if (bubbleTop < minY) {
-                        menuScrollDy = (int) (bubbleCenter - (totalHeight * 0.5f - dp(24)));
+                    if (bubbleBottom > visibleBottom - dp(8)) {
+                        menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f + dp(24)));
+                    } else if (bubbleTop < visibleTop + dp(8)) {
+                        menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f - dp(24)));
                     }
                     if (menuScrollDy != 0) {
                         int maxDown = chatListView.computeVerticalScrollRange()
@@ -35705,8 +35713,14 @@ public class ChatActivity extends BaseFragment implements
                         bubbleTop -= menuScrollDy;
                         bubbleBottom -= menuScrollDy;
                     }
-                    int belowY = (int) (bubbleBottom - dp(28) + dp(10));
-                    int aboveY = (int) (bubbleTop - dp(28) - height - dp(10));
+                    // DiveLite: расстояние учитывает фактические границы приподнятого бабла:
+                    // подъём на dp(28) плюс раздатие от скейла 1.04 вокруг центра —
+                    // чем выше бабл, тем дальше его края выходят за исходные границы
+                    float liftHalfGrow = 0.02f * (bubbleBottom - bubbleTop);
+                    float liftedTop = bubbleTop - dp(28) - liftHalfGrow;
+                    float liftedBottom = bubbleBottom - dp(28) + liftHalfGrow;
+                    int belowY = (int) (liftedBottom + dp(6));
+                    int aboveY = (int) (liftedTop - height - dp(6));
                     if (belowY + height <= totalHeight - dp(8)) {
                         // влезает снизу
                         popupY = belowY;

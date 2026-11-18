@@ -68,6 +68,8 @@ import org.telegram.ui.Components.StableAnimator;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundProvider;
+
+import app.exteraless.appearance.GlassMenuHelper;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PremiumPreviewFragment;
 import org.telegram.ui.SelectAnimatedEmojiDialog;
@@ -324,6 +326,7 @@ public class CustomEmojiReactionsWindow {
         this.selectAnimatedEmojiDialog.searchBox.setUseCustomBackground();
         this.blurredBackgroundDrawable = backgroundFactory.create(containerView, true)
             .setColorProvider(backgroundColorProvider)
+            .setBitmapAlphaFactor(GlassMenuHelper.menuBitmapAlphaFactor())
             .setRadius(dp(12))
             .setPadding(dp(8));
     }
