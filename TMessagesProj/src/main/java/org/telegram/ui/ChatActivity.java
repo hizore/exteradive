@@ -36258,19 +36258,15 @@ public class ChatActivity extends BaseFragment implements
                     }
 
                     // Композиция = реакции над плашкой, плашка, бабл, меню.
-                    // Если она целиком помещается — бабл ставим выше или ниже в
-                    // зависимости от его исходного положения; иначе центрируем.
+                    // Прокрутка МИНИМАЛЬНАЯ: только на столько, насколько композиция
+                    // не влезает. Если всё помещается — список вообще не трогаем.
                     float compTop = scrimLiftCompTop;
                     float compBottom = scrimLiftCompBottom;
                     if (compBottom - compTop <= visibleHeight) {
-                        if (compTop < visibleTop + dp(4) || compBottom > visibleBottom - dp(4)) {
-                            float bubbleCenter = (scrimLiftLiftedTop + scrimLiftLiftedBottom) * 0.5f;
-                            float visibleCenter = (visibleTop + visibleBottom) * 0.5f;
-                            if (bubbleCenter < visibleCenter) {
-                                menuScrollDy = (int) (compTop - visibleTop);
-                            } else {
-                                menuScrollDy = (int) (compBottom - visibleBottom);
-                            }
+                        if (compTop < visibleTop + dp(4)) {
+                            menuScrollDy = (int) (compTop - (visibleTop + dp(4)));
+                        } else if (compBottom > visibleBottom - dp(4)) {
+                            menuScrollDy = (int) (compBottom - (visibleBottom - dp(4)));
                         }
                     } else {
                         menuScrollDy = (int) ((compTop + compBottom) * 0.5f - (visibleTop + visibleBottom) * 0.5f);
