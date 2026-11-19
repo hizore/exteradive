@@ -17712,6 +17712,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         );
     }
 
+    // DiveLite: рисуется ли ник отправителя в самом бабле.
+    // Если да — плашка над поднятым баблом показывает только аватар.
+    public boolean hasSenderNameInBubble() {
+        return drawNameLayout;
+    }
+
     private String getAuthorName() {
         if (currentUser != null) {
             return UserObject.getUserName(currentUser);
