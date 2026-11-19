@@ -22,6 +22,16 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     private float bottomViewYOffset;
     private float expandSize;
     private float bottomViewReactionsOffset;
+    // DiveLite: поднятое сообщение — панель реакций выравнивается по НАЧАЛУ строки
+    // (левый край бабла у чужих сообщений), а не прижимается к правому краю меню.
+    private boolean raisedReactionsStartAligned;
+
+    public void setRaisedReactionsStartAligned(boolean value) {
+        if (raisedReactionsStartAligned != value) {
+            raisedReactionsStartAligned = value;
+            requestLayout();
+        }
+    }
 
     public ChatScrimPopupContainerLayout(Context context) {
         super(context);
@@ -38,6 +48,17 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (maxHeight != 0) {
             heightMeasureSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST);
+        }
+        if (raisedReactionsStartAligned && reactionsLayout != null && popupWindowLayout != null) {
+            // Без «прижатия к правому краю» меню: панель реакций остаётся там, где её
+            // поставил layout_gravity, а её ширина не пересчитывается под ширину списка.
+            reactionsLayout.getLayoutParams().width = LayoutHelper.WRAP_CONTENT;
+            ((LayoutParams) reactionsLayout.getLayoutParams()).rightMargin = 0;
+            popupLayoutLeftOffset = 0;
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            updatePopupTranslation();
+            maxHeight = getMeasuredHeight();
+            return;
         }
         if (reactionsLayout != null && popupWindowLayout != null) {
             reactionsLayout.getLayoutParams().width = LayoutHelper.WRAP_CONTENT;
