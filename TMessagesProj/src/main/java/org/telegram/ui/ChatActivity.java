@@ -1255,6 +1255,9 @@ public class ChatActivity extends BaseFragment implements
     private int scrimLiftOverlayBaseX, scrimLiftOverlayBaseY;
     // DiveLite: если ник уже нарисован в самом бабле — над баблом только аватар (круг)
     private boolean scrimLiftSenderNameInBubble;
+    // Реальный прямоугольник бабла в координатах ячейки — по нему считаются
+    // границы панелей и позиция плашки автора.
+    private final Rect scrimLiftBubbleRect = new Rect();
     private float liftTapDownX, liftTapDownY;
     private final Paint scrimLiftSenderGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint scrimLiftSenderTintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -20390,8 +20393,11 @@ public class ChatActivity extends BaseFragment implements
                             && (scrimLiftSenderNameInBubble
                                     || scrimLiftSenderNameLayout != null && scrimLiftSenderNamePaint != null)) {
                         ChatMessageCell liftCell = (ChatMessageCell) scrimView;
-                        float bgLeft = liftCell.getBackgroundDrawableLeft();
-                        float bgTop = liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop();
+                        float bgLeft = scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.left : liftCell.getBackgroundDrawableLeft();
+                        float bgTop = scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.top
+                                : liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop();
                         float avatarSize = dp(32);
                         float rowGap = dp(10);
                         // Чужое сообщение: ряд автора слегка сдвинут вправо от края бабла.
@@ -33933,16 +33939,16 @@ public class ChatActivity extends BaseFragment implements
     }
 
     /**
-     * DiveLite: меню не прячется и не ужимается до «стандартной панели» — если оно не
-     * влезает под поднятым баблом по высоте, пункты заменяются сеткой ИКОНОК без
-     * текста (несколько рядов при необходимости). Клик по иконке выполняет действие
-     * исходного пункта. Все прочие view меню (кнопки-инфо и т.п.) остаются.
+     * DiveLite: контекстное меню. Если стандартное (с текстом) помещается под баблом —
+     * остаётся стандартным. Если не помещается — превращается в горизонтальный ряд
+     * иконок без текста: иконки раскладываются по ширине, а если их всё равно больше
+     * экрана — ряд прокручивается по горизонтали. Отступ от краёв экрана — 20dp.
      *
-     * @return новая высота меню или -1, если перекладывать не нужно
+     * @return новая высота меню или -1, если меню менять не нужно
      */
-    private int applyRaisedMenuIconGrid(ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout,
-                                        ChatScrimPopupContainerLayout container, int menuHeight, int spaceBelow) {
-        if (spaceBelow <= dp(40) || menuHeight <= spaceBelow + dp(4) || popupLayout.getItemsCount() == 0) {
+    private int applyRaisedMenuIconRow(ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout,
+                                       ChatScrimPopupContainerLayout container, int menuHeight, int spaceBelow) {
+        if (spaceBelow <= dp(48) || menuHeight <= spaceBelow + dp(4) || popupLayout.getItemsCount() == 0) {
             return -1;
         }
         final ArrayList<ActionBarMenuSubItem> menuItems = new ArrayList<>();
@@ -33955,37 +33961,54 @@ public class ChatActivity extends BaseFragment implements
         if (menuItems.isEmpty()) {
             return -1;
         }
-        final int availableWidth = chatListView.getMeasuredWidth() - dp(32);
+        final int margin = dp(20);
+        final int available = Math.max(dp(120), chatListView.getMeasuredWidth() - margin * 2);
         final int btnSize = dp(44);
-        final int perRow = Math.max(1, availableWidth / btnSize);
-        LinearLayout grid = new LinearLayout(getParentActivity());
-        grid.setOrientation(LinearLayout.VERTICAL);
-        for (int r = 0; r * perRow < menuItems.size(); r++) {
-            LinearLayout rowView = new LinearLayout(getParentActivity());
-            rowView.setOrientation(LinearLayout.HORIZONTAL);
-            for (int c = 0; c < perRow && r * perRow + c < menuItems.size(); c++) {
-                ActionBarMenuSubItem src = menuItems.get(r * perRow + c);
-                ImageView iconButton = new ImageView(getParentActivity());
-                iconButton.setScaleType(ImageView.ScaleType.CENTER);
-                iconButton.setImageDrawable(src.getImageView().getDrawable());
-                iconButton.setColorFilter(new PorterDuffColorFilter(
-                        Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon, resourceProvider),
-                        PorterDuff.Mode.MULTIPLY));
-                iconButton.setBackground(Theme.createSelectorDrawable(
-                        Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP));
-                iconButton.setOnClickListener(v1 -> src.performClick());
-                rowView.addView(iconButton, new LinearLayout.LayoutParams(btnSize, btnSize));
-            }
-            grid.addView(rowView, new LinearLayout.LayoutParams(
-                    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        LinearLayout row = new LinearLayout(getParentActivity());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
+        for (int i = 0; i < menuItems.size(); i++) {
+            ActionBarMenuSubItem src = menuItems.get(i);
+            ImageView iconButton = new ImageView(getParentActivity());
+            iconButton.setScaleType(ImageView.ScaleType.CENTER);
+            iconButton.setImageDrawable(src.getImageView().getDrawable());
+            iconButton.setColorFilter(new PorterDuffColorFilter(
+                    Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon, resourceProvider),
+                    PorterDuff.Mode.MULTIPLY));
+            iconButton.setBackground(Theme.createSelectorDrawable(
+                    Theme.getColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP));
+            iconButton.setOnClickListener(v1 -> src.performClick());
+            row.addView(iconButton, new LinearLayout.LayoutParams(btnSize, btnSize));
         }
         // текстовые пункты скрываются — их действия живут в иконках
         for (int i = 0; i < menuItems.size(); i++) {
             menuItems.get(i).setVisibility(View.GONE);
         }
-        popupLayout.addView(grid, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        int gridWidth = Math.min(availableWidth, perRow * btnSize);
-        popupLayout.setMinimumWidth(gridWidth + dp(16));
+        row.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+        int rowWidth = row.getMeasuredWidth();
+        View rowHolder;
+        if (rowWidth > available) {
+            // иконки не влезают — горизонтальная прокрутка
+            HorizontalScrollView scroll = new HorizontalScrollView(getParentActivity());
+            scroll.setHorizontalScrollBarEnabled(false);
+            scroll.setFillViewport(true);
+            scroll.addView(row, new HorizontalScrollView.LayoutParams(
+                    LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+            scroll.measure(View.MeasureSpec.makeMeasureSpec(available, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+            rowHolder = scroll;
+        } else {
+            // раскладываем иконки по ширине панели
+            int perRow = Math.max(1, Math.min(menuItems.size(), available / btnSize));
+            int itemWidth = Math.min(dp(56), Math.max(btnSize, available / perRow));
+            for (int i = 0; i < row.getChildCount(); i++) {
+                row.getChildAt(i).setLayoutParams(new LinearLayout.LayoutParams(itemWidth, btnSize));
+            }
+            rowHolder = row;
+        }
+        popupLayout.addView(rowHolder, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        popupLayout.setMinimumWidth(Math.min(available, rowWidth) + dp(16));
         popupLayout.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
         container.setMaxHeight(0);
@@ -36058,22 +36081,36 @@ public class ChatActivity extends BaseFragment implements
                     minY = dp(24);
                     maxY = Math.min(location[1] + chatListView.getMeasuredHeight(), AndroidUtilities.displaySize.y) - dp(8) - height;
                 } else if (NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool() && v instanceof ChatMessageCell) {
-                    // меню не должно перекрывать приподнятый бабл: если сообщение высоко —
-                    // меню уезжает вниз, если низко — поднимается над баблом
+                    // DiveLite: границы берём у РЕАЛЬНОГО прямоугольника бабла
+                    // (currentBackgroundDrawable), а не по ячейке: у ячейки есть
+                    // свои отступы, из-за чего панели наезжали на текст.
                     float bubbleTop, bubbleBottom;
+                    float bubbleLeft, bubbleRight;
                     ChatMessageCell liftCell = (ChatMessageCell) v;
                     MessageObject.GroupedMessages liftGroup = liftCell.getCurrentMessagesGroup();
+                    scrimLiftBubbleRect.set(0, 0, 0, 0);
                     if (liftGroup != null && liftGroup.transitionParams.cell != null) {
                         MessageObject.GroupedMessages.TransitionParams tp = liftGroup.transitionParams;
                         bubbleTop = chatListView.getY() + tp.top + tp.offsetTop;
                         bubbleBottom = chatListView.getY() + tp.bottom + tp.offsetBottom;
+                        bubbleLeft = chatListView.getLeft() + tp.left + tp.offsetLeft;
+                        bubbleRight = chatListView.getLeft() + tp.right + tp.offsetRight;
                         if (!tp.backgroundChangeBounds) {
                             bubbleTop += tp.cell.getTranslationY();
                             bubbleBottom += tp.cell.getTranslationY();
                         }
+                    } else if (liftCell.currentBackgroundDrawable != null) {
+                        Rect bubbleBounds = liftCell.currentBackgroundDrawable.getBounds();
+                        scrimLiftBubbleRect.set(bubbleBounds);
+                        bubbleTop = chatListView.getY() + v.getY() + bubbleBounds.top;
+                        bubbleBottom = chatListView.getY() + v.getY() + bubbleBounds.bottom;
+                        bubbleLeft = chatListView.getLeft() + v.getLeft() + bubbleBounds.left;
+                        bubbleRight = chatListView.getLeft() + v.getLeft() + bubbleBounds.right;
                     } else {
                         bubbleTop = chatListView.getY() + v.getY();
                         bubbleBottom = bubbleTop + v.getMeasuredHeight();
+                        bubbleLeft = chatListView.getLeft() + v.getLeft();
+                        bubbleRight = bubbleLeft + v.getMeasuredWidth();
                     }
                     // Видимая область списка учитывает шапку чата и панель ввода.
                     float visibleTop = chatListView.getY() + chatListView.getPaddingTop();
@@ -36089,20 +36126,21 @@ public class ChatActivity extends BaseFragment implements
                     final float reactionsVisualHeight = reactionsVisible
                             ? reactionsLayout.getMeasuredHeight() - reactionsLayout.getPaddingBottom() : 0;
                     float menuHeight = menuVisible ? popupLayout.getMeasuredHeight() : 0;
+                    final float pillHeight = scrimLiftSenderImage != null ? dp(10 + 32) : 0;
                     float initialPivotY = chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f;
                     float initialLiftedTop = initialPivotY + (bubbleTop - initialPivotY) * 1.04f - dp(28);
                     float initialLiftedBottom = initialPivotY + (bubbleBottom - initialPivotY) * 1.04f - dp(28);
-                    if (scrimLiftSenderImage != null) {
-                        float senderRowTop = chatListView.getY() + v.getY()
-                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(10 + 32 + 6);
-                        initialLiftedTop = Math.min(initialLiftedTop,
-                                initialPivotY + (senderRowTop - initialPivotY) * 1.04f - dp(28));
-                    }
+                    // Плашка автора стоит ровно над баблом (по его реальному краю).
+                    float initialPillTop = initialPivotY
+                            + (bubbleTop - pillHeight - initialPivotY) * 1.04f - dp(28);
 
-                    // DiveLite: композиция = реакции над баблом, меню под баблом.
+                    // DiveLite: композиция = реакции над плашкой, плашка, бабл, меню.
                     // Если она целиком помещается — бабл ставим выше или ниже в
                     // зависимости от его исходного положения; иначе центрируем.
-                    float compTop = initialLiftedTop - (reactionsVisible ? reactionsVisualHeight + panelGap : 0);
+                    float compTop = initialPillTop - (reactionsVisible ? reactionsVisualHeight + panelGap : 0);
+                    if (scrimLiftSenderImage == null) {
+                        compTop = initialLiftedTop - (reactionsVisible ? reactionsVisualHeight + panelGap : 0);
+                    }
                     float compBottom = initialLiftedBottom + (menuVisible ? menuHeight + panelGap : 0);
                     if (compBottom - compTop <= visibleHeight) {
                         if (compTop < visibleTop + dp(4) || compBottom > visibleBottom - dp(4)) {
@@ -36140,19 +36178,15 @@ public class ChatActivity extends BaseFragment implements
                     float liftPivotY = (chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f) - menuScrollDy;
                     float liftedTop = liftPivotY + (bubbleTop - liftPivotY) * 1.04f - dp(28);
                     float liftedBottom = liftPivotY + (bubbleBottom - liftPivotY) * 1.04f - dp(28);
-                    if (scrimLiftSenderImage != null) {
-                        float senderRowTop = chatListView.getY() + v.getY()
-                                + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(10 + 32 + 6)
-                                - menuScrollDy;
-                        liftedTop = Math.min(liftedTop,
-                                liftPivotY + (senderRowTop - liftPivotY) * 1.04f - dp(28));
-                    }
+                    // Плашка автора — ровно над баблом.
+                    float pillTop = liftPivotY
+                            + (bubbleTop - pillHeight - liftPivotY) * 1.04f - dp(28);
 
                     // DiveLite: если меню не влезает под баблом — пункты заменяются
-                    // сеткой иконок без текста (клик выполняет исходное действие).
+                    // горизонтальным рядом иконок без текста (клик выполняет исходное действие).
                     if (menuVisible) {
                         int spaceBelow = (int) (visibleBottom - (liftedBottom + panelGap));
-                        int expanded = applyRaisedMenuIconGrid(popupLayout, scrimPopupContainerLayout,
+                        int expanded = applyRaisedMenuIconRow(popupLayout, scrimPopupContainerLayout,
                                 (int) menuHeight, spaceBelow);
                         if (expanded > 0) {
                             menuHeight = expanded;
@@ -36161,7 +36195,7 @@ public class ChatActivity extends BaseFragment implements
                         }
                     }
 
-                    // Панели в одном полноэкранном окне: между ними прозрачный зазор
+                    // Панели — в одном окне активити: между ними прозрачный зазор
                     // над поднятым баблом, поэтому сообщение видно и его можно скроллить.
                     LinearLayout.LayoutParams popupParams =
                             (LinearLayout.LayoutParams) popupLayout.getLayoutParams();
@@ -36173,14 +36207,15 @@ public class ChatActivity extends BaseFragment implements
                         popupParams.leftMargin = outgoingBubble ? 0 : dp(16);
                         popupParams.rightMargin = outgoingBubble ? dp(16) : 0;
                     }
+                    float panelsTop = scrimLiftSenderImage != null ? pillTop : liftedTop;
                     if (reactionsVisible) {
-                        popupY = (int) (liftedTop - panelGap - reactionsVisualHeight);
+                        popupY = (int) (panelsTop - panelGap - reactionsVisualHeight);
                         popupParams.topMargin = menuVisible
                                 ? Math.max(0, (int) (liftedBottom + panelGap - popupY - reactionsBoxHeight))
                                 : 0;
                     } else {
                         popupParams.topMargin = 0;
-                        popupY = menuVisible ? (int) (liftedBottom + panelGap) : (int) liftedTop;
+                        popupY = menuVisible ? (int) (liftedBottom + panelGap) : (int) panelsTop;
                     }
                     popupLayout.setLayoutParams(popupParams);
                     scrimPopupContainerLayout.setMaxHeight(0);
@@ -36197,12 +36232,10 @@ public class ChatActivity extends BaseFragment implements
                     // панель реакций — над баблом слева, для своих — у правого края.
                     if (menuVisible || reactionsVisible) {
                         int containerWidth = scrimPopupContainerLayout.getMeasuredWidth();
-                        int bubbleLeft = chatListView.getLeft() + v.getLeft() + liftCell.getBackgroundDrawableLeft();
-                        int bubbleRight = chatListView.getLeft() + v.getLeft() + liftCell.getBackgroundDrawableRight();
                         int desiredX = message != null && message.isOutOwner()
-                                ? bubbleRight - containerWidth : bubbleLeft;
-                        popupX = Math.max(dp(6), Math.min(
-                                chatListView.getMeasuredWidth() - dp(6) - containerWidth, desiredX));
+                                ? (int) bubbleRight - containerWidth : (int) bubbleLeft;
+                        popupX = Math.max(dp(20), Math.min(
+                                chatListView.getMeasuredWidth() - dp(20) - containerWidth, desiredX));
                         if (AndroidUtilities.isTablet()) {
                             int[] location = new int[2];
                             fragmentView.getLocationInWindow(location);
@@ -36267,7 +36300,9 @@ public class ChatActivity extends BaseFragment implements
                     showMenu.run();
                 }
                 chatListView.stopScroll();
-                chatLayoutManager.setCanScrollVertically(!allowRaisedMessageScroll);
+                // DiveLite: с поднятым сообщением список должен скроллиться пальцем,
+                // поэтому вертикальная прокрутка разрешена (обычно она тут выключена).
+                chatLayoutManager.setCanScrollVertically(allowRaisedMessageScroll);
                 // DiveLite: скрим под меню с блюром — обычное затемнение оставляло
                 // видимый оригинал бабла под приподнятым. При стекле снимок уже сделан
                 // до показа попапа (чистый) — повторный собрал бы в битмап само меню.
