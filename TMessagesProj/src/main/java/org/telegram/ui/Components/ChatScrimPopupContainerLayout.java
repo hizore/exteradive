@@ -56,6 +56,11 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
             ((LayoutParams) reactionsLayout.getLayoutParams()).rightMargin = 0;
             popupLayoutLeftOffset = 0;
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            // measureHint() двигает чипы вниз на высоту подсказки и задаёт высоту
+            // панели. Без него чипы липнут к верху, а стекло панели вытягивается вниз —
+            // панель реакций наезжала на сообщение.
+            reactionsLayout.measureHint();
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             updatePopupTranslation();
             maxHeight = getMeasuredHeight();
             return;
