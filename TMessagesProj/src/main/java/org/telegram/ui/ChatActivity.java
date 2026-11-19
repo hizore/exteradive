@@ -20447,6 +20447,33 @@ public class ChatActivity extends BaseFragment implements
                         canvas.restoreToCount(rowSave);
                         canvas.restore();
                     }
+
+                    // DiveLite: раскладка панелей — от реально нарисованного бабла
+                    // (трансформ подъёма уже применён к канвасу).
+                    if (liftBubble && scrimLiftOverlayShown && scrimView instanceof ChatMessageCell) {
+                        ChatMessageCell liftCell = (ChatMessageCell) scrimView;
+                        float off = (dp(28) + scrimLiftExtraOffset) * scrimViewProgress;
+                        float pivotY = chatListView.getY() + scrimView.getY() + scrimView.getMeasuredHeight() / 2f;
+                        float pivotX = chatListView.getLeft() + scrimView.getX() + scrimView.getMeasuredWidth() / 2f;
+                        float cellTop = chatListView.getY() + scrimView.getY();
+                        float cellLeft = chatListView.getLeft() + scrimView.getX();
+                        float rawTop = cellTop + (scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.top
+                                : liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop());
+                        float rawBottom = cellTop + (scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.bottom
+                                : liftCell.getPaddingTop() + liftCell.getBackgroundDrawableBottom());
+                        float rawLeft = cellLeft + (scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.left : liftCell.getBackgroundDrawableLeft());
+                        float rawRight = cellLeft + (scrimLiftBubbleRect.width() > 0
+                                ? scrimLiftBubbleRect.right : liftCell.getBackgroundDrawableRight());
+                        float dTop = (pivotY - off) + (rawTop - pivotY) * 1.04f;
+                        float dBottom = (pivotY - off) + (rawBottom - pivotY) * 1.04f;
+                        float dLeft = pivotX + (rawLeft - pivotX) * 1.04f;
+                        float dRight = pivotX + (rawRight - pivotX) * 1.04f;
+                        float pillTop = dTop - dp(10 + 32);
+                        layoutRaisedPanelsForDraw(dTop, dBottom, dLeft, dRight, pillTop);
+                    }
                     if (liftBubble) {
                         canvas.restore();
                     }
@@ -33900,30 +33927,27 @@ public class ChatActivity extends BaseFragment implements
         }
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP);
-        lp.leftMargin = scrimPopupX;
-        lp.topMargin = scrimPopupY;
+        // Позиция панелей задаётся translation'ом из раскладки по нарисованному баблу,
+        // поэтому отступы тут нулевые.
+        lp.leftMargin = 0;
+        lp.topMargin = 0;
         contentView.addView(panels, lp);
         panels.setTranslationX(0f);
         panels.setTranslationY(0f);
         scrimLiftOverlayView = panels;
-        scrimLiftOverlayBaseX = scrimPopupX;
-        scrimLiftOverlayBaseY = scrimPopupY;
+        scrimLiftOverlayBaseX = 0;
+        scrimLiftOverlayBaseY = 0;
         scrimLiftOverlayShown = true;
     }
 
     /**
      * Панели едут за баблом через translation: relayout на каждый кадр скролла
-     * был бы слишком дорогим (пересборка всего contentView).
+     * был бы слишком дорогим (пересборка всего contentView). Позицию считает
+     * раскладка от нарисованного бабла (layoutRaisedPanelsForDraw).
      */
     private void updateLiftOverlayPosition() {
         if (!scrimLiftOverlayShown || scrimLiftOverlayView == null) {
             return;
-        }
-        float tx = scrimPopupX - scrimLiftOverlayBaseX;
-        float ty = scrimPopupY - scrimLiftOverlayBaseY;
-        if (scrimLiftOverlayView.getTranslationX() != tx || scrimLiftOverlayView.getTranslationY() != ty) {
-            scrimLiftOverlayView.setTranslationX(tx);
-            scrimLiftOverlayView.setTranslationY(ty);
         }
     }
 
@@ -34072,10 +34096,9 @@ public class ChatActivity extends BaseFragment implements
                 && scrimLiftReactionsLayout.getVisibility() == View.VISIBLE;
         final boolean menuVisible = scrimLiftMenuLayout.getVisibility() == View.VISIBLE;
         final int panelGap = dp(12);
-        // Видимая часть панели реакций — без её нижнего паддинга.
+        // Ряд чипов: 52dp + отступ подсказки сверху.
         final float reactionsVisualHeight = reactionsVisible
-                ? scrimLiftReactionsLayout.getMeasuredHeight() - scrimLiftReactionsLayout.getPaddingBottom() : 0;
-        final float reactionsBoxHeight = reactionsVisible ? scrimLiftReactionsLayout.getMeasuredHeight() : 0;
+                ? scrimLiftReactionsLayout.getTopOffset() + dp(52) : 0;
         scrimLiftMenuHeight = scrimLiftMenuLayout.getMeasuredHeight();
         final float pillHeight = scrimLiftSenderImage != null ? dp(10 + 32) : 0;
         final float pivotY = chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f;
@@ -34086,33 +34109,62 @@ public class ChatActivity extends BaseFragment implements
         final float panelsTop = scrimLiftSenderImage != null ? pillTop : liftedTop;
         scrimLiftLiftedTop = liftedTop;
         scrimLiftLiftedBottom = liftedBottom;
-
-        // Позиция стека панелей: реакции над плашкой (и баблом), меню под баблом.
-        final int containerWidth = scrimLiftContainerLayout.getMeasuredWidth();
-        final boolean outgoing = cell.getMessageObject() != null && cell.getMessageObject().isOutOwner();
-        final int desiredX = outgoing ? (int) bubbleRight - containerWidth : (int) bubbleLeft;
-        final int x = Math.max(dp(20), Math.min(
-                chatListView.getMeasuredWidth() - dp(20) - containerWidth, desiredX));
-        final int y;
-        LinearLayout.LayoutParams popupParams = (LinearLayout.LayoutParams) scrimLiftMenuLayout.getLayoutParams();
-        if (reactionsVisible) {
-            y = (int) (panelsTop - panelGap - reactionsVisualHeight);
-            popupParams.topMargin = menuVisible
-                    ? Math.max(0, (int) (liftedBottom + panelGap - y - reactionsBoxHeight)) : 0;
-        } else {
-            popupParams.topMargin = 0;
-            y = menuVisible ? (int) (liftedBottom + panelGap) : (int) panelsTop;
-        }
-        // У своих сообщений меню прижимается к правому краю, у чужих — к левому.
-        popupParams.gravity = outgoing ? Gravity.RIGHT : Gravity.LEFT;
-        popupParams.leftMargin = outgoing ? 0 : dp(16);
-        popupParams.rightMargin = outgoing ? dp(16) : 0;
-        scrimLiftMenuLayout.setLayoutParams(popupParams);
-        scrimPopupX = x;
-        scrimPopupY = y;
         scrimLiftCompTop = panelsTop - (reactionsVisible ? reactionsVisualHeight + panelGap : 0);
         scrimLiftCompBottom = liftedBottom + (menuVisible ? scrimLiftMenuHeight + panelGap : 0);
-        updateLiftOverlayPosition();
+
+        // Сторона меню: свои — справа, чужие — слева (сама позиция считается при отрисовке).
+        final boolean outgoing = cell.getMessageObject() != null && cell.getMessageObject().isOutOwner();
+        LinearLayout.LayoutParams popupParams = (LinearLayout.LayoutParams) scrimLiftMenuLayout.getLayoutParams();
+        final int wantedGravity = outgoing ? Gravity.RIGHT : Gravity.LEFT;
+        if (popupParams.gravity != wantedGravity) {
+            popupParams.gravity = wantedGravity;
+            popupParams.leftMargin = outgoing ? 0 : dp(16);
+            popupParams.rightMargin = outgoing ? dp(16) : 0;
+            scrimLiftMenuLayout.setLayoutParams(popupParams);
+        }
+    }
+
+    /**
+     * DiveLite: раскладка панелей поднятого сообщения считается ЗДЕСЬ — в момент
+     * отрисовки, от фактически нарисованного бабла. Никакого запоминания позиций:
+     * панели всегда точно привязаны к баблу, независимо от прокрутки, таймингов
+     * и пересчёта измерений.
+     */
+    private void layoutRaisedPanelsForDraw(float dTop, float dBottom, float dLeft, float dRight,
+                                           float pillTop) {
+        if (scrimLiftContainerLayout == null || scrimLiftMenuLayout == null || scrimLiftOverlayView == null) {
+            return;
+        }
+        final int panelGap = dp(12);
+        final boolean reactionsVisible = scrimLiftReactionsLayout != null
+                && scrimLiftReactionsLayout.getVisibility() == View.VISIBLE;
+        final boolean menuVisible = scrimLiftMenuLayout.getVisibility() == View.VISIBLE;
+        // Реакции: ряд чипов высотой 52dp, начинающийся на getTopOffset() от верха панели.
+        final float reactionsVisual = reactionsVisible
+                ? scrimLiftReactionsLayout.getTopOffset() + dp(52) : 0;
+        final float reactionsBox = reactionsVisible
+                ? dp(52) + scrimLiftReactionsLayout.getTopOffset() + dp(22) : 0;
+        final float topAnchor = scrimLiftSenderImage != null ? pillTop : dTop;
+        final float reactionsBottom = reactionsVisible ? topAnchor - panelGap : 0;
+        final float menuTop = menuVisible ? dBottom + panelGap : 0;
+        // Верх контейнера: панель реакций (если есть) — иначе само меню.
+        final float containerTop = reactionsVisible ? reactionsBottom - reactionsVisual : menuTop;
+
+        LinearLayout.LayoutParams popupParams = (LinearLayout.LayoutParams) scrimLiftMenuLayout.getLayoutParams();
+        int menuTopMargin = menuVisible && reactionsVisible
+                ? Math.max(0, (int) (menuTop - containerTop - reactionsBox)) : 0;
+        if (popupParams.topMargin != menuTopMargin) {
+            popupParams.topMargin = menuTopMargin;
+            scrimLiftMenuLayout.setLayoutParams(popupParams);
+        }
+
+        final int containerWidth = scrimLiftContainerLayout.getMeasuredWidth();
+        final boolean outgoing = scrimView != null && scrimView instanceof ChatMessageCell
+                && ((ChatMessageCell) scrimView).getMessageObject() != null
+                && ((ChatMessageCell) scrimView).getMessageObject().isOutOwner();
+        float containerLeft = outgoing ? dRight - containerWidth : dLeft;
+        scrimLiftOverlayView.setTranslationX(containerLeft - scrimLiftOverlayBaseX);
+        scrimLiftOverlayView.setTranslationY(containerTop - scrimLiftOverlayBaseY);
     }
 
     private CharSequence getMessageCaption(MessageObject messageObject, MessageObject.GroupedMessages group) {
@@ -36235,10 +36287,8 @@ public class ChatActivity extends BaseFragment implements
                         }
                     }
                     // Позиции панелей пересчитаются после прокрутки (в showMenu)
-                    // и при каждом onScrolled — поэтому двойного сдвига нет.
+                    // и при каждой отрисовке — поэтому двойного сдвига нет.
                     updateRaisedPanelsLayout();
-                    popupY = scrimPopupY;
-                    popupX = scrimPopupX;
                     height = scrimPopupContainerLayout.getMeasuredHeight() + dp(48);
                     maxY = totalHeight - height - dp(8);
                     raisedPanelsSeparated = true;
