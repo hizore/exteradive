@@ -1245,13 +1245,13 @@ public class ChatActivity extends BaseFragment implements
     public ActionBarPopupWindow scrimPopupWindow;
     private boolean scrimPopupWindowHideDimOnDismiss = true;
     private int scrimPopupX, scrimPopupY;
-    // DiveLite: поднятое сообщение: окно панелей растянуто на весь экран, касания
-    // вне панелей передаются списку чата (скролл пальцем), панели следуют за баблом.
+    // DiveLite: поднятые сообщения. Панели меню/реакций добавляются прямо в окно
+    // активити (не отдельным popup-окном): тогда палец скроллит список нативно,
+    // ничего не перехватывается окном, а панели едут за баблом. Новые сообщения
+    // не сдвигают композицию — программные прокрутки запрещены.
     private boolean scrimLiftPopupScrollEnabled;
-    private FrameLayout scrimLiftPopupRoot;
-    private View scrimLiftPopupPanelView;
-    private boolean liftPanelDragging;
-    private int scrimLiftForwardOffsetX, scrimLiftForwardOffsetY;
+    private boolean scrimLiftOverlayShown;
+    private View scrimLiftOverlayView;
     private final Paint scrimLiftSenderGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint scrimLiftSenderTintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Matrix scrimLiftSenderGlassMatrix = new Matrix();
@@ -1941,7 +1941,7 @@ public class ChatActivity extends BaseFragment implements
     RecyclerListView.OnItemLongClickListenerExtended onItemLongClickListener = new RecyclerListView.OnItemLongClickListenerExtended() {
         @Override
         public boolean onItemClick(View view, int position, float x, float y) {
-            if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+            if (scrimLiftPopupScrollEnabled) {
                 return true;
             }
             if (isTryingTextSelection() || hasTextSelection() || inPreviewMode || isInsideContainer) {
@@ -2117,7 +2117,7 @@ public class ChatActivity extends BaseFragment implements
     RecyclerListView.OnItemClickListenerExtended onItemClickListener = new RecyclerListView.OnItemClickListenerExtended() {
         @Override
         public void onItemClick(View view, int position, float x, float y) {
-            if (scrimLiftPopupScrollEnabled && scrimPopupWindow != null) {
+            if (scrimLiftPopupScrollEnabled) {
                 closeMenu();
                 return;
             }
@@ -7648,11 +7648,15 @@ public class ChatActivity extends BaseFragment implements
                         && scrimPopupWindow.isShowing() && dy != 0) {
                     // Попап остаётся привязан к поднятому сообщению, пока список движется.
                     scrimPopupY -= dy;
-                    if (scrimLiftPopupRoot != null) {
-                        updateLiftPopupPosition();
+                    if (scrimLiftOverlayShown) {
+                        updateLiftOverlayPosition();
                     } else {
                         scrimPopupWindow.update(scrimPopupX, scrimPopupY, -1, -1);
                     }
+                } else if (scrimLiftOverlayShown && dy != 0) {
+                    // DiveLite: панели в окне активити едут за баблом при скролле.
+                    scrimPopupY -= dy;
+                    updateLiftOverlayPosition();
                 }
                 final ChatActivity chatToUpdate = parentChatActivity != null ? parentChatActivity : ChatActivity.this;
 
@@ -19596,8 +19600,12 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 expandY = chatActivityEnterView.getY();
             }
-            if (scrimView != null && scrimView != actionBar.getBackButton()
-                    || chatActivityEnterView != null && chatActivityEnterView.isStickersExpanded() && ev.getY() < expandY) {
+            // DiveLite: пока открыто поднятое сообщение (панели в окне активити),
+            // касания чата не блокируются скримом: список должен скроллиться пальцем.
+            boolean blockScrimTouch = scrimView != null
+                    && scrimView != actionBar.getBackButton()
+                    && !scrimLiftPopupScrollEnabled;
+            if (blockScrimTouch || chatActivityEnterView != null && chatActivityEnterView.isStickersExpanded() && ev.getY() < expandY) {
                 return false;
             }
 
@@ -33814,98 +33822,56 @@ public class ChatActivity extends BaseFragment implements
     }
 
     /**
-     * DiveLite: окно панелей поднятого сообщения растянуто на весь экран. Касания вне
-     * панелей передаются списку чата — только так бабл можно скроллить пальцем, потому
-     * что само окно иначе осталось бы touch-modal и не пускало события в список.
+     * DiveLite: панели поднятого сообщения живут прямо в окне активити — как обычные
+     * дочерние view контента. Никакого отдельного popup-окна: оно всегда touch-modal
+     * и съедает жесты, из-за чего скролл пальцем не работал. Здесь же касания вне
+     * панелей естественным образом уходят в список чата.
      */
-    private FrameLayout createRaisedScrollPopupRoot(View panels) {
-        FrameLayout root = new FrameLayout(getParentActivity()) {
-            private float downRawX;
-            private float downRawY;
-            private boolean gestureMoved;
-            private boolean gestureOutsideList;
-
-            @Override
-            public boolean dispatchTouchEvent(MotionEvent ev) {
-                if (scrimLiftPopupPanelView == null) {
-                    return super.dispatchTouchEvent(ev);
-                }
-                final int action = ev.getActionMasked();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    liftPanelDragging = false;
-                    gestureMoved = false;
-                    int[] self = new int[2];
-                    int[] list = new int[2];
-                    getLocationOnScreen(self);
-                    chatListView.getLocationOnScreen(list);
-                    scrimLiftForwardOffsetX = list[0] - self[0];
-                    scrimLiftForwardOffsetY = list[1] - self[1];
-                    // Касание вне области списка (шапка, панель ввода) ведёт себя как
-                    // раньше: закрывает меню, а не прокручивает чат.
-                    float yInList = ev.getY() - scrimLiftForwardOffsetY;
-                    gestureOutsideList = yInList < 0 || yInList > chatListView.getMeasuredHeight();
-                    downRawX = ev.getRawX();
-                    downRawY = ev.getRawY();
-                    if (gestureOutsideList) {
-                        closeMenu();
-                        return true;
-                    }
-                } else if (gestureOutsideList) {
-                    return true;
-                } else if (!gestureMoved
-                        && Math.abs(ev.getRawX() - downRawX) + Math.abs(ev.getRawY() - downRawY) > dp(4)) {
-                    gestureMoved = true;
-                }
-                if (liftPanelDragging) {
-                    forwardLiftTouchToList(ev);
-                    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                        // Тап мимо панелей закрывает меню, свайп остаётся прокруткой.
-                        if (action == MotionEvent.ACTION_UP && !gestureMoved) {
-                            closeMenu();
-                        }
-                        liftPanelDragging = false;
-                    }
-                    return true;
-                }
-                if (super.dispatchTouchEvent(ev)) {
-                    return true;
-                }
-                if (action == MotionEvent.ACTION_DOWN) {
-                    liftPanelDragging = true;
-                    forwardLiftTouchToList(ev);
-                    return true;
-                }
-                return false;
-            }
-        };
+    private void showRaisedMessageOverlay(View panels) {
+        if (contentView == null || panels == null) {
+            return;
+        }
+        if (panels.getParent() != null) {
+            ((ViewGroup) panels.getParent()).removeView(panels);
+        }
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP);
-        root.addView(panels, lp);
-        scrimLiftPopupRoot = root;
-        scrimLiftPopupPanelView = panels;
-        return root;
+        lp.leftMargin = scrimPopupX;
+        lp.topMargin = scrimPopupY;
+        contentView.addView(panels, lp);
+        scrimLiftOverlayView = panels;
+        scrimLiftOverlayShown = true;
     }
 
-    private void forwardLiftTouchToList(MotionEvent ev) {
-        if (chatListView == null) {
+    private void updateLiftOverlayPosition() {
+        if (!scrimLiftOverlayShown || scrimLiftOverlayView == null || scrimLiftOverlayView.getLayoutParams() == null) {
             return;
         }
-        MotionEvent copy = MotionEvent.obtain(ev);
-        copy.offsetLocation(scrimLiftForwardOffsetX, scrimLiftForwardOffsetY);
-        chatListView.dispatchTouchEvent(copy);
-        copy.recycle();
-    }
-
-    /** Панели поднятого сообщения позиционируются отступами внутри полноэкранного окна. */
-    private void updateLiftPopupPosition() {
-        if (scrimLiftPopupRoot == null || scrimLiftPopupPanelView == null) {
-            return;
-        }
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) scrimLiftPopupPanelView.getLayoutParams();
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) scrimLiftOverlayView.getLayoutParams();
         if (lp.leftMargin != scrimPopupX || lp.topMargin != scrimPopupY) {
             lp.leftMargin = scrimPopupX;
             lp.topMargin = scrimPopupY;
-            scrimLiftPopupPanelView.setLayoutParams(lp);
+            scrimLiftOverlayView.setLayoutParams(lp);
+        }
+    }
+
+    private void dismissRaisedMessageOverlay() {
+        scrimLiftOverlayShown = false;
+        scrimLiftPopupScrollEnabled = false;
+        if (scrimLiftOverlayView != null) {
+            if (scrimLiftOverlayView.getParent() != null) {
+                ((ViewGroup) scrimLiftOverlayView.getParent()).removeView(scrimLiftOverlayView);
+            }
+            scrimLiftOverlayView = null;
+        }
+        if (chatListView != null) {
+            chatListView.setLongPressConsumesNestedScroll(true);
+        }
+        if (chatLayoutManager != null) {
+            chatLayoutManager.setCanScrollVertically(true);
+        }
+        if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
+            chatActivityEnterView.getEditField().setAllowDrawCursor(true);
         }
     }
 
@@ -35647,10 +35613,11 @@ public class ChatActivity extends BaseFragment implements
                 @Override
                 public boolean dispatchTouchEvent(MotionEvent ev) {
                     boolean b = super.dispatchTouchEvent(ev);
-                    // DiveLite: в поднятом режиме между панелями — прозрачный зазор над
-                    // баблом. Касание туда не закрывает меню: оно уходит в список,
-                    // а клик по сообщению закроет меню через обработчик клика.
-                    if (ev.getAction() == MotionEvent.ACTION_DOWN && !b && scrimLiftPopupPanelView == null) {
+                    // DiveLite: в overlay-режиме между панелями — прозрачный зазор над
+                    // баблом. Касание туда не закрывает меню: событие уходит дальше по
+                    // дереву (в список чата), а клик по сообщению закроет меню через
+                    // обработчик клика.
+                    if (ev.getAction() == MotionEvent.ACTION_DOWN && !b && !scrimLiftOverlayShown) {
                         closeMenu();
                     }
                     return b;
@@ -35662,9 +35629,9 @@ public class ChatActivity extends BaseFragment implements
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (scrimLiftPopupPanelView != null) {
-                        // DiveLite: поднятый режим: окно на весь экран, а касания вне
-                        // панелей обрабатывает root (прокрутка/тап), здесь ничего не делаем.
+                    if (scrimLiftOverlayShown) {
+                        // DiveLite: overlay-режим — касания вне панелей уходят в список
+                        // через обычную диспетчеризацию, здесь ничего не решаем.
                         return false;
                     }
                     if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
@@ -35735,7 +35702,9 @@ public class ChatActivity extends BaseFragment implements
 
                         @Override
                         public void hideMenu() {
-                            if (scrimPopupWindow != null) {
+                            if (scrimLiftOverlayShown) {
+                                closeMenu();
+                            } else if (scrimPopupWindow != null) {
                                 scrimPopupWindow.dismiss(false);
                             }
                         }
@@ -35930,20 +35899,15 @@ public class ChatActivity extends BaseFragment implements
             if (glassMenu) {
                 GlassMenuHelper.applyToGaps(popupLayout, GlassMenuHelper.separatorColor(true, themeDelegate));
             }
-            // DiveLite: в режиме поднятого сообщения окно панелей растягивается на весь
-            // экран, а касания вне панелей передаются списку чата — только так бабл
-            // можно скроллить пальцем, не будучи заблокированным touch-modal окном.
-            final boolean raisedScrollPopup = allowRaisedMessageScroll && !isInsideContainer;
-            if (!raisedScrollPopup) {
-                scrimLiftPopupRoot = null;
-                scrimLiftPopupPanelView = null;
-            }
-            final View scrimPopupContentView = raisedScrollPopup
-                    ? createRaisedScrollPopupRoot(scrimPopupContainerLayout)
-                    : scrimPopupContainerLayout;
-            scrimPopupWindow = new ActionBarPopupWindow(scrimPopupContentView,
-                    raisedScrollPopup ? LayoutHelper.MATCH_PARENT : LayoutHelper.WRAP_CONTENT,
-                    raisedScrollPopup ? LayoutHelper.MATCH_PARENT : LayoutHelper.WRAP_CONTENT) {
+            // DiveLite: поднятые сообщения. Панели НЕ открываются отдельным popup-окном:
+            // оно всегда touch-modal и перехватывает жесты, из-за чего скролл пальцем
+            // не работал. Панели добавляются прямо в contentView — тогда касания вне
+            // панелей естественно уходят в список чата и он скроллится нативно.
+            final boolean raisedOverlayMode = allowRaisedMessageScroll;
+            if (raisedOverlayMode) {
+                scrimPopupWindow = null;
+            } else {
+            scrimPopupWindow = new ActionBarPopupWindow(scrimPopupContainerLayout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT) {
                 @Override
                 public void dismiss() {
                     super.dismiss();
@@ -35958,9 +35922,6 @@ public class ChatActivity extends BaseFragment implements
                     menuDeleteItem = null;
                     scrimPopupWindowItems = null;
                     scrimLiftPopupScrollEnabled = false;
-                    liftPanelDragging = false;
-                    scrimLiftPopupRoot = null;
-                    scrimLiftPopupPanelView = null;
                     chatListView.setLongPressConsumesNestedScroll(true);
                     chatLayoutManager.setCanScrollVertically(true);
                     if (scrimPopupWindowHideDimOnDismiss) {
@@ -35985,11 +35946,7 @@ public class ChatActivity extends BaseFragment implements
             scrimPopupWindow.setDismissAnimationDuration(220);
             scrimPopupWindow.setOutsideTouchable(true);
             scrimPopupWindow.setClippingEnabled(true);
-            if (raisedScrollPopup) {
-                // Окно на весь экран: анимация масштаба двигала бы всю панель,
-                // оставляем только собственные анимации пунктов.
-                scrimPopupWindow.setAnimationStyle(0);
-            } else if (!isReactionsAvailable || reactionsLayout == null || !ReactionsContainerLayout.allowSmoothEnterTransition()) {
+            if (!isReactionsAvailable || reactionsLayout == null || !ReactionsContainerLayout.allowSmoothEnterTransition()) {
                 scrimPopupWindow.setAnimationStyle(R.style.PopupContextAnimation);
             } else {
                 scrimPopupWindow.setAnimationStyle(0);
@@ -35998,6 +35955,7 @@ public class ChatActivity extends BaseFragment implements
             scrimPopupWindow.setInputMethodMode(ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
             scrimPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
             scrimPopupWindow.getContentView().setFocusableInTouchMode(true);
+            }
             popupLayout.setFitItems(true);
 
             // DiveLite: тумблеры скрытия контекстного меню и панели реакций —
@@ -36180,6 +36138,11 @@ public class ChatActivity extends BaseFragment implements
                             View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
                     height = scrimPopupContainerLayout.getMeasuredHeight() + dp(48);
                     maxY = totalHeight - height - dp(8);
+                    // Если композиция не влезает — прижимаем её вверх, но никогда
+                    // не двигаем вниз (иначе панели налезут на бабл).
+                    if (maxY > minY) {
+                        popupY = Math.min(popupY, maxY);
+                    }
                     // DiveLite: стек панелей выравниваем по баблу: для чужих сообщений
                     // панель реакций — над баблом слева, для своих — у правого края.
                     if (menuVisible || reactionsVisible) {
@@ -36209,25 +36172,30 @@ public class ChatActivity extends BaseFragment implements
             final int finalPopupX = scrimPopupX = popupX;
             final int finalPopupY = scrimPopupY = popupY;
             final int finalScrollDy = menuScrollDy;
-            if (!raisedScrollPopup) {
+            if (!raisedOverlayMode) {
                 scrimPopupContainerLayout.setMaxHeight(maxY + height - popupY);
+            } else {
+                // в overlay-режиме окно не ограничивает контейнер по высоте
+                scrimPopupContainerLayout.setMaxHeight(0);
             }
             ReactionsContainerLayout finalReactionsLayout = reactionsLayout;
             Runnable showMenu = () -> {
-                if (scrimPopupWindow == null || fragmentView == null || scrimPopupWindow.isShowing() || !AndroidUtilities.isActivityRunning(getParentActivity())) {
-                    return;
-                }
-                if (scrimLiftPopupRoot != null) {
-                    // DiveLite: полноэкранное окно панелей; сами панели позиционируются
-                    // внутри него отступами, поэтому скролл списком не блокируется окном.
-                    updateLiftPopupPosition();
-                    scrimPopupWindow.showAtLocation(chatListView, Gravity.LEFT | Gravity.TOP, 0, 0);
+                if (raisedOverlayMode) {
+                    if (fragmentView == null || !AndroidUtilities.isActivityRunning(getParentActivity())) {
+                        return;
+                    }
+                    // DiveLite: панели добавляются прямо в окно активити — список чата
+                    // получает касания вне панелей и скроллится пальцем нативно.
+                    showRaisedMessageOverlay(scrimPopupContainerLayout);
                     scrimLiftPopupScrollEnabled = true;
                     chatListView.setLongPressConsumesNestedScroll(false);
                     // Отпускаем старый long-press: иначе RecyclerListView оставляет
                     // жест себе и новый палец не начинает прокрутку.
                     chatListView.cancelClickRunnables(true);
                 } else {
+                    if (scrimPopupWindow == null || fragmentView == null || scrimPopupWindow.isShowing() || !AndroidUtilities.isActivityRunning(getParentActivity())) {
+                        return;
+                    }
                     scrimPopupWindow.showAtLocation(chatListView, Gravity.LEFT | Gravity.TOP, finalPopupX, finalPopupY);
                     keepScrimPopupAboveKeyboard(scrimPopupWindow);
                 }
@@ -36684,6 +36652,21 @@ public class ChatActivity extends BaseFragment implements
         scrimPopupWindowHideDimOnDismiss = hideDim;
         if (scrimPopupWindow != null) {
             scrimPopupWindow.dismiss();
+        }
+        if (scrimLiftOverlayShown) {
+            // DiveLite: панели поднятого сообщения живут в окне активити
+            menuDeleteItem = null;
+            scrimPopupWindowItems = null;
+            if (Bulletin.getVisibleBulletin() == messageSeenPrivacyBulletin && messageSeenPrivacyBulletin != null) {
+                messageSeenPrivacyBulletin.hide();
+                messageSeenPrivacyBulletin = null;
+            }
+            if (scrimPopupWindowHideDimOnDismiss) {
+                dimBehindView(false);
+            } else {
+                scrimPopupWindowHideDimOnDismiss = true;
+            }
+            dismissRaisedMessageOverlay();
         }
         // DiveLite: вернуть дату, спрятанную над приподнятым баблом
         if (scrimLiftHiddenDateCell != null) {
@@ -38972,6 +38955,9 @@ public class ChatActivity extends BaseFragment implements
             return false;
         } else if (isMessagesSearchListVisible()) {
             if (invoked) showMessagesSearchListView(false);
+            return false;
+        } else if (scrimLiftOverlayShown) {
+            if (invoked) closeMenu();
             return false;
         } else if (scrimPopupWindow != null) {
             if (invoked) closeMenu();
