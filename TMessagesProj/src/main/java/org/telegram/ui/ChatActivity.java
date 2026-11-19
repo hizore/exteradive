@@ -33985,7 +33985,10 @@ public class ChatActivity extends BaseFragment implements
      */
     private int applyRaisedMenuIconRow(ActionBarPopupWindow.ActionBarPopupWindowLayout popupLayout,
                                        ChatScrimPopupContainerLayout container, int menuHeight, int spaceBelow) {
-        if (spaceBelow <= dp(48) || menuHeight <= spaceBelow + dp(4) || popupLayout.getItemsCount() == 0) {
+        // При нехватке места обычное меню нельзя оставлять вертикальным:
+        // maxHeight контейнера обрежет его и пользователь увидит только первые пункты.
+        // Даже если снизу меньше 48dp, компактный ряд иконок всё равно помещается.
+        if (menuHeight <= spaceBelow + dp(4) || popupLayout.getItemsCount() == 0) {
             return -1;
         }
         final ArrayList<ActionBarMenuSubItem> menuItems = new ArrayList<>();
