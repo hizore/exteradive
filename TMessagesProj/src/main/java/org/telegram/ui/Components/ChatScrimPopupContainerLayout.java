@@ -183,20 +183,26 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     }
 
     public void setExpandSize(float expandSize) {
-        popupWindowLayout.setTranslationY(expandSize);
+        if (popupWindowLayout != null) {
+            popupWindowLayout.setTranslationY(expandSize);
+        }
         this.expandSize = expandSize;
         updateBottomViewPosition();
     }
 
     public void setPopupAlpha(float alpha) {
-        popupWindowLayout.setAlpha(alpha);
+        if (popupWindowLayout != null) {
+            popupWindowLayout.setAlpha(alpha);
+        }
         if (bottomView != null) {
             bottomView.setAlpha(alpha);
         }
     }
 
     public void setReactionsTransitionProgress(float v) {
-        popupWindowLayout.setReactionsTransitionProgress(v);
+        if (popupWindowLayout != null) {
+            popupWindowLayout.setReactionsTransitionProgress(v);
+        }
         if (bottomView != null) {
             bottomView.setAlpha(v);
             float scale = 0.5f + v * 0.5f;

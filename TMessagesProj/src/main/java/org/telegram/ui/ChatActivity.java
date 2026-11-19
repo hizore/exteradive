@@ -1239,6 +1239,7 @@ public class ChatActivity extends BaseFragment implements
     private StaticLayout scrimLiftSenderNameLayout;
     private TextPaint scrimLiftSenderNamePaint;
     private int scrimLiftSenderNameColor;
+    private float scrimLiftSenderNameWidth;
     private int popupAnimationIndex = -1;
     private AnimatorSet scrimAnimatorSet;
     public ActionBarPopupWindow scrimPopupWindow;
@@ -1247,6 +1248,9 @@ public class ChatActivity extends BaseFragment implements
     // DiveLite: скролл raised message оставляет меню живым, но прячет его на время drag.
     private boolean scrimLiftPopupScrollEnabled;
     private View scrimLiftPopupScrollView;
+    private View scrimLiftReactionsScrollView;
+    private ActionBarPopupWindow scrimReactionsPopupWindow;
+    private int scrimReactionsPopupX, scrimReactionsPopupY;
     private final Paint scrimLiftSenderGlassPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint scrimLiftSenderTintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Matrix scrimLiftSenderGlassMatrix = new Matrix();
@@ -7633,6 +7637,10 @@ public class ChatActivity extends BaseFragment implements
                     // Попап остаётся привязан к поднятому сообщению, пока список движется.
                     scrimPopupY -= dy;
                     scrimPopupWindow.update(scrimPopupX, scrimPopupY, -1, -1);
+                    if (scrimReactionsPopupWindow != null && scrimReactionsPopupWindow.isShowing()) {
+                        scrimReactionsPopupY -= dy;
+                        scrimReactionsPopupWindow.update(scrimReactionsPopupX, scrimReactionsPopupY, -1, -1);
+                    }
                 }
                 final ChatActivity chatToUpdate = parentChatActivity != null ? parentChatActivity : ChatActivity.this;
 
@@ -19571,7 +19579,12 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 expandY = chatActivityEnterView.getY();
             }
-            if ((scrimView != null && scrimView != actionBar.getBackButton()) || chatActivityEnterView != null && chatActivityEnterView.isStickersExpanded() && ev.getY() < expandY) {
+            // Поднятое сообщение разрешает прокрутку: scrim остаётся на экране,
+            // но не блокирует жесты чата.
+            boolean blockScrimTouch = scrimView != null
+                    && scrimView != actionBar.getBackButton()
+                    && !scrimLiftPopupScrollEnabled;
+            if (blockScrimTouch || chatActivityEnterView != null && chatActivityEnterView.isStickersExpanded() && ev.getY() < expandY) {
                 return false;
             }
 
@@ -20335,10 +20348,11 @@ public class ChatActivity extends BaseFragment implements
                         canvas.save();
                         canvas.clipRect(chatListView.getLeft(), listTop, chatListView.getRight(), getMeasuredHeight());
                         canvas.translate(chatListView.getLeft() + scrimView.getX(), chatListView.getY() + scrimView.getY());
+                        // Фон подгоняется по фактический размер имени, а не по maxWidth layout.
                         scrimLiftSenderPillRect.set(
-                                Math.min(avatarX, nameX) - dp(8),
+                                avatarX - dp(8),
                                 avatarY - dp(6),
-                                Math.max(avatarX + avatarSize, nameX + scrimLiftSenderNameLayout.getWidth()) + dp(8),
+                                avatarX + avatarSize + dp(8) + scrimLiftSenderNameWidth + dp(8),
                                 avatarY + avatarSize + dp(6));
                         int rowSave = canvas.saveLayerAlpha(
                                 scrimLiftSenderPillRect.left, scrimLiftSenderPillRect.top,
@@ -33797,6 +33811,27 @@ public class ChatActivity extends BaseFragment implements
                 .setDuration(hidden ? 110 : 180)
                 .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
                 .start();
+        final View reactionsView = scrimLiftReactionsScrollView;
+        if (reactionsView != null) {
+            reactionsView.animate().cancel();
+            reactionsView.animate()
+                    .alpha(hidden ? 0f : 1f)
+                    .setDuration(hidden ? 110 : 180)
+                    .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+                    .start();
+        }
+    }
+
+    private void dismissRaisedReactionsPopup(boolean animated) {
+        final ActionBarPopupWindow popup = scrimReactionsPopupWindow;
+        scrimReactionsPopupWindow = null;
+        if (scrimLiftReactionsScrollView != null) {
+            scrimLiftReactionsScrollView.animate().cancel();
+            scrimLiftReactionsScrollView = null;
+        }
+        if (popup != null && popup.isShowing()) {
+            popup.dismiss(animated);
+        }
     }
 
     /** Allow the chat behind the raised-message popup to receive scroll gestures. */
@@ -34305,6 +34340,9 @@ public class ChatActivity extends BaseFragment implements
             // Гейт тот же, что в exteraGram: настройка + доступный блюр.
             // Флаг выключен или блюр недоступен -> ниже ничего не меняется, popup остаётся прежним.
             final boolean glassMenu = GlassMenuHelper.isEnabled(currentAccount, themeDelegate);
+            final boolean allowRaisedMessageScroll = NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()
+                    && v instanceof ChatMessageCell && !isInsideContainer;
+            final ChatScrimPopupContainerLayout[] reactionsPopupContainerHolder = new ChatScrimPopupContainerLayout[1];
             if (glassMenu) {
                 GlassMenuHelper.applyToPopup(scrimBlur3Factory, themeDelegate, popupLayout);
             }
@@ -34376,6 +34414,7 @@ public class ChatActivity extends BaseFragment implements
             }
 
             boolean addGap = false;
+            final LinearLayout[] groupedIconsRowHolder = new LinearLayout[1];
 
             if (optionsView == null) {
                 if (showWelcomeMessageRevertOption(selectedObject)) {
@@ -35463,6 +35502,7 @@ public class ChatActivity extends BaseFragment implements
                     }
 
                     var groupedIconsView = new GroupedIconsView(getContext(), ChatActivity.this, selectedObject, this.lastMessageMenuStatus.allowReply, this.lastMessageMenuStatus.allowReplyPm, this.lastMessageMenuStatus.allowEdit, this.lastMessageMenuStatus.allowDelete, this.lastMessageMenuStatus.allowForward, this.lastMessageMenuStatus.allowCopy, this.lastMessageMenuStatus.allowCopyPhoto, this.lastMessageMenuStatus.allowCopyLink, this.lastMessageMenuStatus.allowCopyLinkPm);
+                    groupedIconsRowHolder[0] = groupedIconsView.linearLayout;
                     popupLayout.addView(groupedIconsView.linearLayout);
                 }
 
@@ -35574,10 +35614,23 @@ public class ChatActivity extends BaseFragment implements
                         }
                     });
 
-                    LinearLayout.LayoutParams params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, (int) (52 + reactionsLayout.getTopOffset() / AndroidUtilities.density + pad), Gravity.RIGHT, 0, 50, 0, -20);
-                    scrimPopupContainerLayout.addView(reactionsLayout, params);
-                    scrimPopupContainerLayout.setReactionsLayout(reactionsLayout);
-                    scrimPopupContainerLayout.setClipChildren(false);
+                    final int reactionsHeight = (int) (52 + reactionsLayout.getTopOffset() / AndroidUtilities.density + pad);
+                    if (allowRaisedMessageScroll) {
+                        // Отдельное маленькое окно держит реакции НАД баблом, не создавая
+                        // невидимую touch-modal область поверх самого сообщения.
+                        ChatScrimPopupContainerLayout reactionsPopupContainer = new ChatScrimPopupContainerLayout(contentView.getContext());
+                        reactionsPopupContainer.setClipChildren(false);
+                        reactionsPopupContainer.setReactionsLayout(reactionsLayout);
+                        reactionsPopupContainer.addView(reactionsLayout,
+                                LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, reactionsHeight, Gravity.RIGHT));
+                        reactionsPopupContainerHolder[0] = reactionsPopupContainer;
+                    } else {
+                        LinearLayout.LayoutParams params = LayoutHelper.createLinear(
+                                LayoutHelper.MATCH_PARENT, reactionsHeight, Gravity.RIGHT, 0, 50, 0, -20);
+                        scrimPopupContainerLayout.addView(reactionsLayout, params);
+                        scrimPopupContainerLayout.setReactionsLayout(reactionsLayout);
+                        scrimPopupContainerLayout.setClipChildren(false);
+                    }
                     // openExtera: стекло под панелью реакций
                     if (glassMenu) {
                         GlassMenuHelper.applyToReactions(scrimBlur3Factory, themeDelegate, reactionsLayout);
@@ -35741,7 +35794,8 @@ public class ChatActivity extends BaseFragment implements
 
             ReactionsContainerLayout finalReactionsLayout1 = reactionsLayout;
             if (reactionsLayout != null) {
-                reactionsLayout.setParentLayout(scrimPopupContainerLayout);
+                reactionsLayout.setParentLayout(reactionsPopupContainerHolder[0] != null
+                        ? reactionsPopupContainerHolder[0] : scrimPopupContainerLayout);
             }
             // openExtera: на стекле сплошной разделитель между группами пунктов заменяется
             // еле заметной подложкой
@@ -35755,6 +35809,7 @@ public class ChatActivity extends BaseFragment implements
                     if (scrimPopupWindow != this) {
                         return;
                     }
+                    dismissRaisedReactionsPopup(false);
                     if (Bulletin.getVisibleBulletin() == messageSeenPrivacyBulletin && messageSeenPrivacyBulletin != null) {
                         messageSeenPrivacyBulletin.hide();
                         messageSeenPrivacyBulletin = null;
@@ -35768,6 +35823,7 @@ public class ChatActivity extends BaseFragment implements
                         scrimLiftPopupScrollView.setAlpha(1f);
                     }
                     scrimLiftPopupScrollView = null;
+                    chatListView.setLongPressConsumesNestedScroll(true);
                     chatLayoutManager.setCanScrollVertically(true);
                     if (scrimPopupWindowHideDimOnDismiss) {
                         dimBehindView(false);
@@ -35782,6 +35838,7 @@ public class ChatActivity extends BaseFragment implements
                 @Override
                 public void dismiss(boolean animated) {
                     super.dismiss(animated);
+                    dismissRaisedReactionsPopup(animated);
                     if (finalReactionsLayout1 != null) {
                         finalReactionsLayout1.dismissParent(animated);
                     }
@@ -35789,8 +35846,6 @@ public class ChatActivity extends BaseFragment implements
             };
             scrimPopupWindow.setPauseNotifications(true);
             scrimPopupWindow.setDismissAnimationDuration(220);
-            final boolean allowRaisedMessageScroll = NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool()
-                    && v instanceof ChatMessageCell;
             // Non-modal popup пропускает жесты в чат за его границами; обычный popup
             // сохраняет прежнее поведение и закрывается по нажатию снаружи.
             scrimPopupWindow.setOutsideTouchable(!allowRaisedMessageScroll);
@@ -35802,9 +35857,11 @@ public class ChatActivity extends BaseFragment implements
             }
             scrimPopupWindow.setFocusable(true);
             if (allowRaisedMessageScroll) {
+                // On some Android versions the focusable popup still consumes chat swipes
+                // despite setTouchModal(false); non-focusable popups remain clickable.
+                scrimPopupWindow.setFocusable(false);
                 setPopupTouchModal(scrimPopupWindow, false);
             }
-            scrimPopupContainerLayout.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
             scrimPopupWindow.setInputMethodMode(ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED);
             scrimPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
             scrimPopupWindow.getContentView().setFocusableInTouchMode(true);
@@ -35815,10 +35872,18 @@ public class ChatActivity extends BaseFragment implements
             if (NaConfig.INSTANCE.getHideMessageMenu().Bool()) {
                 popupLayout.setVisibility(View.GONE);
             }
-            if (reactionsLayout != null && NaConfig.INSTANCE.getHideReactionsBar().Bool()) {
+            if (reactionsLayout != null && (NaConfig.INSTANCE.getHideReactionsBar().Bool()
+                    || allowRaisedMessageScroll && !isReactionsAvailable)) {
                 reactionsLayout.setVisibility(View.GONE);
             }
 
+            scrimPopupContainerLayout.measure(View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST), View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+            if (reactionsPopupContainerHolder[0] != null && reactionsLayout != null
+                    && reactionsLayout.getVisibility() == View.VISIBLE) {
+                reactionsPopupContainerHolder[0].measure(
+                        View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                        View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+            }
             ItemOptions.setGapBackgroundColor(popupLayout, Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultSubmenuItem), 0.06f));
 
             int popupX = v.getLeft() + (int) x - scrimPopupContainerLayout.getMeasuredWidth() + backgroundPaddings.left - AndroidUtilities.dp(28);
@@ -35843,9 +35908,10 @@ public class ChatActivity extends BaseFragment implements
             int popupY;
             int minY = (int) (chatListView.getY() + dp(24));
             int maxY = totalHeight - height - dp(8);
+            boolean raisedPanelsSeparated = false;
             // DiveLite: прокрутка обрезанного бабла к центру перед открытием меню
             int menuScrollDy = 0;
-            if (height < totalHeight) {
+            if (height < totalHeight || allowRaisedMessageScroll) {
                 popupY = (int) (chatListView.getY() + v.getTop() + y);
                 if (isInsideContainer) {
                     int[] location = new int[2];
@@ -35873,24 +35939,86 @@ public class ChatActivity extends BaseFragment implements
                         bubbleTop = chatListView.getY() + v.getY();
                         bubbleBottom = bubbleTop + v.getMeasuredHeight();
                     }
-                    // DiveLite: бабл частично за экраном — не обрезаем его, а прокручиваем
-                    // к центру (обрезан снизу — встанет чуть ниже центра, сверху — чуть выше);
-                    // меню, скрим и блюр-снимок открываются только после прокрутки.
-                    // Видимая область — по паддингам списка: они уже учитывают шапку чата
-                    // (экшн-бар, закреплённое, поиск) и панель ввода сообщения
+                    // Видимая область списка учитывает шапку чата и панель ввода.
                     float visibleTop = chatListView.getY() + chatListView.getPaddingTop();
                     float visibleBottom = chatListView.getY() + chatListView.getMeasuredHeight() - chatListView.getPaddingBottom();
-                    float scrollTop = bubbleTop;
+                    final boolean reactionsVisible = reactionsLayout != null
+                            && reactionsLayout.getVisibility() == View.VISIBLE;
+                    final boolean menuVisible = optionsView == null && popupLayout.getVisibility() == View.VISIBLE;
+                    final float reactionsHeight = reactionsVisible
+                            ? (reactionsPopupContainerHolder[0] != null
+                                    ? reactionsPopupContainerHolder[0].getMeasuredHeight()
+                                    : reactionsLayout.getMeasuredHeight())
+                            : 0;
+                    float menuHeight = menuVisible ? scrimPopupContainerLayout.getMeasuredHeight() : 0;
+                    float visibleHeight = visibleBottom - visibleTop;
+                    float initialPivotY = chatListView.getY() + v.getY() + v.getMeasuredHeight() / 2f;
+                    float initialLiftedTop = initialPivotY + (bubbleTop - initialPivotY) * 1.04f - dp(28);
+                    float initialLiftedBottom = initialPivotY + (bubbleBottom - initialPivotY) * 1.04f - dp(28);
                     if (scrimLiftSenderNameLayout != null) {
                         float senderRowTop = chatListView.getY() + v.getY()
                                 + liftCell.getPaddingTop() + liftCell.getBackgroundDrawableTop() - dp(10 + 32 + 6);
-                        scrollTop = Math.min(scrollTop, senderRowTop);
+                        initialLiftedTop = Math.min(initialLiftedTop,
+                                initialPivotY + (senderRowTop - initialPivotY) * 1.04f - dp(28));
                     }
-                    float bubbleCenter = (scrollTop + bubbleBottom) / 2f;
-                    if (bubbleBottom > visibleBottom - dp(8)) {
-                        menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f + dp(24)));
-                    } else if (scrollTop < visibleTop + dp(8)) {
-                        menuScrollDy = (int) (bubbleCenter - (visibleTop + (visibleBottom - visibleTop) / 2f - dp(24)));
+
+                    // Если сообщение вместе с панелью реакций и полным меню не помещается,
+                    // заменяем текстовые пункты компактным рядом иконок (ответить/копировать/
+                    // переслать/удалить/изменить).
+                    float fullCompositionHeight = (initialLiftedBottom - initialLiftedTop)
+                            + reactionsHeight + menuHeight
+                            + dp((reactionsVisible ? 6 : 0) + (menuVisible ? 6 : 0));
+                    if (menuVisible && fullCompositionHeight > visibleHeight
+                            && popupLayout.getItemsCount() > 0) {
+                        LinearLayout compactActionsRow = groupedIconsRowHolder[0];
+                        if (compactActionsRow == null) {
+                            GroupedIconsView compactIcons = new GroupedIconsView(
+                                    getContext(), ChatActivity.this, selectedObject,
+                                    this.lastMessageMenuStatus.allowReply,
+                                    this.lastMessageMenuStatus.allowReplyPm,
+                                    this.lastMessageMenuStatus.allowEdit,
+                                    this.lastMessageMenuStatus.allowDelete,
+                                    this.lastMessageMenuStatus.allowForward,
+                                    this.lastMessageMenuStatus.allowCopy,
+                                    this.lastMessageMenuStatus.allowCopyPhoto,
+                                    this.lastMessageMenuStatus.allowCopyLink,
+                                    this.lastMessageMenuStatus.allowCopyLinkPm);
+                            compactActionsRow = compactIcons.linearLayout;
+                            popupLayout.addView(compactActionsRow);
+                            groupedIconsRowHolder[0] = compactActionsRow;
+                        }
+                        for (int i = 0; i < popupLayout.getItemsCount(); i++) {
+                            View item = popupLayout.getItemAt(i);
+                            item.setVisibility(item == compactActionsRow ? View.VISIBLE : View.GONE);
+                        }
+                        popupLayout.setFitItems(true);
+                        scrimPopupContainerLayout.setMaxHeight(0);
+                        scrimPopupContainerLayout.measure(
+                                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST));
+                        menuHeight = scrimPopupContainerLayout.getMeasuredHeight();
+                        height = scrimPopupContainerLayout.getMeasuredHeight() + dp(48);
+                        maxY = totalHeight - height - dp(8);
+                        popupX = v.getLeft() + (int) x - scrimPopupContainerLayout.getMeasuredWidth()
+                                + backgroundPaddings.left - AndroidUtilities.dp(28);
+                        popupX = Math.max(AndroidUtilities.dp(6),
+                                Math.min(chatListView.getMeasuredWidth() - AndroidUtilities.dp(6)
+                                        - scrimPopupContainerLayout.getMeasuredWidth(), popupX));
+                        if (AndroidUtilities.isTablet()) {
+                            int[] location = new int[2];
+                            fragmentView.getLocationInWindow(location);
+                            popupX += location[0];
+                        }
+                    }
+
+                    float requiredTop = initialLiftedTop
+                            - (reactionsVisible ? reactionsHeight + dp(12) : 0);
+                    float requiredBottom = initialLiftedBottom
+                            + (menuVisible ? menuHeight + dp(12) : 0);
+                    float requiredCenter = (requiredTop + requiredBottom) * 0.5f;
+                    float visibleCenter = (visibleTop + visibleBottom) * 0.5f;
+                    if (requiredTop < visibleTop + dp(8) || requiredBottom > visibleBottom - dp(8)) {
+                        menuScrollDy = (int) (requiredCenter - visibleCenter);
                     }
                     if (menuScrollDy != 0) {
                         int maxDown = chatListView.computeVerticalScrollRange()
@@ -35922,22 +36050,35 @@ public class ChatActivity extends BaseFragment implements
                         liftedTop = Math.min(liftedTop,
                                 liftPivotY + (senderRowTop - liftPivotY) * 1.04f - dp(28));
                     }
-                    int belowY = (int) (liftedBottom + dp(6));
-                    int aboveY = (int) (liftedTop - height - dp(6));
-                    if (belowY + height <= totalHeight - dp(8)) {
-                        // влезает снизу
-                        popupY = belowY;
-                    } else if (aboveY >= minY) {
-                        // влезает сверху
-                        popupY = aboveY;
-                    } else {
-                        // не влезает нигде — снизу, прижать к экрану
-                        popupY = belowY;
+
+                    // Реакции и контекстное меню — отдельные окна: между ними нет
+                    // touch-modal spacer, поэтому поднятое сообщение можно скроллить.
+                    final int panelGap = dp(12);
+                    if (reactionsVisible) {
+                        scrimReactionsPopupY = (int) (liftedTop - panelGap - reactionsHeight);
+                        int reactionsWidth = reactionsPopupContainerHolder[0] != null
+                                ? reactionsPopupContainerHolder[0].getMeasuredWidth()
+                                : reactionsLayout.getMeasuredWidth();
+                        int reactionAnchorX = chatListView.getLeft() + v.getLeft() + (int) x;
+                        scrimReactionsPopupX = Math.max(dp(6), Math.min(
+                                chatListView.getMeasuredWidth() - dp(6) - reactionsWidth,
+                                reactionAnchorX - reactionsWidth / 2));
+                        if (AndroidUtilities.isTablet()) {
+                            int[] location = new int[2];
+                            fragmentView.getLocationInWindow(location);
+                            scrimReactionsPopupX += location[0];
+                        }
                     }
+                    popupY = menuVisible ? (int) (liftedBottom + panelGap) : (int) liftedTop;
+                    height = scrimPopupContainerLayout.getMeasuredHeight() + dp(48);
+                    maxY = totalHeight - height - dp(8);
+                    raisedPanelsSeparated = true;
                 } else if (height - backgroundPaddings.top - backgroundPaddings.bottom > AndroidUtilities.dp(240)) {
                     popupY += AndroidUtilities.dp(240) - height;
                 }
-                popupY = Utilities.clamp(popupY, maxY, minY);
+                if (!raisedPanelsSeparated) {
+                    popupY = Utilities.clamp(popupY, maxY, minY);
+                }
             } else {
                 popupY = inBubbleMode ? 0 : AndroidUtilities.statusBarHeight;
             }
@@ -35946,6 +36087,7 @@ public class ChatActivity extends BaseFragment implements
             final int finalScrollDy = menuScrollDy;
             scrimPopupContainerLayout.setMaxHeight(maxY + height - popupY);
             ReactionsContainerLayout finalReactionsLayout = reactionsLayout;
+            ChatScrimPopupContainerLayout finalReactionsPopupContainer = reactionsPopupContainerHolder[0];
             Runnable showMenu = () -> {
                 if (scrimPopupWindow == null || fragmentView == null || scrimPopupWindow.isShowing() || !AndroidUtilities.isActivityRunning(getParentActivity())) {
                     return;
@@ -35955,6 +36097,32 @@ public class ChatActivity extends BaseFragment implements
                 scrimLiftPopupScrollView = allowRaisedMessageScroll ? scrimPopupContainerLayout : null;
                 if (scrimLiftPopupScrollView != null) {
                     scrimLiftPopupScrollView.setAlpha(1f);
+                    ChatScrimPopupContainerLayout reactionsPopupContainer = finalReactionsPopupContainer;
+                    if (reactionsPopupContainer != null && finalReactionsLayout != null
+                            && finalReactionsLayout.getVisibility() == View.VISIBLE) {
+                        ActionBarPopupWindow reactionsPopup = new ActionBarPopupWindow(
+                                reactionsPopupContainer, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, false);
+                        reactionsPopup.setFocusable(false);
+                        reactionsPopup.setOutsideTouchable(false);
+                        reactionsPopup.setClippingEnabled(true);
+                        reactionsPopup.setAnimationStyle(0);
+                        setPopupTouchModal(reactionsPopup, false);
+                        scrimReactionsPopupWindow = reactionsPopup;
+                        scrimLiftReactionsScrollView = reactionsPopupContainer;
+                        reactionsPopupContainer.setAlpha(1f);
+                        reactionsPopup.setOnDismissListener(() -> {
+                            if (scrimReactionsPopupWindow == reactionsPopup) {
+                                scrimReactionsPopupWindow = null;
+                                scrimLiftReactionsScrollView = null;
+                            }
+                        });
+                        reactionsPopup.showAtLocation(chatListView, Gravity.LEFT | Gravity.TOP,
+                                scrimReactionsPopupX, scrimReactionsPopupY);
+                    }
+                    chatListView.setLongPressConsumesNestedScroll(false);
+                    // Отпускаем старый long-press: иначе RecyclerListView поглощает drag
+                    // и новый палец не начинает прокрутку.
+                    chatListView.cancelClickRunnables(true);
                 }
                 keepScrimPopupAboveKeyboard(scrimPopupWindow);
                 if (isReactionsAvailableFinal && finalReactionsLayout != null) {
@@ -36391,7 +36559,13 @@ public class ChatActivity extends BaseFragment implements
         scrimLiftSenderNamePaint = new TextPaint(Theme.chat_namePaint);
         scrimLiftSenderNamePaint.setColor(scrimLiftSenderNameColor);
         CharSequence displayedName = TextUtils.ellipsize(name, scrimLiftSenderNamePaint, nameWidth, TextUtils.TruncateAt.END);
-        return new StaticLayout(displayedName, scrimLiftSenderNamePaint, nameWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+        StaticLayout nameLayout = new StaticLayout(displayedName, scrimLiftSenderNamePaint, nameWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+        scrimLiftSenderNameWidth = 0f;
+        for (int i = 0; i < nameLayout.getLineCount(); i++) {
+            scrimLiftSenderNameWidth = Math.max(scrimLiftSenderNameWidth, nameLayout.getLineWidth(i));
+        }
+        scrimLiftSenderNameWidth = Math.min(nameWidth, scrimLiftSenderNameWidth);
+        return nameLayout;
     }
 
     public void closeMenu() {

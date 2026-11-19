@@ -125,6 +125,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     private OnItemLongClickListener onItemLongClickListener;
     private OnItemLongClickListenerExtended onItemLongClickListenerExtended;
     private boolean longPressCalled;
+    private boolean longPressConsumesNestedScroll = true;
     private OnScrollListener onScrollListener;
     private OnInterceptTouchListener onInterceptTouchListener;
     private View emptyView;
@@ -1448,6 +1449,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     }
 
     public void cancelClickRunnables(boolean uncheck) {
+        longPressCalled = false;
         if (selectChildRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(selectChildRunnable);
             selectChildRunnable = null;
@@ -2063,6 +2065,11 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
         setOnItemLongClickListener(listener, ViewConfiguration.getLongPressTimeout());
     }
 
+    /** Отдельное окно меню может оставить long-press, но вернуть списку drag. */
+    public void setLongPressConsumesNestedScroll(boolean consumes) {
+        longPressConsumesNestedScroll = consumes;
+    }
+
     public void setOnItemLongClickListener(OnItemLongClickListenerExtended listener, long duration) {
         onItemLongClickListenerExtended = listener;
         gestureDetector.setIsLongpressEnabled(listener != null);
@@ -2616,7 +2623,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
 
     @Override
     public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow, int type) {
-        if (longPressCalled) {
+        if (longPressCalled && longPressConsumesNestedScroll) {
             if (onItemLongClickListenerExtended != null) {
                 onItemLongClickListenerExtended.onMove(dx, dy);
             }
