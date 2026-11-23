@@ -13489,11 +13489,19 @@ public class ChatActivity extends BaseFragment implements
      * сообщений»). Обновляется при каждом открытии меню.
      */
     private void captureStrongBlur() {
-        Bitmap strong = SnapshotFrostDrawable.captureAndBlur(contentView, 6);
-        if (strong == null) {
-            return;
-        }
-        SnapshotFrostDrawable.setSnapshot(strong);
+        // exteradive: PixelCopy вместо view.draw() — на устройстве программный
+        // draw отдавал пустой кадр, поэтому «блюра нет, но тонировка есть».
+        // Результат асинхронный: текущее открытие может использовать прошлый
+        // снимок, следующий — уже свежий; пересъёмка также при закрытии меню.
+        app.exteraless.appearance.SnapshotFrostDrawable.captureWindowAndBlur(
+                getParentActivity(), 6, 1f, bitmap -> {
+                    if (bitmap != null) {
+                        SnapshotFrostDrawable.setSnapshot(bitmap);
+                        if (fragmentView != null) {
+                            fragmentView.invalidate();
+                        }
+                    }
+                });
     }
 
     @Override
@@ -36375,6 +36383,9 @@ public class ChatActivity extends BaseFragment implements
         }
         contentView.invalidate();
         chatListView.invalidate();
+        // exteradive: переснять окно без меню — следующий показ панелей
+        // получит актуальный блюр-фон сразу (PixelCopy, асинхронно).
+        captureStrongBlur();
     }
 
     private final class RaisedMessage {

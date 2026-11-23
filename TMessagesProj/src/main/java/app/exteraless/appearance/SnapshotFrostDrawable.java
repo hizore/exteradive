@@ -96,6 +96,75 @@ public final class SnapshotFrostDrawable extends Drawable {
         return captureAndBlur(root, downscale, 1f);
     }
 
+    /**
+     * exteradive: снимок окна через PixelCopy — единственный надёжный способ
+     * на реальном устройстве: программный view.draw() в software-canvas там
+     * отдаёт пустые кадры (блюр «не работал» именно поэтому). Результат
+     * приходит асинхронно в главный поток.
+     */
+    public interface BlurResult {
+        void onResult(@Nullable Bitmap blurred);
+    }
+
+    public static void captureWindowAndBlur(@Nullable android.app.Activity activity, int downscale,
+                                            float blurStrength, @NonNull BlurResult cb) {
+        android.view.Window window = activity == null ? null : activity.getWindow();
+        View decor = window == null ? null : window.peekDecorView();
+        if (window == null || decor == null || decor.getWidth() <= 0 || decor.getHeight() <= 0
+                || android.os.Build.VERSION.SDK_INT < 24) {
+            // запасной путь — старый синхронный захват (эмуляторы, API<24)
+            cb.onResult(captureAndBlur(decor, downscale, blurStrength));
+            return;
+        }
+        final int sw = decor.getWidth();
+        final int sh = decor.getHeight();
+        final Bitmap src;
+        try {
+            src = Bitmap.createBitmap(sw, sh, Bitmap.Config.ARGB_8888);
+        } catch (Throwable t) {
+            cb.onResult(null);
+            return;
+        }
+        try {
+            android.view.PixelCopy.request(window, src, result -> {
+                Bitmap out = null;
+                try {
+                    if (result == android.view.PixelCopy.SUCCESS) {
+                        out = blurScaled(src, downscale, blurStrength);
+                    }
+                } catch (Throwable t) {
+                    FileLog.e(t);
+                } finally {
+                    if (!src.isRecycled()) {
+                        src.recycle();
+                    }
+                }
+                cb.onResult(out);
+            }, new android.os.Handler(android.os.Looper.getMainLooper()));
+        } catch (Throwable t) {
+            FileLog.e(t);
+            if (!src.isRecycled()) {
+                src.recycle();
+            }
+            cb.onResult(null);
+        }
+    }
+
+    private static @Nullable Bitmap blurScaled(@NonNull Bitmap src, int downscale, float blurStrength) {
+        final int ds = Math.max(2, downscale);
+        final int w = Math.max(1, src.getWidth() / ds);
+        final int h = Math.max(1, src.getHeight() / ds);
+        Bitmap small = Bitmap.createScaledBitmap(src, w, h, false);
+        float strength = Math.max(0f, Math.min(1f, blurStrength));
+        int base = Math.max(2, Math.min(w, h) / 2);
+        int radius = (int) (base * strength * strength);
+        if (radius > 1) {
+            Utilities.stackBlurBitmap(small, radius);
+        }
+        small.setHasAlpha(false);
+        return small;
+    }
+
     private WeakReference<View> hostRef;
 
     private final Paint frostPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);

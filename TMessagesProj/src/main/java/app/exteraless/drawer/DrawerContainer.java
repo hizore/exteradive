@@ -124,6 +124,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     /** exteradive: снимок под шторкой для блюра её фона. */
     private Bitmap lastSnapshot;
     private boolean lazyCaptureAttempted;
+    private boolean blurCopyInFlight;
     private Drawable drawerFrost;
     /**
      * Защита от рекурсии: снимок делается через {@code root.draw()}, который
@@ -468,7 +469,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         // exteradive: снимок нужен при любом способе открытия — и по кнопке, и
         // свайпом; openDrawer при свайпе не вызывается. Флаг защищает от
         // рекурсии: захват сам проходит по этому же dispatchDraw.
-        if (lastSnapshot == null && !capturingSnapshot) {
+        if (lastSnapshot == null) {
             captureDrawerBlur();
         }
         final float clamped = Math.max(0.0f, Math.min(1.0f, progress));
@@ -745,8 +746,10 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         dismissSelectionPopup();
         menuView.clearMenu();
         // exteradive: снимок одноразовый — при следующем открытии берём свежий
-        // (с актуальной силой блюра из настроек).
-        lastSnapshot = null;
+        // (с актуальной силой блюра из настроек). Окно сейчас без шторки —
+        // идеальный момент для чистого PixelCopy-кадра.
+        lazyCaptureAttempted = false;
+        captureDrawerBlur();
     }
 
     /** Иммерсивный режим уводит контент на всю ширину панели, обычный — на 30 %. */
@@ -1040,7 +1043,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         // (первое открытие свайпом и т.п.), берём его лениво, но не чаще
         // одного раза за открытие: иначе при стабильно пустом снимке будет
         // рекурсия capture -> apply -> capture.
-        if (lastSnapshot == null && !capturingSnapshot && !lazyCaptureAttempted) {
+        if (lastSnapshot == null && !lazyCaptureAttempted) {
             lazyCaptureAttempted = true;
             captureDrawerBlur();
         }
@@ -1059,33 +1062,23 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         drawerFrost = frost;
     }
 
-    /** Снимает экран под шторкой в размытый битмап (панель ещё не показана). */
+    /** Снимает окно через PixelCopy для мороза шторки (асинхронно). */
     private void captureDrawerBlur() {
-        capturingSnapshot = true;
-        // Панель могла быть уже видна (открытие свайпом) — на время снимка её
-        // прячем, чтобы в блюр не попала сама шторка.
-        int panelVisibility = drawerPanel.getVisibility();
-        drawerPanel.setVisibility(View.GONE);
-        try {
-            // exteradive: снимок берём с content-вью активности (android.R.id.content),
-            // а не с DecorView: на устройстве root.draw() от Decor часто отдаёт пустой
-            // кадр - из-за этого «блюр не работает и не настраивается», хотя
-            // прозрачность слоя (она не зависит от снимка) вела себя нормально.
-            View captureRoot = null;
-            org.telegram.ui.LaunchActivity la = org.telegram.ui.LaunchActivity.instance;
-            if (la != null) {
-                captureRoot = la.findViewById(android.R.id.content);
-            }
-            if (captureRoot == null || captureRoot.getWidth() <= 0) {
-                captureRoot = getRootView();
-            }
-            float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
-            lastSnapshot = app.exteraless.appearance.SnapshotFrostDrawable.captureAndBlur(captureRoot, 6, strength);
-        } finally {
-            drawerPanel.setVisibility(panelVisibility);
-            capturingSnapshot = false;
+        if (blurCopyInFlight) {
+            return;
         }
-        applyDrawerBackground();
+        blurCopyInFlight = true;
+        final float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
+        app.exteraless.appearance.SnapshotFrostDrawable.captureWindowAndBlur(
+                org.telegram.ui.LaunchActivity.instance, 6, strength, bitmap -> {
+                    blurCopyInFlight = false;
+                    if (bitmap != null) {
+                        lastSnapshot = bitmap;
+                    }
+                    applyDrawerBackground();
+                    drawerPanel.invalidate();
+                    invalidate();
+                });
     }
 
     private void setupCallbacks() {
