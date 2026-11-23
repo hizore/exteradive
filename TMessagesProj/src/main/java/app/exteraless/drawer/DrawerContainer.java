@@ -202,8 +202,11 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         }
         isOpen = true;
         updateDrawerWidth();
-        // exteradive: снимок экрана для блюра фона бокового меню.
+        // exteradive: при каждом открытии берём свежий снимок текущего списка
+        // чатов с актуальными ползунками силы блюра и непрозрачности.
+        lastSnapshot = null;
         captureDrawerBlur();
+        applyDrawerBackground();
         super.setVisibility(View.VISIBLE);
         applyDrawerPanelPadding();
         refreshContents();
@@ -462,8 +465,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     /** Скрим 102/255 или 160/255 в иммерсиве. */
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        if (progress <= 0.0f) {
-            super.dispatchDraw(canvas);
+        if (progress <= 0.0f || capturingSnapshot || blurCopyInFlight) {
             return;
         }
         // exteradive: снимок нужен при любом способе открытия — и по кнопке, и
@@ -719,7 +721,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             return;
         }
         drawerPanel.setTranslationX((-drawerWidth) * (1.0f - progress));
-        translateNavigationLayout(progress <= 0.001f ? 0.0f : getNavigationLayoutTranslation(progress));
+        translateNavigationLayout(progress <= 0.001f || blurCopyInFlight ? 0.0f : getNavigationLayoutTranslation(progress));
         if (getVisibility() != View.VISIBLE) {
             super.setVisibility(View.VISIBLE);
         }
@@ -745,11 +747,11 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         tapClosePending = false;
         dismissSelectionPopup();
         menuView.clearMenu();
-        // exteradive: снимок одноразовый — при следующем открытии берём свежий
-        // (с актуальной силой блюра из настроек). Окно сейчас без шторки —
-        // идеальный момент для чистого PixelCopy-кадра.
+        // exteradive: сбрасываем снимок при закрытии — при следующем открытии
+        // (после скролла списка чатов или смены ползунков в настройках) всегда
+        // берётся свежий кадр с актуальными настройками блюра и непрозрачности.
+        lastSnapshot = null;
         lazyCaptureAttempted = false;
-        captureDrawerBlur();
     }
 
     /** Иммерсивный режим уводит контент на всю ширину панели, обычный — на 30 %. */
@@ -858,6 +860,16 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         if (isAnimating) {
             cancelAnimations();
         }
+        // exteradive: при начале свайп-открытия шторка ещё GONE (progress == 0) —
+        // всегда берём свежий снимок текущего списка чатов с актуальными
+        // настройками силы блюра и непрозрачности.
+        if (progress <= 0.001f) {
+            lastSnapshot = null;
+        }
+        if (lastSnapshot == null && !blurCopyInFlight) {
+            captureDrawerBlur();
+        }
+        applyDrawerBackground();
         super.setVisibility(View.VISIBLE);
         applyDrawerPanelPadding();
         refreshContents();
@@ -1043,42 +1055,105 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         // (первое открытие свайпом и т.п.), берём его лениво, но не чаще
         // одного раза за открытие: иначе при стабильно пустом снимке будет
         // рекурсия capture -> apply -> capture.
-        if (lastSnapshot == null && !lazyCaptureAttempted) {
+        View parentView = getParent() instanceof View ? (View) getParent() : null;
+        if (lastSnapshot == null && !lazyCaptureAttempted && !blurCopyInFlight && !capturingSnapshot
+                && parentView != null && parentView.getWidth() > 0 && parentView.getHeight() > 0) {
             lazyCaptureAttempted = true;
             captureDrawerBlur();
         }
         final float opacity = Math.max(0f, Math.min(1f, SharedConfig.sidePanelOpacity / 100f));
-        // exteradive: тонировка лёгкая (0.42), чтобы структура блюра читалась;
-        // ползунок непрозрачности правит альфу всего морозного слоя.
-        final float factor = 0.42f;
+        // exteradive: размытый снимок (frostPaint) ВСЕГДА рисуется с альфой 255
+        // (на 100% перекрывая резкий список чатов под прозрачной панелью — иначе
+        // при снижении непрозрачности сквозь панель просвечивал НЕРАЗМЫТЫЙ список
+        // чатов!). Ползунок непрозрачности управляет только плотностью тонировки
+        // drawerBg поверх 100%-непрозрачного размытого снимка.
+        final float factor = 0.10f + 0.65f * opacity * opacity;
         drawerPanel.setBackgroundColor(0);
         // exteradive: хозяин мороза — сам контейнер: шторка рисуется в его
         // канвасе, а панель сдвигается translationX (хост=панель съезжал).
-        app.exteraless.appearance.SnapshotFrostDrawable frost = app.exteraless.appearance.GlassMenuHelper
+        drawerFrost = app.exteraless.appearance.GlassMenuHelper
             .frostPanel(this, drawerBg, 0, factor)
             .setFallbackColor(Theme.multAlpha(drawerBg, factor))
             .setBitmap(lastSnapshot);
-        frost.setAlpha((int) (255 * Math.max(0.15f, opacity)));
-        drawerFrost = frost;
     }
 
-    /** Снимает окно через PixelCopy для мороза шторки (асинхронно). */
+    /** Снимает экран списка чатов под шторкой (синхронный кадр + PixelCopy окна). */
     private void captureDrawerBlur() {
-        if (blurCopyInFlight) {
+        if (!xyz.nextalone.nagram.NaConfig.INSTANCE.getBlurSidePanel().Bool()) {
+            return;
+        }
+        final View captureRoot = getParent() instanceof View ? (View) getParent() : getRootView();
+        if (captureRoot == null || captureRoot.getWidth() <= 0 || captureRoot.getHeight() <= 0) {
+            return;
+        }
+        final float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
+        if (lastSnapshot == null && !capturingSnapshot) {
+            capturingSnapshot = true;
+            float savedTx = navigationTranslationTarget != null ? navigationTranslationTarget.getTranslationX() : 0f;
+            if (navigationTranslationTarget != null && savedTx != 0f) {
+                navigationTranslationTarget.setTranslationX(0f);
+            }
+            try {
+                Bitmap sync = app.exteraless.appearance.SnapshotFrostDrawable.captureAndBlur(captureRoot, 4, strength);
+                if (sync != null) {
+                    lastSnapshot = boostDrawerSnapshot(sync);
+                }
+            } finally {
+                if (navigationTranslationTarget != null && savedTx != 0f) {
+                    navigationTranslationTarget.setTranslationX(savedTx);
+                }
+                capturingSnapshot = false;
+            }
+            applyDrawerBackground();
+        }
+        if (blurCopyInFlight || progress > 0.001f) {
             return;
         }
         blurCopyInFlight = true;
-        final float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
+        final Runnable safetyTimeout = () -> {
+            if (blurCopyInFlight) {
+                blurCopyInFlight = false;
+                applyDrawerBackground();
+                syncDrawerState();
+                drawerPanel.invalidate();
+                invalidate();
+            }
+        };
+        AndroidUtilities.runOnUIThread(safetyTimeout, 80L);
         app.exteraless.appearance.SnapshotFrostDrawable.captureWindowAndBlur(
-                org.telegram.ui.LaunchActivity.instance, 6, strength, bitmap -> {
+                org.telegram.ui.LaunchActivity.instance, 4, strength, bitmap -> {
+                    AndroidUtilities.cancelRunOnUIThread(safetyTimeout);
                     blurCopyInFlight = false;
                     if (bitmap != null) {
-                        lastSnapshot = bitmap;
+                        lastSnapshot = boostDrawerSnapshot(bitmap);
                     }
                     applyDrawerBackground();
+                    syncDrawerState();
                     drawerPanel.invalidate();
                     invalidate();
                 });
+    }
+
+    /**
+     * Поднимает насыщенность размытого снимка списка чатов (как в ScrimOptions),
+     * чтобы аватары, кружки историй и плашки чатов не растворялись в сером фоне.
+     */
+    private static Bitmap boostDrawerSnapshot(Bitmap src) {
+        if (src == null || src.isRecycled()) {
+            return src;
+        }
+        try {
+            android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix();
+            cm.setSaturation(1.55f);
+            Bitmap boosted = AndroidUtilities.applyColorMatrix(src, cm);
+            if (boosted != null && boosted != src) {
+                boosted.setHasAlpha(false);
+                src.recycle();
+                return boosted;
+            }
+        } catch (Throwable ignore) {
+        }
+        return src;
     }
 
     private void setupCallbacks() {

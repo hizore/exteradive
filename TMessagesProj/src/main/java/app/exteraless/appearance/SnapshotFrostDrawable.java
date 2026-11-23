@@ -73,12 +73,14 @@ public final class SnapshotFrostDrawable extends Drawable {
             if (sx != 0 || sy != 0) {
                 canvas.translate(-sx, -sy);
             }
+            canvas.drawColor(org.telegram.ui.ActionBar.Theme.getColor(
+                    org.telegram.ui.ActionBar.Theme.key_windowBackgroundWhite));
             root.draw(canvas);
             float strength = Math.max(0f, Math.min(1f, blurStrength));
             // exteradive: та же perceptual'ная кривая, что у PixelCopy-пути:
             // максимум = min(стороны)/10, 0% — почти резкий кадр.
             int base = Math.max(4, Math.min(w, h) / 10);
-            int radius = (int) (base * strength * strength);
+            int radius = strength > 0.01f ? Math.max(2, Math.round(base * strength * strength)) : 0;
             if (radius > 1) {
                 Utilities.stackBlurBitmap(bitmap, radius);
             }
@@ -95,45 +97,17 @@ public final class SnapshotFrostDrawable extends Drawable {
     }
 
     /**
-     * exteradive: снимок экрана. Основной источник — штатный механизм
-     * Telegram {@code AndroidUtilities.makeGlobalBlurBitmap}: он рисует все
-     * окна приложения в уменьшенный кадр — тот же путь, что у стеклянного
-     * меню и подложки поднятого сообщения, на реальных устройствах он
-     * работает. PixelCopy и синхронный draw — запасные.
+     * exteradive: снимок окна через PixelCopy — единственный надёжный способ
+     * на реальном устройстве: программный view.draw() в software-canvas там
+     * отдаёт пустые кадры (блюр «не работал» именно поэтому). Результат
+     * приходит асинхронно в главный поток.
      */
     public interface BlurResult {
         void onResult(@Nullable Bitmap blurred);
     }
 
-    /** Потолок радиуса в кадре: ~min(стороны)/16 (при ds=6 это ≈60 px экрана). */
-    public static int blurRadiusPx(int downscale, float strength) {
-        final float s = Math.max(0f, Math.min(1f, strength));
-        int w = Math.max(1, AndroidUtilities.displaySize.x / Math.max(2, downscale));
-        int h = Math.max(1, AndroidUtilities.displaySize.y / Math.max(2, downscale));
-        int base = Math.max(4, Math.min(w, h) / 16);
-        return (int) (base * s * s);
-    }
-
     public static void captureWindowAndBlur(@Nullable android.app.Activity activity, int downscale,
                                             float blurStrength, @NonNull BlurResult cb) {
-        final int ds = Math.max(2, downscale);
-        final int radius = blurRadiusPx(ds, blurStrength);
-        try {
-            final Bitmap[] holder = new Bitmap[1];
-            AndroidUtilities.makeGlobalBlurBitmap(b -> { holder[0] = b; }, ds, radius, null, null);
-            if (holder[0] != null && !holder[0].isRecycled()) {
-                holder[0].setHasAlpha(false);
-                cb.onResult(holder[0]);
-                return;
-            }
-        } catch (Throwable t) {
-            FileLog.e(t);
-        }
-        captureWindowPixelCopy(activity, ds, blurStrength, cb);
-    }
-
-    private static void captureWindowPixelCopy(@Nullable android.app.Activity activity, int downscale,
-                                               final float blurStrength, @NonNull BlurResult cb) {
         android.view.Window window = activity == null ? null : activity.getWindow();
         View decor = window == null ? null : window.peekDecorView();
         if (window == null || decor == null || decor.getWidth() <= 0 || decor.getHeight() <= 0
@@ -181,8 +155,10 @@ public final class SnapshotFrostDrawable extends Drawable {
         final int ds = Math.max(2, downscale);
         final int w = Math.max(1, src.getWidth() / ds);
         final int h = Math.max(1, src.getHeight() / ds);
-        Bitmap small = Bitmap.createScaledBitmap(src, w, h, false);
-        int radius = blurRadiusPx(ds, blurStrength);
+        Bitmap small = Bitmap.createScaledBitmap(src, w, h, true);
+        float strength = Math.max(0f, Math.min(1f, blurStrength));
+        int base = Math.max(4, Math.min(w, h) / 10);
+        int radius = strength > 0.01f ? Math.max(2, Math.round(base * strength * strength)) : 0;
         if (radius > 1) {
             Utilities.stackBlurBitmap(small, radius);
         }
@@ -307,24 +283,30 @@ public final class SnapshotFrostDrawable extends Drawable {
                 shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
                 frostPaint.setShader(shader);
             }
-            // exteradive: снимок покрывает ВЕСЬ экран (абсолютные координаты),
-            // а рисуемся мы в канвасе вида-хозяина: его (0,0) стоит на экране в
-            // getLocationOnScreen. Для шторки хозяин — сам DrawerContainer
-            // (панель сдвигается translationX, канвас — контейнерный).
-            float tx = 0f, ty = 0f;
+            // Снимок растянут на экран; панель живёт в своих координатах, поэтому
+            // из матрицы шейдера вычитаем позицию вида-хозяина на экране.
             View host = hostRef.get();
-            if (host != null && host.isAttachedToWindow()) {
-                host.getLocationOnScreen(screenLocation);
-                tx = -screenLocation[0];
-                ty = -screenLocation[1];
+            canvas.getMatrix(canvasMatrix);
+            if (!canvasMatrix.invert(shaderMatrix)) {
+                shaderMatrix.reset();
             }
-            float sux = AndroidUtilities.displaySize.x / (float) bitmap.getWidth();
-            float suy = (AndroidUtilities.displaySize.y + AndroidUtilities.statusBarHeight
-                    + AndroidUtilities.navigationBarHeight) / (float) bitmap.getHeight();
+            float tx = 0f, ty = 0f;
+            if (host != null && host.isAttachedToWindow()) {
+                originPoint[0] = originPoint[1] = 0f;
+                canvasMatrix.mapPoints(originPoint);
+                host.getLocationOnScreen(screenLocation);
+                tx = originPoint[0] - screenLocation[0];
+                ty = originPoint[1] - screenLocation[1];
+            }
+            int screenW = host != null && host.getRootView() != null && host.getRootView().getWidth() > 0
+                    ? host.getRootView().getWidth() : AndroidUtilities.displaySize.x;
+            int screenH = host != null && host.getRootView() != null && host.getRootView().getHeight() > 0
+                    ? host.getRootView().getHeight() : AndroidUtilities.displaySize.y;
+            float sux = screenW / (float) bitmap.getWidth();
+            float suy = screenH / (float) bitmap.getHeight();
             tmpMatrix.reset();
             tmpMatrix.setScale(sux, suy);
             tmpMatrix.postTranslate(tx, ty);
-            shaderMatrix.reset();
             shaderMatrix.preConcat(tmpMatrix);
             shader.setLocalMatrix(shaderMatrix);
             frostPaint.setAlpha((int) (255 * alpha));
