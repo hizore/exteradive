@@ -135,9 +135,16 @@ public final class RaisedMessagePanels {
             modeChosen = true;
         }
         if (visible(menu)) {
-            // Swipe-back pages may be taller than the main strip. Keep their own viewport.
-            int limit = popup != null && popup.getSwipeBack() != null
-                    ? viewport : Math.min(viewport, Math.max(dp(64), menuLimit - footerHeight));
+            // exteradive: страницы swipe-back («Назад»: список реакций /
+            // просмотревшие) раньше измерялись на весь вьюпорт — панель
+            // раздувалась на полэкрана. Потолок — 55% вьюпорта, список
+            // скроллится внутри.
+            int limit;
+            if (popup != null && popup.getSwipeBack() != null) {
+                limit = Math.min((int) (viewport * 0.55f), Math.max(dp(240), menuLimit - footerHeight));
+            } else {
+                limit = Math.min(viewport, Math.max(dp(64), menuLimit - footerHeight));
+            }
             menu.measure(atMost(maxWidth), atMost(limit));
         }
         if (!sideChosen && !bubble.isEmpty() && viewport > 0) {
@@ -331,6 +338,8 @@ public final class RaisedMessagePanels {
         // ставится первой, чтобы галочка была слева, аватары справа от неё, а
         // остальные кнопки сдвигались правее.
         java.util.ArrayList<View> iconItems = new java.util.ArrayList<>();
+        java.util.ArrayList<View> textItems = new java.util.ArrayList<>();
+        java.util.ArrayList<View> keepItems = new java.util.ArrayList<>();
         java.util.ArrayList<View> seenViews = new java.util.ArrayList<>();
         java.util.ArrayList<View> drop = new java.util.ArrayList<>();
         while (original.getChildCount() > 0) {
@@ -344,6 +353,16 @@ public final class RaisedMessagePanels {
                 iconItems.add(child);
             } else if (containsSeenView(child)) {
                 seenViews.add(child);
+            } else if (child instanceof ActionBarMenuSubItem) {
+                // exteradive: пункты без иконки раньше ВЫБРАСЫВАровались из
+                // компактной плашки — у пользователя «пропала половина кнопок».
+                // Теперь они остаются текстовыми таблетками в той же строке.
+                textItems.add(child);
+            } else if (child.isClickable() || child.isLongClickable()) {
+                // exteradive: кликабельные кастомные строки (сводка «N реакций»
+                // с аватарами, «Кто просмотрел») — вход в swipe-back подменю,
+                // выбрасывать нельзя. Некликабельные подсказки — по-прежнему DROP.
+                keepItems.add(child);
             } else {
                 drop.add(child);
             }
@@ -372,9 +391,50 @@ public final class RaisedMessagePanels {
             item.setMinimumWidth(0);
             row.addView(item, params);
         }
+        for (View item : textItems) {
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                compactTextItem((ActionBarMenuSubItem) item), dp(44));
+            params.weight = 0;
+            params.leftMargin = dp(2);
+            params.rightMargin = dp(2);
+            row.addView(item, params);
+        }
+        for (View item : keepItems) {
+            // сводка реакций и т.п.: натуральная высота, ширина до dp(260)
+            item.measure(atMost(dp(260)), atMost(dp(48)));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                Math.max(dp(48), item.getMeasuredWidth()), dp(44));
+            params.weight = 0;
+            params.leftMargin = dp(2);
+            params.rightMargin = dp(2);
+            row.addView(item, params);
+        }
         popup.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         popup.setFitItems(false);
         popup.setMinimumWidth(0);
+    }
+
+    /**
+     * exteradive: пункт меню без иконки в компактной строке — текстовой
+     * таблеткой: одна строка, конец обрезается многоточием, подпункт скрыт.
+     */
+    private static int compactTextItem(ActionBarMenuSubItem item) {
+        item.getTextView().setAlpha(1f);
+        item.getTextView().setMaxLines(1);
+        item.getTextView().setEllipsize(TextUtils.TruncateAt.END);
+        if (item.subtextView != null) {
+            item.subtextView.setVisibility(View.GONE);
+        }
+        ImageView icon = item.getImageView();
+        if (icon != null) {
+            icon.setVisibility(View.GONE);
+        }
+        item.setFocusable(item.isClickable() || item.isLongClickable());
+        item.setPadding(dp(14), 0, dp(14), 0);
+        item.setMinimumWidth(0);
+        item.measure(atMost(dp(220)), View.MeasureSpec.makeMeasureSpec(dp(44), View.MeasureSpec.EXACTLY));
+        int w = Math.max(dp(44), item.getMeasuredWidth());
+        return Math.min(w, dp(220));
     }
 
     /** Пункт меню с видимой иконкой — только такие попадают в компактную полосу. */

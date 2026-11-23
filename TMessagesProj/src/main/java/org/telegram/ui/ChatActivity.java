@@ -34284,7 +34284,7 @@ public class ChatActivity extends BaseFragment implements
                 // ряду реакций; BACKGROUND view путь на устройстве не показывал
                 // панель вовсе (меню казалось прозрачным).
                 popupLayout.setBackground(null);
-                popupLayout.setFrostBackground(GlassMenuHelper.frostPanel(popupLayout, messageTint, 12));
+                popupLayout.setFrostBackground(GlassMenuHelper.frostPanel(popupLayout, messageTint, 12, 0.8f));
             } else {
                 if (glassMenu) {
                     GlassMenuHelper.applyToPopup(scrimBlur3Factory, themeDelegate, popupLayout);
@@ -34301,7 +34301,7 @@ public class ChatActivity extends BaseFragment implements
             // Страницы (подменю, «кто просмотрел») — полупрозрачное стекло:
             // блюр и просматриваемый фон должны быть видны (opacity 0.55).
             if (menuBlurStrong && popupLayout.getSwipeBack() != null) {
-                popupLayout.getSwipeBack().setFrostBackground(GlassMenuHelper.frostPanel(popupLayout.getSwipeBack(), messageTint, 0, 0.55f));
+                popupLayout.getSwipeBack().setFrostBackground(GlassMenuHelper.frostPanel(popupLayout.getSwipeBack(), messageTint, 12, 0.55f));
             }
             MessageSeenView messageSeenView = null;
 
@@ -36235,7 +36235,11 @@ public class ChatActivity extends BaseFragment implements
             raised.sender.measure(View.MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(20)), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
         }
-        raised.panels = RaisedMessagePanels.attach(container, false);
+        // exteradive: в поднятом режиме меню ВСЕГДА компактная плашка:
+        // полный текстовый список + футер — те самые «раздутые панели».
+        // Пункты без иконок остаются в плашке текстовыми таблетками,
+        // ничего не теряется (см. RaisedMessagePanels.makeIconStrip).
+        raised.panels = RaisedMessagePanels.attach(container, true);
         raised.panels.setViewport(top, bottom);
         // exteradive: плашка автора должна получать касания (клик в профиль).
         raised.panels.setSenderView(raised.sender);
