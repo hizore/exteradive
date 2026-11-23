@@ -1052,8 +1052,10 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         // ползунок непрозрачности правит альфу всего морозного слоя.
         final float factor = 0.42f;
         drawerPanel.setBackgroundColor(0);
+        // exteradive: хозяин мороза — сам контейнер: шторка рисуется в его
+        // канвасе, а панель сдвигается translationX (хост=панель съезжал).
         app.exteraless.appearance.SnapshotFrostDrawable frost = app.exteraless.appearance.GlassMenuHelper
-            .frostPanel(drawerPanel, drawerBg, 0, factor)
+            .frostPanel(this, drawerBg, 0, factor)
             .setFallbackColor(Theme.multAlpha(drawerBg, factor))
             .setBitmap(lastSnapshot);
         frost.setAlpha((int) (255 * Math.max(0.15f, opacity)));
