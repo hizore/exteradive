@@ -1067,8 +1067,20 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         int panelVisibility = drawerPanel.getVisibility();
         drawerPanel.setVisibility(View.GONE);
         try {
+            // exteradive: снимок берём с content-вью активности (android.R.id.content),
+            // а не с DecorView: на устройстве root.draw() от Decor часто отдаёт пустой
+            // кадр - из-за этого «блюр не работает и не настраивается», хотя
+            // прозрачность слоя (она не зависит от снимка) вела себя нормально.
+            View captureRoot = null;
+            org.telegram.ui.LaunchActivity la = org.telegram.ui.LaunchActivity.instance;
+            if (la != null) {
+                captureRoot = la.findViewById(android.R.id.content);
+            }
+            if (captureRoot == null || captureRoot.getWidth() <= 0) {
+                captureRoot = getRootView();
+            }
             float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
-            lastSnapshot = app.exteraless.appearance.SnapshotFrostDrawable.captureAndBlur(getRootView(), 6, strength);
+            lastSnapshot = app.exteraless.appearance.SnapshotFrostDrawable.captureAndBlur(captureRoot, 6, strength);
         } finally {
             drawerPanel.setVisibility(panelVisibility);
             capturingSnapshot = false;

@@ -78,6 +78,9 @@
     <string name="OEAppearanceLoaderWaveDensityMin">Sparse</string>
     <string name="OEAppearanceLoaderWaveDensityMax">Tight</string>
     <string name="OEAppearanceLoaderWaveSpeed">Wave Speed</string>
+    <string name="OEAppearanceVoiceWaveAmplitude">Voice Bubble Wave Amplitude</string>
+    <string name="OEAppearanceVoiceWaveDensity">Voice Bubble Wave Density</string>
+    <string name="OEAppearanceVoiceWaveSpeed">Voice Bubble Wave Speed</string>
     <string name="OEAppearanceLoaderWaveSpeedMin">Slow</string>
     <string name="OEAppearanceLoaderWaveSpeedMax">Fast</string>
 

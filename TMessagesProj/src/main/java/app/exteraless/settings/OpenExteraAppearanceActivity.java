@@ -90,6 +90,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private static final int TYPE_LOADER_WAVE_AMPLITUDE = 109;
     private static final int TYPE_LOADER_WAVE_DENSITY = 110;
     private static final int TYPE_LOADER_WAVE_SPEED = 111;
+    // exteradive: волна голосового в бабле (по образцу волны загрузки)
+    private static final int TYPE_VOICE_WAVE_AMPLITUDE = 114;
+    private static final int TYPE_VOICE_WAVE_DENSITY = 115;
+    private static final int TYPE_VOICE_WAVE_SPEED = 116;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -138,6 +142,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int loaderWaveDensityRow;
     private int loaderWaveSpeedRow;
     private int loaderWaveDividerRow;
+    // exteradive: ползунки волны голосового
+    private int voiceWaveAmplitudeRow;
+    private int voiceWaveDensityRow;
+    private int voiceWaveSpeedRow;
 
     // Avatar corners
     private int avatarCornersPreviewRow;
@@ -310,6 +318,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         loaderWaveAmplitudeRow = addRow("loaderWaveAmplitude");
         loaderWaveDensityRow = addRow("loaderWaveDensity");
         loaderWaveSpeedRow = addRow("loaderWaveSpeed");
+        voiceWaveAmplitudeRow = addRow("voiceWaveAmplitude");
+        voiceWaveDensityRow = addRow("voiceWaveDensity");
+        voiceWaveSpeedRow = addRow("voiceWaveSpeed");
         loaderWaveDividerRow = addRow();
 
     }
@@ -1121,6 +1132,48 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = waveSpeedSlider;
                     break;
                 }
+                case TYPE_VOICE_WAVE_AMPLITUDE: {
+                    // exteradive: амплитуда волны голосового в бабле
+                    AvatarCornersSeekBar vwAmpSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setVoiceWaveAmplitude(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceVoiceWaveAmplitude),
+                            getString(R.string.OEAppearanceLoaderWaveMin),
+                            getString(R.string.OEAppearanceLoaderWaveMax));
+                    vwAmpSlider.setValueSuffix("%");
+                    vwAmpSlider.setValue(SharedConfig.voiceWaveAmplitude);
+                    vwAmpSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = vwAmpSlider;
+                    break;
+                }
+                case TYPE_VOICE_WAVE_DENSITY: {
+                    // exteradive: густота волны (длина гребня) голосового
+                    AvatarCornersSeekBar vwDensitySlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setVoiceWaveDensity(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceVoiceWaveDensity),
+                            getString(R.string.OEAppearanceLoaderWaveMin),
+                            getString(R.string.OEAppearanceLoaderWaveMax));
+                    vwDensitySlider.setValueSuffix("%");
+                    vwDensitySlider.setValue(SharedConfig.voiceWaveDensity);
+                    vwDensitySlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = vwDensitySlider;
+                    break;
+                }
+                case TYPE_VOICE_WAVE_SPEED: {
+                    // exteradive: скорость бега волны голосового при воспроизведении
+                    AvatarCornersSeekBar vwSpeedSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setVoiceWaveSpeed(value),
+                            0, 100,
+                            getString(R.string.OEAppearanceVoiceWaveSpeed),
+                            getString(R.string.OEAppearanceLoaderWaveMin),
+                            getString(R.string.OEAppearanceLoaderWaveMax));
+                    vwSpeedSlider.setValueSuffix("%");
+                    vwSpeedSlider.setValue(SharedConfig.voiceWaveSpeed);
+                    vwSpeedSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = vwSpeedSlider;
+                    break;
+                }
                 case TYPE_DETAIL_SETTINGS: {
                     // Базовый класс делает такую же ячейку, но многострочной; exteraGram
                     // (asButtonWithSubtext(..., 64, 60) :456-458) держит ровно 64 dp.
@@ -1401,6 +1454,12 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_LOADER_WAVE_DENSITY;
             } else if (position == loaderWaveSpeedRow) {
                 return TYPE_LOADER_WAVE_SPEED;
+            } else if (position == voiceWaveAmplitudeRow) {
+                return TYPE_VOICE_WAVE_AMPLITUDE;
+            } else if (position == voiceWaveDensityRow) {
+                return TYPE_VOICE_WAVE_DENSITY;
+            } else if (position == voiceWaveSpeedRow) {
+                return TYPE_VOICE_WAVE_SPEED;
             } else if (position == appearanceHeaderRow || position == sectionsHeaderRow
                     || position == blurHeaderRow || position == chatListHeaderRow
                     || position == foldersHeaderRow || position == linksHeaderRow

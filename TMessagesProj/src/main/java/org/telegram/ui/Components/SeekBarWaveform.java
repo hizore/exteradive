@@ -28,6 +28,7 @@ import androidx.core.math.MathUtils;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.Theme;
 
@@ -471,22 +472,28 @@ public class SeekBarWaveform {
 
         isUnread = messageObject != null && messageObject.isContentUnread() && !messageObject.isOut() && progress <= 0;
 
-        // фаза плывёт только при воспроизведении — «живая» волна плеера
+        // exteradive: фаза плывёт только при воспроизведении; скорость — из
+        // настройки «Скорость волны голосового».
         long now = SystemClock.elapsedRealtime();
         float dt = waveLastT == 0 ? 0.016f : Math.min(0.05f, (now - waveLastT) / 1000f);
         waveLastT = now;
         final boolean isPlaying = messageObject != null && MediaController.getInstance().isPlayingMessage(messageObject);
         float loadingT = loadingFloat.set(loading && !isPlaying ? 1f : 0f);
+        final float speed = AndroidUtilities.lerp(1.5f, 14f, SharedConfig.voiceWaveSpeed / 100f);
         if (isPlaying) {
-            wavePhase = (wavePhase + 6f * dt) % (2f * (float) Math.PI);
+            wavePhase = (wavePhase + speed * dt) % (2f * (float) Math.PI);
         }
         if (parentView != null && (isPlaying || appearProgress < 1f || loadingT > 0f || loading)) {
             parentView.invalidate();
         }
 
+        // exteradive: ГРОМКОСТЬ/огибающая сообщения не учитывается вовсе —
+        // ровная синус-волна, как в плеере; форма только по настройкам:
+        // амплитуда, густота (длина волны), скорость.
         final boolean reverse = delegate != null && delegate.reverseWaveform();
         final float cy = (height - dp(14)) / 2f + dp(7);
-        final float lambda = dp(24);
+        final float amp = AndroidUtilities.lerp(dp(1.2f), dp(7f), SharedConfig.voiceWaveAmplitude / 100f) * waveScaling;
+        final float lambda = AndroidUtilities.lerp(dp(64), dp(12), SharedConfig.voiceWaveDensity / 100f);
         final float step = dp(2);
         final float waveW = (n - 1) * pitch + pitch * 0.5f;
         wavePath.rewind();
@@ -494,14 +501,7 @@ public class SeekBarWaveform {
         for (float px = 0; ; px += step) {
             boolean last = px >= waveW;
             float cx = last ? waveW : px;
-            int bar = MathUtils.clamp((int) (cx / pitch + 0.5f), 0, n - 1);
-            int idx = reverse ? heights.length - 1 - bar : bar;
-            float amp = AndroidUtilities.dpf2(heights[idx]) * waveScaling;
-            // волна появляется слева направо вместе со штатным appear-эффектом
-            float bart = MathUtils.clamp(appearProgress * n - bar, 0f, 1f);
-            amp *= bart;
-            float ap = Math.max(AndroidUtilities.dpf2(2), Math.min(dp(7), amp));
-            float y = cy + ap * (float) Math.sin((double) cx / lambda * 2.0 * Math.PI * (reverse ? -1.0 : 1.0) - wavePhase);
+            float y = cy + amp * (float) Math.sin((double) cx / lambda * 2.0 * Math.PI * (reverse ? -1.0 : 1.0) - wavePhase);
             if (first) {
                 wavePath.moveTo(cx, y);
                 first = false;
@@ -521,8 +521,10 @@ public class SeekBarWaveform {
         paintWaveActive.setColor(outerColor);
         paintWaveActive.setAlpha((int) (255 * (1f - loadingT) * this.alpha));
 
+        // волна появляется слева направо вместе со штатным appear-эффектом
+        final float revealW = waveW * MathUtils.clamp(appearProgress * 1.2f, 0f, 1f);
         canvas.save();
-        canvas.clipRect(0, 0, waveW, height);
+        canvas.clipRect(0, 0, revealW, height);
         canvas.drawPath(wavePath, paintWaveInactive);
         canvas.restore();
         if (progress > 0.001f && loadingT < 1f) {

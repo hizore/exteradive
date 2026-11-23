@@ -63,6 +63,9 @@
     <string name="OEAppearanceLoaderWaveDensityMin">Редко</string>
     <string name="OEAppearanceLoaderWaveDensityMax">Часто</string>
     <string name="OEAppearanceLoaderWaveSpeed">Скорость волны</string>
+    <string name="OEAppearanceVoiceWaveAmplitude">Амплитуда волны голосового</string>
+    <string name="OEAppearanceVoiceWaveDensity">Густота волны голосового</string>
+    <string name="OEAppearanceVoiceWaveSpeed">Скорость волны голосового</string>
     <string name="OEAppearanceLoaderWaveSpeedMin">Медленно</string>
     <string name="OEAppearanceLoaderWaveSpeedMax">Быстро</string>
 

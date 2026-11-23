@@ -274,6 +274,11 @@ public class SharedConfig {
     public static boolean bubbleOpacityOut = false;
     // Сила блюра баблов 0..100 (DiveGram). 0 — стекла почти нет, 100 — максимум.
     public static int bubbleBlurStrength = 80;
+    // exteradive: волна голосового в бабле (настройки по образцу волны
+    // загрузки): амплитуда 0..100, густота 0..100, скорость 0..100.
+    public static int voiceWaveAmplitude = 60;
+    public static int voiceWaveDensity = 50;
+    public static int voiceWaveSpeed = 50;
     // exteradive: боковая панель (шторка) — свои непрозрачность и сила блюра,
     // 0..100, по образцу настроек баблов.
     public static int sidePanelOpacity = 90;
@@ -749,6 +754,9 @@ public class SharedConfig {
             bubbleBlurStrength = forkPrefs.getInt("dgBubbleBlurStrength", 80);
             sidePanelOpacity = forkPrefs.getInt("dgSidePanelOpacity", 90);
             sidePanelBlurStrength = forkPrefs.getInt("dgSidePanelBlurStrength", 80);
+            voiceWaveAmplitude = forkPrefs.getInt("dgVoiceWaveAmplitude", 60);
+            voiceWaveDensity = forkPrefs.getInt("dgVoiceWaveDensity", 50);
+            voiceWaveSpeed = forkPrefs.getInt("dgVoiceWaveSpeed", 50);
             loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
             loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);
             loaderWaveSpeed = forkPrefs.getInt("dgLoaderWaveSpeed", 40);
@@ -1750,6 +1758,28 @@ public class SharedConfig {
         sidePanelBlurStrength = Math.max(0, Math.min(100, value));
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgSidePanelBlurStrength", sidePanelBlurStrength)
+                .apply();
+    }
+
+    // exteradive: волна голосового в бабле
+    public static void setVoiceWaveAmplitude(int value) {
+        voiceWaveAmplitude = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgVoiceWaveAmplitude", voiceWaveAmplitude)
+                .apply();
+    }
+
+    public static void setVoiceWaveDensity(int value) {
+        voiceWaveDensity = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgVoiceWaveDensity", voiceWaveDensity)
+                .apply();
+    }
+
+    public static void setVoiceWaveSpeed(int value) {
+        voiceWaveSpeed = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgVoiceWaveSpeed", voiceWaveSpeed)
                 .apply();
     }
 
