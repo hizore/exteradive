@@ -11,7 +11,10 @@ import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
@@ -165,17 +168,50 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
         } else if (position == otherRow) {
             presentFragment(new OpenExteraOtherActivity());
         } else if (position == exteralessLinkRow) {
-            // exteradive: канал первоисточника
-            try {
-                android.app.Activity act = getParentActivity();
-                if (act != null) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/exteraless"));
-                    act.startActivity(browserIntent);
-                }
-            } catch (Throwable t) {
-                org.telegram.messenger.FileLog.e(t);
-            }
+            // exteradive: плашка сразу открывает канал в приложении,
+            // без внешного браузера/диалога «открыть ссылку?».
+            openExteralessChannel();
         }
+    }
+
+    private void openExteralessChannel() {
+        TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
+        req.username = "exteraless";
+        org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount)
+                .sendRequest(req, (response, error) -> {
+            if (!(response instanceof TLRPC.TL_contacts_resolvedPeer)) {
+                // резервальный путь — внешний браузер
+                AndroidUtilities.runOnUIThread(() -> {
+                    try {
+                        android.app.Activity act = getParentActivity();
+                        if (act != null) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/exteraless"));
+                            act.startActivity(browserIntent);
+                        }
+                    } catch (Throwable t) {
+                        org.telegram.messenger.FileLog.e(t);
+                    }
+                });
+                return;
+            }
+            TLRPC.TL_contacts_resolvedPeer resolved = (TLRPC.TL_contacts_resolvedPeer) response;
+            AndroidUtilities.runOnUIThread(() -> {
+                MessagesController mc = MessagesController.getInstance(currentAccount);
+                mc.putUsers(resolved.users, false);
+                mc.putChats(resolved.chats, false);
+                long dialogId = 0;
+                if (resolved.peer instanceof TLRPC.TL_peerChannel) {
+                    dialogId = -((TLRPC.TL_peerChannel) resolved.peer).channel_id;
+                } else if (resolved.peer instanceof TLRPC.TL_peerUser) {
+                    dialogId = ((TLRPC.TL_peerUser) resolved.peer).user_id;
+                } else if (resolved.peer instanceof TLRPC.TL_peerChat) {
+                    dialogId = -((TLRPC.TL_peerChat) resolved.peer).chat_id;
+                }
+                if (dialogId != 0) {
+                    presentFragment(org.telegram.ui.ChatActivity.of(dialogId));
+                }
+            });
+        });
     }
 
     private class ListAdapter extends BaseListAdapter {
