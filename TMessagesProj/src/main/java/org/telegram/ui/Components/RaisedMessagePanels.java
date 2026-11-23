@@ -136,12 +136,13 @@ public final class RaisedMessagePanels {
         }
         if (visible(menu)) {
             // exteradive: страницы swipe-back («Назад»: список реакций /
-            // просмотревшие) раньше измерялись на весь вьюпорт — панель
-            // раздувалась на полэкрана. Потолок — 55% вьюпорта, список
-            // скроллится внутри.
+            // просмотревшие) не должны раздувать панель на весь экран —
+            // ограничиваем подстраницу ~6 строками (dp(368)) со скроллом внутри,
+            // но не меньше высоты самого главного меню.
             int limit;
             if (popup != null && popup.getSwipeBack() != null) {
-                limit = Math.min((int) (viewport * 0.55f), Math.max(dp(240), menuLimit - footerHeight));
+                int subpageCap = Math.min(dp(368), Math.max(dp(240), menuLimit - footerHeight));
+                limit = Math.min(viewport, Math.max(mainMenuHeight(), subpageCap));
             } else {
                 limit = Math.min(viewport, Math.max(dp(64), menuLimit - footerHeight));
             }
@@ -195,10 +196,7 @@ public final class RaisedMessagePanels {
             reactions.setTranslationY(upperEdge);
         }
         if (visible(menu)) {
-            // exteradive: позиция считается по ФАКТИЧЕСКОЙ ширине попапа.
-            // visibleMenuWidth() учитывает скейл перехода — с ним панель
-            // уезжала за правый край экрана («липнет к краю»).
-            int menuWidth = Math.max(visibleMenuWidth(), menu.getMeasuredWidth());
+            int menuWidth = visibleMenuWidth();
             int menuHeight = visibleMenuHeight();
             int footerHeight = visible(footer) ? footer.getMeasuredHeight() : 0;
             boolean placeAbove = above;
@@ -338,8 +336,7 @@ public final class RaisedMessagePanels {
         // ставится первой, чтобы галочка была слева, аватары справа от неё, а
         // остальные кнопки сдвигались правее.
         java.util.ArrayList<View> iconItems = new java.util.ArrayList<>();
-        java.util.ArrayList<View> textItems = new java.util.ArrayList<>();
-        java.util.ArrayList<View> keepItems = new java.util.ArrayList<>();
+        java.util.ArrayList<View> groupedIconButtons = new java.util.ArrayList<>();
         java.util.ArrayList<View> seenViews = new java.util.ArrayList<>();
         java.util.ArrayList<View> drop = new java.util.ArrayList<>();
         while (original.getChildCount() > 0) {
@@ -351,18 +348,21 @@ public final class RaisedMessagePanels {
             }
             if (hasIconSubItem(child)) {
                 iconItems.add(child);
+            } else if (isGroupedIconsRow(child)) {
+                // exteradive: при включённой группировке иконок (GroupedIconsView)
+                // кнопки Ответить/Копировать/Удалить/Изменить лежат как ImageView
+                // внутри горизонтального LinearLayout. Забираем их в общую полосу,
+                // иначе пропадала половина кнопок.
+                LinearLayout group = (LinearLayout) child;
+                while (group.getChildCount() > 0) {
+                    View btn = group.getChildAt(0);
+                    group.removeViewAt(0);
+                    if (btn.getVisibility() == View.VISIBLE && btn.isClickable()) {
+                        groupedIconButtons.add(btn);
+                    }
+                }
             } else if (containsSeenView(child)) {
                 seenViews.add(child);
-            } else if (child instanceof ActionBarMenuSubItem) {
-                // exteradive: пункты без иконки раньше ВЫБРАСЫВАровались из
-                // компактной плашки — у пользователя «пропала половина кнопок».
-                // Теперь они остаются текстовыми таблетками в той же строке.
-                textItems.add(child);
-            } else if (child.isClickable() || child.isLongClickable()) {
-                // exteradive: кликабельные кастомные строки (сводка «N реакций»
-                // с аватарами, «Кто просмотрел») — вход в swipe-back подменю,
-                // выбрасывать нельзя. Некликабельные подсказки — по-прежнему DROP.
-                keepItems.add(child);
             } else {
                 drop.add(child);
             }
@@ -383,6 +383,12 @@ public final class RaisedMessagePanels {
             params.rightMargin = dp(2);
             row.addView(seenBox, params);
         }
+        for (View btn : groupedIconButtons) {
+            btn.setPadding(0, 0, 0, 0);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(48), dp(48));
+            params.weight = 0;
+            row.addView(btn, params);
+        }
         for (View item : iconItems) {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -391,50 +397,26 @@ public final class RaisedMessagePanels {
             item.setMinimumWidth(0);
             row.addView(item, params);
         }
-        for (View item : textItems) {
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                compactTextItem((ActionBarMenuSubItem) item), dp(44));
-            params.weight = 0;
-            params.leftMargin = dp(2);
-            params.rightMargin = dp(2);
-            row.addView(item, params);
-        }
-        for (View item : keepItems) {
-            // сводка реакций и т.п.: натуральная высота, ширина до dp(260)
-            item.measure(atMost(dp(260)), atMost(dp(48)));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                Math.max(dp(48), item.getMeasuredWidth()), dp(44));
-            params.weight = 0;
-            params.leftMargin = dp(2);
-            params.rightMargin = dp(2);
-            row.addView(item, params);
-        }
         popup.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         popup.setFitItems(false);
         popup.setMinimumWidth(0);
     }
 
-    /**
-     * exteradive: пункт меню без иконки в компактной строке — текстовой
-     * таблеткой: одна строка, конец обрезается многоточием, подпункт скрыт.
-     */
-    private static int compactTextItem(ActionBarMenuSubItem item) {
-        item.getTextView().setAlpha(1f);
-        item.getTextView().setMaxLines(1);
-        item.getTextView().setEllipsize(TextUtils.TruncateAt.END);
-        if (item.subtextView != null) {
-            item.subtextView.setVisibility(View.GONE);
+    /** Ряд сгруппированных иконок (GroupedIconsView.linearLayout). */
+    private static boolean isGroupedIconsRow(View view) {
+        if (!(view instanceof LinearLayout)) {
+            return false;
         }
-        ImageView icon = item.getImageView();
-        if (icon != null) {
-            icon.setVisibility(View.GONE);
+        LinearLayout ll = (LinearLayout) view;
+        if (ll.getOrientation() != LinearLayout.HORIZONTAL || ll.getChildCount() == 0) {
+            return false;
         }
-        item.setFocusable(item.isClickable() || item.isLongClickable());
-        item.setPadding(dp(14), 0, dp(14), 0);
-        item.setMinimumWidth(0);
-        item.measure(atMost(dp(220)), View.MeasureSpec.makeMeasureSpec(dp(44), View.MeasureSpec.EXACTLY));
-        int w = Math.max(dp(44), item.getMeasuredWidth());
-        return Math.min(w, dp(220));
+        for (int i = 0; i < ll.getChildCount(); i++) {
+            if (!(ll.getChildAt(i) instanceof ImageView)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Пункт меню с видимой иконкой — только такие попадают в компактную полосу. */
@@ -448,9 +430,11 @@ public final class RaisedMessagePanels {
             && (icon.getDrawable() != null || item.getIconResId() != 0);
     }
 
-    /** Строка «кто прочитал»: галочка + аватары. */
+    /** Строка «кто прочитал» / «реакции»: иконка + аватары. */
     private static boolean containsSeenView(View view) {
-        if (view instanceof org.telegram.ui.MessageSeenView || view instanceof org.telegram.ui.Components.MessagePrivateSeenView) {
+        if (view instanceof org.telegram.ui.MessageSeenView
+                || view instanceof org.telegram.ui.Components.MessagePrivateSeenView
+                || view instanceof org.telegram.ui.Components.ReactedHeaderView) {
             return true;
         }
         if (view instanceof ViewGroup) {

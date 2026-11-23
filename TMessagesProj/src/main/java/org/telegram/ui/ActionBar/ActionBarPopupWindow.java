@@ -459,6 +459,7 @@ public class ActionBarPopupWindow extends PopupWindow {
             // скейла появления, иначе под рядом иконок висел бы хвост от
             // скрытых страниц swipe-back и панель становилась «жирной».
             if (frostBackground != null) {
+                int frostW = (int) (getMeasuredWidth() * backScaleX);
                 int frostH = (int) (getMeasuredHeight() * backScaleY);
                 if (gapStartY != -1000000) {
                     int pageH = gapStartY + dp(16) - (scrollView == null ? 0 : scrollView.getScrollY());
@@ -466,12 +467,16 @@ public class ActionBarPopupWindow extends PopupWindow {
                         frostH = pageH;
                     }
                 }
-                // exteradive: мороз — только тело панели, теневые отступы
-                // девятипатча (bgPaddings) остаются прозрачными: иначе мороз
-                // заполнял теневую зону и панель «липнула» к краю экрана.
-                int l = bgPaddings.left;
+                // exteradive: мороз — только тело ТЕКУЩЕЙ видимой страницы
+                // (с учётом backScaleX и backScaleY), теневые отступы девятипатча
+                // (bgPaddings) остаются прозрачными. Раньше ширина бралась без
+                // backScaleX — по самой широкой скрытой странице swipe-back, из-за
+                // чего справа от меню торчало пустое тёмное поле.
+                int leftEdge = swipeBackLayout != null && swipeBackLayout.stickToRight
+                        ? getMeasuredWidth() - frostW : 0;
+                int l = leftEdge + bgPaddings.left;
                 int t = bgPaddings.top;
-                int r = getMeasuredWidth() - bgPaddings.right;
+                int r = leftEdge + frostW - bgPaddings.right;
                 int b = frostH - bgPaddings.bottom;
                 if (r > l && b > t) {
                     frostBackground.setBounds(l, t, r, b);
