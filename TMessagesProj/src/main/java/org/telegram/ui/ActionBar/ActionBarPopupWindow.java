@@ -466,8 +466,15 @@ public class ActionBarPopupWindow extends PopupWindow {
                         frostH = pageH;
                     }
                 }
-                if (frostH > 0) {
-                    frostBackground.setBounds(0, 0, getMeasuredWidth(), frostH);
+                // exteradive: мороз — только тело панели, теневые отступы
+                // девятипатча (bgPaddings) остаются прозрачными: иначе мороз
+                // заполнял теневую зону и панель «липнула» к краю экрана.
+                int l = bgPaddings.left;
+                int t = bgPaddings.top;
+                int r = getMeasuredWidth() - bgPaddings.right;
+                int b = frostH - bgPaddings.bottom;
+                if (r > l && b > t) {
+                    frostBackground.setBounds(l, t, r, b);
                     frostBackground.draw(canvas);
                 }
             }
