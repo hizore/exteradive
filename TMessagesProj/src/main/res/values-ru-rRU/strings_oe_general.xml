@@ -232,4 +232,5 @@
     <string name="OEDiveTypingInfo">Работает только с теми, у кого есть общий с вами чат: Telegram передаёт статус набора лишь для чатов, где вы состоите.</string>
     <string name="OEDiveVoiceBitrateTitle">Качество голосовых сообщений</string>
     <string name="OESendAsRound">Отправить как кружок</string>
+    <string name="TypingInChat">печатае в %s</string>
 </resources>

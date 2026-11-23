@@ -18,6 +18,8 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.RoundedCorner;
 import android.view.VelocityTracker;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -38,6 +40,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
@@ -118,6 +121,16 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     private boolean startedEdgeSwipe;
     private boolean tapClosePending;
     private boolean notificationsRegistered;
+    /** exteradive: снимок под шторкой для блюра её фона. */
+    private Bitmap lastSnapshot;
+    private boolean lazyCaptureAttempted;
+    private Drawable drawerFrost;
+    /**
+     * Защита от рекурсии: снимок делается через {@code root.draw()}, который
+     * проходит и по этому же dispatchDraw.
+     */
+    private boolean capturingSnapshot;
+
     private boolean predictiveBackInProgress;
     private float predictiveBackStartProgress;
     private float startX;
@@ -140,7 +153,7 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         drawerWidth = calculateDrawerWidth();
 
         drawerPanel = new FrameLayout(context);
-        drawerPanel.setBackgroundColor(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND));
+        applyDrawerBackground();
         drawerPanel.setTranslationX(-drawerWidth);
         addView(drawerPanel, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT));
         final FrameLayout.LayoutParams panelParams = (FrameLayout.LayoutParams) drawerPanel.getLayoutParams();
@@ -188,6 +201,8 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         }
         isOpen = true;
         updateDrawerWidth();
+        // exteradive: снимок экрана для блюра фона бокового меню.
+        captureDrawerBlur();
         super.setVisibility(View.VISIBLE);
         applyDrawerPanelPadding();
         refreshContents();
@@ -450,6 +465,12 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             super.dispatchDraw(canvas);
             return;
         }
+        // exteradive: снимок нужен при любом способе открытия — и по кнопке, и
+        // свайпом; openDrawer при свайпе не вызывается. Флаг защищает от
+        // рекурсии: захват сам проходит по этому же dispatchDraw.
+        if (lastSnapshot == null && !capturingSnapshot) {
+            captureDrawerBlur();
+        }
         final float clamped = Math.max(0.0f, Math.min(1.0f, progress));
         final int alpha;
         final int red;
@@ -475,7 +496,13 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     /** В неиммерсивном режиме правый край скруглён. */
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
-        if (child != drawerPanel || AppearanceConfig.immersiveDrawerAnimation()) {
+        if (child != drawerPanel) {
+            return super.drawChild(canvas, child, drawingTime);
+        }
+        if (AppearanceConfig.immersiveDrawerAnimation()) {
+            // exteradive: мороз шторки рисуется ЯВНО под содержимым панели
+            // (через View.setBackground на устройстве он не показывался).
+            drawDrawerFrost(canvas);
             return super.drawChild(canvas, child, drawingTime);
         }
         final float topRight = cachedTopRightRadius < 0.0f ? AndroidUtilities.dp(24.0f) : cachedTopRightRadius;
@@ -494,9 +521,22 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         clipPath.addRoundRect(bounds, radii, Path.Direction.CW);
         final int save = canvas.save();
         canvas.clipPath(clipPath);
+        // exteradive: мороз рисуется ВНУТРИ того же скругляющего клипа панели,
+        // иначе квадратные угры мороза визуально «съедали» скругления справа.
+        drawDrawerFrost(canvas);
         final boolean result = super.drawChild(canvas, child, drawingTime);
         canvas.restoreToCount(save);
         return result;
+    }
+
+    private void drawDrawerFrost(Canvas canvas) {
+        if (drawerFrost == null || drawerPanel == null) {
+            return;
+        }
+        drawerFrost.setBounds((int) (drawerPanel.getX()), (int) drawerPanel.getY(),
+                (int) (drawerPanel.getX() + drawerPanel.getMeasuredWidth()),
+                (int) (drawerPanel.getY() + drawerPanel.getMeasuredHeight()));
+        drawerFrost.draw(canvas);
     }
 
     /** Системные радиусы углов, API 31+. */
@@ -704,6 +744,9 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
         tapClosePending = false;
         dismissSelectionPopup();
         menuView.clearMenu();
+        // exteradive: снимок одноразовый — при следующем открытии берём свежий
+        // (с актуальной силой блюра из настроек).
+        lastSnapshot = null;
     }
 
     /** Иммерсивный режим уводит контент на всю ширину панели, обычный — на 30 %. */
@@ -971,11 +1014,63 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
     }
 
     private void updateColors() {
-        drawerPanel.setBackgroundColor(Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND));
+        applyDrawerBackground();
         headerView.updateColors();
         accountPickerView.updateColors();
         menuView.updateColors();
         invalidate();
+    }
+
+    /**
+     * exteradive: фон бокового меню — размытый снимок экрана под шторкой с
+     * полупрозрачной тонировкой. Снимок делается при открытии, поэтому блюр
+     * показывает ровно то, что было за панелью.
+     */
+    private void applyDrawerBackground() {
+        final int drawerBg = Theme.getColor(COLOR_KEY_DRAWER_BACKGROUND);
+        // exteradive: блюр боковой панели подчиняется своему тумблеру, а его
+        // плотность и сила — отдельным ползункам (как у баблов сообщений).
+        final boolean blurOn = xyz.nextalone.nagram.NaConfig.INSTANCE.getBlurSidePanel().Bool();
+        if (!blurOn) {
+            drawerFrost = null;
+            drawerPanel.setBackgroundColor(drawerBg);
+            return;
+        }
+        // exteradive: снимок обязан быть — если по какой-то причине его нет
+        // (первое открытие свайпом и т.п.), берём его лениво, но не чаще
+        // одного раза за открытие: иначе при стабильно пустом снимке будет
+        // рекурсия capture -> apply -> capture.
+        if (lastSnapshot == null && !capturingSnapshot && !lazyCaptureAttempted) {
+            lazyCaptureAttempted = true;
+            captureDrawerBlur();
+        }
+        final float opacity = Math.max(0f, Math.min(1f, SharedConfig.sidePanelOpacity / 100f));
+        // 0.15..0.75 — раньше тонировка выходила почти сплошной и «блюра» не
+        // было видно. Фон самой панели делаем прозрачным: мороз рисует
+        // drawChild явно под содержимым.
+        final float factor = 0.15f + 0.6f * opacity;
+        drawerPanel.setBackgroundColor(0);
+        drawerFrost = app.exteraless.appearance.GlassMenuHelper
+            .frostPanel(drawerPanel, drawerBg, 0, factor)
+            .setFallbackColor(Theme.multAlpha(drawerBg, factor))
+            .setBitmap(lastSnapshot);
+    }
+
+    /** Снимает экран под шторкой в размытый битмап (панель ещё не показана). */
+    private void captureDrawerBlur() {
+        capturingSnapshot = true;
+        // Панель могла быть уже видна (открытие свайпом) — на время снимка её
+        // прячем, чтобы в блюр не попала сама шторка.
+        int panelVisibility = drawerPanel.getVisibility();
+        drawerPanel.setVisibility(View.GONE);
+        try {
+            float strength = Math.max(0f, Math.min(1f, SharedConfig.sidePanelBlurStrength / 100f));
+            lastSnapshot = app.exteraless.appearance.SnapshotFrostDrawable.captureAndBlur(getRootView(), 6, strength);
+        } finally {
+            drawerPanel.setVisibility(panelVisibility);
+            capturingSnapshot = false;
+        }
+        applyDrawerBackground();
     }
 
     private void setupCallbacks() {

@@ -84,6 +84,9 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     /** DiveLite: слайдер непрозрачности баблов сообщений. */
     private static final int TYPE_BUBBLE_OPACITY = 107;
     private static final int TYPE_BUBBLE_BLUR_STRENGTH = 108;
+    // exteradive: боковая панель — свои непрозрачность и сила блюра
+    private static final int TYPE_SIDE_PANEL_OPACITY = 112;
+    private static final int TYPE_SIDE_PANEL_BLUR_STRENGTH = 113;
     private static final int TYPE_LOADER_WAVE_AMPLITUDE = 109;
     private static final int TYPE_LOADER_WAVE_DENSITY = 110;
     private static final int TYPE_LOADER_WAVE_SPEED = 111;
@@ -107,6 +110,18 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private int blurHeaderRow;
     private int glassOutlineRow;
     private int glassMessageMenuRow;
+    private int messageMenuLiftRow;
+    private int liftSenderInfoRow;
+    private int hideMessageMenuRow;
+    private int hideReactionsRow;
+    // exteradive: мороз х3 для приподнятых сообщений и панелей над чатом
+    private final int liftMessageBlurRow = -1; // тумблер убран: блюр поднятых всегда включён
+    private int reactionsPanelBlurRow;
+    private int contextMenuBlurRow;
+    private int sidePanelBlurRow;
+    // exteradive: ползунки боковой панели (шторки)
+    private int sidePanelOpacityRow;
+    private int sidePanelBlurStrengthRow;
     private int forceBlurRow;
     private int disableAvatarBlurRow;
     // DiveLite: непрозрачность баблов и их блюр
@@ -271,6 +286,15 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         blurHeaderRow = addRow("blurHeader");
         glassOutlineRow = addRow("glassOutline");
         glassMessageMenuRow = addRow("glassMessageMenu");
+        messageMenuLiftRow = addRow("messageMenuLift");
+        liftSenderInfoRow = addRow("liftSenderInfo");
+        hideMessageMenuRow = addRow("hideMessageMenu");
+        hideReactionsRow = addRow("hideReactions");
+        reactionsPanelBlurRow = addRow("reactionsPanelBlur");
+        contextMenuBlurRow = addRow("contextMenuBlur");
+        sidePanelBlurRow = addRow("sidePanelBlur");
+        sidePanelOpacityRow = addRow("sidePanelOpacity");
+        sidePanelBlurStrengthRow = addRow("sidePanelBlurStrength");
         forceBlurRow = addRow("forceBlur");
         disableAvatarBlurRow = addRow("disableAvatarBlur");
         // DiveLite: непрозрачность баблов (ползунок) и блюр (тумблер)
@@ -753,6 +777,26 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
             SharedConfig.setBubbleOpacityOut(!SharedConfig.bubbleOpacityOut);
             notifyRow(bubbleOpacityOutRow);
             return;
+        } else if (position == hideMessageMenuRow) {
+            NaConfig.INSTANCE.getHideMessageMenu().toggleConfigBool();
+            notifyRow(hideMessageMenuRow);
+            return;
+        } else if (position == hideReactionsRow) {
+            NaConfig.INSTANCE.getHideReactionsBar().toggleConfigBool();
+            notifyRow(hideReactionsRow);
+            return;
+        } else if (position == reactionsPanelBlurRow) {
+            NaConfig.INSTANCE.getBlurReactionsPanel().toggleConfigBool();
+            notifyRow(reactionsPanelBlurRow);
+            return;
+        } else if (position == contextMenuBlurRow) {
+            NaConfig.INSTANCE.getBlurMessageMenu().toggleConfigBool();
+            notifyRow(contextMenuBlurRow);
+            return;
+        } else if (position == sidePanelBlurRow) {
+            NaConfig.INSTANCE.getBlurSidePanel().toggleConfigBool();
+            notifyRow(sidePanelBlurRow);
+            return;
         } else if (position == loaderWaveAccentRow) {
             // DiveLite: красить волну индикатора загрузки акцентным цветом темы.
             SharedConfig.setLoaderWaveAccent(!SharedConfig.loaderWaveAccent);
@@ -869,6 +913,18 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                         .show();
             } else if (enabled) {
                 showPowerSaverNotice();
+            }
+            return;
+        } else if (position == messageMenuLiftRow) {
+            boolean enabled = NaConfig.INSTANCE.getMessageMenuLiftBubble().toggleConfigBool();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(enabled);
+            }
+            return;
+        } else if (position == liftSenderInfoRow) {
+            boolean enabled = NaConfig.INSTANCE.getShowLiftSenderInfo().toggleConfigBool();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(enabled);
             }
             return;
         } else if (position == separateHeadersRow
@@ -996,6 +1052,34 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = blurStrengthSlider;
                     break;
                 }
+                case TYPE_SIDE_PANEL_OPACITY: {
+                    // exteradive: непрозрачность боковой панели (шторки)
+                    AvatarCornersSeekBar sideOpacitySlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setSidePanelOpacity(value),
+                            0, 100,
+                            getString(R.string.OESidePanelOpacity),
+                            getString(R.string.OEAppearanceBubbleOpacityMin),
+                            getString(R.string.OEAppearanceBubbleOpacityMax));
+                    sideOpacitySlider.setValueSuffix("%");
+                    sideOpacitySlider.setValue(SharedConfig.sidePanelOpacity);
+                    sideOpacitySlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = sideOpacitySlider;
+                    break;
+                }
+                case TYPE_SIDE_PANEL_BLUR_STRENGTH: {
+                    // exteradive: сила блюра боковой панели (шторки)
+                    AvatarCornersSeekBar sideBlurSlider = new AvatarCornersSeekBar(mContext,
+                            value -> SharedConfig.setSidePanelBlurStrength(value),
+                            0, 100,
+                            getString(R.string.OESidePanelBlurStrength),
+                            getString(R.string.OEAppearanceBubbleBlurStrengthMin),
+                            getString(R.string.OEAppearanceBubbleBlurStrengthMax));
+                    sideBlurSlider.setValueSuffix("%");
+                    sideBlurSlider.setValue(SharedConfig.sidePanelBlurStrength);
+                    sideBlurSlider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = sideBlurSlider;
+                    break;
+                }
                 case TYPE_LOADER_WAVE_AMPLITUDE: {
                     // DiveLite: амплитуда волны индикатора загрузки (0 — плоское кольцо).
                     AvatarCornersSeekBar waveAmpSlider = new AvatarCornersSeekBar(mContext,
@@ -1108,6 +1192,20 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceSeparateHeaders), AppearanceConfig.sectionsSeparatedHeaders(), true);
                     } else if (position == glassMessageMenuRow) {
                         cell.setTextAndValueAndCheck(getString(R.string.OEAppearanceGlassMessageMenu), getString(R.string.OEAppearanceGlassMessageMenuInfo), AppearanceConfig.glassMessageMenu.Bool(), true, true);
+                    } else if (position == messageMenuLiftRow) {
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleOnMenu), NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool(), true);
+                    } else if (position == liftSenderInfoRow) {
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleShowSenderInfo), NaConfig.INSTANCE.getShowLiftSenderInfo().Bool(), true);
+                    } else if (position == hideMessageMenuRow) {
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleHideMenu), NaConfig.INSTANCE.getHideMessageMenu().Bool(), true);
+                    } else if (position == hideReactionsRow) {
+                        cell.setTextAndCheck(getString(R.string.LiftBubbleHideReactions), NaConfig.INSTANCE.getHideReactionsBar().Bool(), true);
+                    } else if (position == reactionsPanelBlurRow) {
+                        cell.setTextAndCheck(getString(R.string.ReactionsPanelBlur), NaConfig.INSTANCE.getBlurReactionsPanel().Bool(), true);
+                    } else if (position == contextMenuBlurRow) {
+                        cell.setTextAndCheck(getString(R.string.ContextMenuBlur), NaConfig.INSTANCE.getBlurMessageMenu().Bool(), true);
+                    } else if (position == sidePanelBlurRow) {
+                        cell.setTextAndCheck(getString(R.string.SidePanelBlur), NaConfig.INSTANCE.getBlurSidePanel().Bool(), true);
                     } else if (position == forceBlurRow) {
                         cell.setTextAndCheck(getString(R.string.OEAppearanceForceBlur), LiteMode.isEnabledSetting(LiteMode.FLAG_CHAT_BLUR), true);
                     } else if (position == disableAvatarBlurRow) {
@@ -1293,6 +1391,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_BUBBLE_OPACITY;
             } else if (position == bubbleBlurStrengthRow) {
                 return TYPE_BUBBLE_BLUR_STRENGTH;
+            } else if (position == sidePanelOpacityRow) {
+                return TYPE_SIDE_PANEL_OPACITY;
+            } else if (position == sidePanelBlurStrengthRow) {
+                return TYPE_SIDE_PANEL_BLUR_STRENGTH;
             } else if (position == loaderWaveAmplitudeRow) {
                 return TYPE_LOADER_WAVE_AMPLITUDE;
             } else if (position == loaderWaveDensityRow) {

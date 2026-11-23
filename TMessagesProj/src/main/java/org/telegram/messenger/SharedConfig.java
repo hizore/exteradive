@@ -274,6 +274,10 @@ public class SharedConfig {
     public static boolean bubbleOpacityOut = false;
     // Сила блюра баблов 0..100 (DiveGram). 0 — стекла почти нет, 100 — максимум.
     public static int bubbleBlurStrength = 80;
+    // exteradive: боковая панель (шторка) — свои непрозрачность и сила блюра,
+    // 0..100, по образцу настроек баблов.
+    public static int sidePanelOpacity = 90;
+    public static int sidePanelBlurStrength = 80;
     // Волнистый индикатор загрузки (M3 Expressive): амплитуда, густота гребней,
     // скорость и цвет по акценту темы.
     public static int loaderWaveAmplitude = 50;   // 0..100, dgLoaderWaveAmplitude
@@ -743,6 +747,8 @@ public class SharedConfig {
             bubbleBlur = forkPrefs.getBoolean("dgBubbleBlur", false);
             bubbleOpacityOut = forkPrefs.getBoolean("dgBubbleOpacityOut", false);
             bubbleBlurStrength = forkPrefs.getInt("dgBubbleBlurStrength", 80);
+            sidePanelOpacity = forkPrefs.getInt("dgSidePanelOpacity", 90);
+            sidePanelBlurStrength = forkPrefs.getInt("dgSidePanelBlurStrength", 80);
             loaderWaveAmplitude = forkPrefs.getInt("dgLoaderWaveAmplitude", 50);
             loaderWaveDensity = forkPrefs.getInt("dgLoaderWaveDensity", 6);
             loaderWaveSpeed = forkPrefs.getInt("dgLoaderWaveSpeed", 40);
@@ -1729,6 +1735,21 @@ public class SharedConfig {
         bubbleBlurStrength = Math.max(0, Math.min(100, value));
         MessagesController.getGlobalMainSettings().edit()
                 .putInt("dgBubbleBlurStrength", bubbleBlurStrength)
+                .apply();
+    }
+
+    // exteradive: боковая панель (шторка) — непрозрачность и сила блюра
+    public static void setSidePanelOpacity(int value) {
+        sidePanelOpacity = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgSidePanelOpacity", sidePanelOpacity)
+                .apply();
+    }
+
+    public static void setSidePanelBlurStrength(int value) {
+        sidePanelBlurStrength = Math.max(0, Math.min(100, value));
+        MessagesController.getGlobalMainSettings().edit()
+                .putInt("dgSidePanelBlurStrength", sidePanelBlurStrength)
                 .apply();
     }
 

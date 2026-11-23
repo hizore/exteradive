@@ -263,4 +263,14 @@
     <string name="RemindTodayAt">\'Отправить сегодня в\' HH:mm</string>
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
+    <string name="LiftBubbleOnMenu">Приподнимать сообщение</string>
+    <string name="LiftBubbleShowSenderInfo">Показывать ник и аватарку в поднятом сообщении</string>
+    <string name="LiftBubbleHideMenu">Убрать контекстное меню</string>
+    <string name="LiftBubbleHideReactions">Убрать панель реакций</string>
+    <string name="LiftBubbleBlur">Блюр приподнятых сообщений</string>
+    <string name="ReactionsPanelBlur">Блюр панели реакций</string>
+    <string name="ContextMenuBlur">Блюр контекстного меню</string>
+    <string name="SidePanelBlur">Блюр боковой панели</string>
+    <string name="OESidePanelOpacity">Непрозрачность боковой панели</string>
+    <string name="OESidePanelBlurStrength">Сила блюра боковой панели</string>
 </resources>

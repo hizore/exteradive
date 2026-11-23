@@ -5446,6 +5446,16 @@
     <string name="Reacted_one">%1$s Reacted</string>
     <string name="Reacted_other">%1$s Reacted</string>
     <string name="Reactions">Reactions</string>
+    <string name="LiftBubbleOnMenu">Raise message bubble</string>
+    <string name="LiftBubbleShowSenderInfo">Show sender name and avatar on raised message</string>
+    <string name="LiftBubbleHideMenu">Hide Context Menu</string>
+    <string name="LiftBubbleHideReactions">Hide Reactions Bar</string>
+    <string name="LiftBubbleBlur">Blur Raised Messages</string>
+    <string name="ReactionsPanelBlur">Blur Reactions Panel</string>
+    <string name="ContextMenuBlur">Blur Context Menu</string>
+    <string name="SidePanelBlur">Blur Side Panel</string>
+    <string name="OESidePanelOpacity">Side Panel Opacity</string>
+    <string name="OESidePanelBlurStrength">Side Panel Blur Strength</string>
     <string name="ReactionsOff">Off</string>
     <string name="ReactionsCount">%1$s/%2$s</string>
     <string name="EnableReactions">Enable Reactions</string>

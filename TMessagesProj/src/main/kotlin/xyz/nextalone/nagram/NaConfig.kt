@@ -174,6 +174,56 @@ object NaConfig {
             ConfigItem.configTypeBool,
             true
         )
+    val messageMenuLiftBubble =
+        addConfig(
+            "MessageMenuLiftBubble",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val showLiftSenderInfo =
+        addConfig(
+            "ShowLiftSenderInfo",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val hideMessageMenu =
+        addConfig(
+            "HideMessageMenu",
+            ConfigItem.configTypeBool,
+            false
+        )
+    val hideReactionsBar =
+        addConfig(
+            "HideReactionsBar",
+            ConfigItem.configTypeBool,
+            false
+        )
+    // exteradive: мороз обоев для приподнятого сообщения и панелей над чатом.
+    // Радиус — втрое больше «блюра сообщений» (bubbleBlurStrength).
+    val blurLiftedMessages =
+        addConfig(
+            "BlurLiftedMessages",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val blurReactionsPanel =
+        addConfig(
+            "BlurReactionsPanel",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val blurMessageMenu =
+        addConfig(
+            "BlurMessageMenu",
+            ConfigItem.configTypeBool,
+            true
+        )
+    val blurSidePanel =
+        addConfig(
+            "BlurSidePanel",
+            ConfigItem.configTypeBool,
+            true
+        )
     // Заголовок списка чатов. Значение по умолчанию видно на самом видном месте —
     // в шапке главного экрана и в превью на экране «Внешний вид», — поэтому это
     // имя форка, а не апстрима.
