@@ -452,12 +452,24 @@ public class ActionBarPopupWindow extends PopupWindow {
 
         @Override
         protected void dispatchDraw(Canvas canvas) {
-            // exteradive: явная отрисовка «мороза» под содержимым меню: view
+            // exteradive: явная отрисовка «мороза» под содержимым попапа: view
             // background у попапа на устройстве не показывался, и меню
-            // выглядело полностью прозрачным.
+            // выглядело полностью прозрачным. Высота — как у штатного фона:
+            // только видимая страница (до первого разделителя) и с учётом
+            // скейла появления, иначе под рядом иконок висел бы хвост от
+            // скрытых страниц swipe-back и панель становилась «жирной».
             if (frostBackground != null) {
-                frostBackground.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
-                frostBackground.draw(canvas);
+                int frostH = (int) (getMeasuredHeight() * backScaleY);
+                if (gapStartY != -1000000) {
+                    int pageH = gapStartY + dp(16) - (scrollView == null ? 0 : scrollView.getScrollY());
+                    if (pageH > 0 && pageH < frostH) {
+                        frostH = pageH;
+                    }
+                }
+                if (frostH > 0) {
+                    frostBackground.setBounds(0, 0, getMeasuredWidth(), frostH);
+                    frostBackground.draw(canvas);
+                }
             }
             if (swipeBackGravityRight) {
                 setTranslationX(getMeasuredWidth() * (1f - backScaleX));
