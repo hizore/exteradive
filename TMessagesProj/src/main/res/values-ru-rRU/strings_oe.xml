@@ -8,6 +8,7 @@
 
 
     <string name="OpenExteraCategories">Категории</string>
+    <string name="OpenExteraBasedOn">Данный клиент основан на exteraless.</string>
     <string name="OpenExteraGeneral">Основные</string>
     <string name="OpenExteraAppearance">Внешний вид</string>
     <string name="OpenExteraOther">Ещё</string>

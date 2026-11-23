@@ -3,6 +3,8 @@ package app.exteraless.settings;
 import static org.telegram.messenger.LocaleController.getString;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -34,6 +36,10 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
     private int appearanceRow;
     private int chatsRow;
     private int otherRow;
+    // exteradive: секция «Ссылки» — канал-первоисточник
+    private int linksHeaderRow;
+    private int exteralessLinkRow;
+    private int linksInfoRow;
 
     @Override
     protected void updateRows() {
@@ -46,6 +52,10 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
         appearanceRow = addRow("appearance");
         chatsRow = addRow("chats");
         otherRow = addRow("other");
+
+        linksHeaderRow = addRow("linksHeader");
+        exteralessLinkRow = addRow("exteralessLink");
+        linksInfoRow = addRow();
     }
 
     /**
@@ -154,6 +164,17 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
             presentFragment(new OpenExteraChatsActivity());
         } else if (position == otherRow) {
             presentFragment(new OpenExteraOtherActivity());
+        } else if (position == exteralessLinkRow) {
+            // exteradive: канал первоисточника
+            try {
+                android.app.Activity act = getParentActivity();
+                if (act != null) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/exteraless"));
+                    act.startActivity(browserIntent);
+                }
+            } catch (Throwable t) {
+                org.telegram.messenger.FileLog.e(t);
+            }
         }
     }
 
@@ -185,6 +206,8 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
                     HeaderCell cell = (HeaderCell) holder.itemView;
                     if (position == categoriesHeaderRow) {
                         cell.setText(getString(R.string.OpenExteraCategories));
+                    } else if (position == linksHeaderRow) {
+                        cell.setText(getString(R.string.OpenExteraLinks));
                     }
                     break;
                 }
@@ -198,6 +221,9 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndIcon(getString(R.string.OpenExteraChats), R.drawable.msg_discussion, true);
                     } else if (position == otherRow) {
                         cell.setTextAndIcon(getString(R.string.OpenExteraOther), R.drawable.msg_fave, false);
+                    } else if (position == exteralessLinkRow) {
+                        // exteradive: ссылка на Telegram-канал первоисточника
+                        cell.setTextAndIcon("exteraless", R.drawable.msg_link, false);
                     }
                     // ВАЖНО: только после setTextAndIcon* — они сбрасывают imageLeft в 16dp.
                     // Метрики сняты с 12.9.0 (420 dpi): иконка 88px от края экрана, текст 219px,
@@ -208,7 +234,12 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
                 }
                 case TYPE_INFO_PRIVACY: {
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
-                    cell.setText(null);
+                    // exteradive: подпись под панелью ссылки
+                    if (position == linksInfoRow) {
+                        cell.setText(getString(R.string.OpenExteraBasedOn));
+                    } else {
+                        cell.setText(null);
+                    }
                     cell.setBackground(Theme.getThemedDrawable(mContext,
                             R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     break;
@@ -225,8 +256,10 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
         public int getItemViewType(int position) {
             if (position == aboutRow) {
                 return TYPE_ABOUT;
-            } else if (position == categoriesHeaderRow) {
+            } else if (position == categoriesHeaderRow || position == linksHeaderRow) {
                 return TYPE_HEADER;
+            } else if (position == linksInfoRow) {
+                return TYPE_INFO_PRIVACY;
             }
             return TYPE_TEXT;
         }
