@@ -75,8 +75,15 @@ public final class SnapshotFrostDrawable extends Drawable {
             }
             root.draw(canvas);
             float strength = Math.max(0f, Math.min(1f, blurStrength));
-            int radius = Math.max(2, (int) (Math.min(w, h) / 4f * (0.2f + 0.8f * strength)));
-            Utilities.stackBlurBitmap(bitmap, radius);
+            // exteradive: кривая силы блюра по всей шкале: 0% — почти резко,
+            // 100% — радиус в половину короткой стороны кадра. Раньше даже при
+            // 0% оставался радиус min/20, на уменьшенном в 6 раз кадре это
+            // «сплошная каша» — ползунок ничего не менял.
+            int base = Math.max(2, Math.min(w, h) / 2);
+            int radius = (int) (base * strength * strength);
+            if (radius > 1) {
+                Utilities.stackBlurBitmap(bitmap, radius);
+            }
             bitmap.setHasAlpha(false);
             return bitmap;
         } catch (Throwable t) {

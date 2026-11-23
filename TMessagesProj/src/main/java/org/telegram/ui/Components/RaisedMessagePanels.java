@@ -178,7 +178,8 @@ public final class RaisedMessagePanels {
             return;
         }
         int width = container.getWidth();
-        int margin = Math.min(dp(20), width / 4);
+        // exteradive: панели не должны «липнуть» к краю экрана — минимум dp(24)
+        int margin = Math.min(dp(24), width / 4);
         int gap = dp(8);
         float upperEdge = bubble.top - senderHeight;
         if (visible(reactions)) {
@@ -187,7 +188,10 @@ public final class RaisedMessagePanels {
             reactions.setTranslationY(upperEdge);
         }
         if (visible(menu)) {
-            int menuWidth = visibleMenuWidth();
+            // exteradive: позиция считается по ФАКТИЧЕСКОЙ ширине попапа.
+            // visibleMenuWidth() учитывает скейл перехода — с ним панель
+            // уезжала за правый край экрана («липнет к краю»).
+            int menuWidth = Math.max(visibleMenuWidth(), menu.getMeasuredWidth());
             int menuHeight = visibleMenuHeight();
             int footerHeight = visible(footer) ? footer.getMeasuredHeight() : 0;
             boolean placeAbove = above;
@@ -211,8 +215,12 @@ public final class RaisedMessagePanels {
     }
 
     private float alignedX(int width, int margin, int panelWidth) {
-        float x = outgoing ? bubble.right - panelWidth : bubble.left;
-        return Math.max(margin, Math.min(x, width - margin - panelWidth));
+        // exteradive: панель никогда не выходит за поля: ширина ограничена
+        // рабочей областью, нижняя граница clamp не может стать больше верхней.
+        int usable = Math.max(1, width - 2 * margin);
+        int w = Math.min(panelWidth, usable);
+        float x = outgoing ? bubble.right - w : bubble.left;
+        return Math.max((float) margin, Math.min(x, (float) (width - margin - w)));
     }
 
     private View mainMenu() {
