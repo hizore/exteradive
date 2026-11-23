@@ -1958,6 +1958,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     // exteradive: непрозрачность баблов (0..100%) и «стекло» по тумблеру.
     // Фактор выставляется при каждом присвоении currentBackgroundDrawable:
     // themed-drawables разделяются между ячейками.
+    // Приподнятое сообщение переключает свой источник на мороз х3.
+    public boolean oeStrongGlass;
+
     public float oeComputeOpacityFactor() {
         if (currentMessageObject != null && (currentMessageObject.isVideo() || currentMessageObject.isGif())) {
             // Гифки и видео всегда полностью непрозрачные.
@@ -1983,7 +1986,15 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         @Override
         public Bitmap oeGetWallpaperBlurBitmap() {
             SizeNotifierFrameLayout pane = oeFindBackgroundPane();
-            return pane == null ? null : pane.oeGetBlurredWallpaper();
+            if (pane == null) {
+                return null;
+            }
+            return oeStrongGlass ? pane.oeGetStrongBlurredWallpaper() : pane.oeGetBlurredWallpaper();
+        }
+
+        @Override
+        public boolean oeIsStrongGlass() {
+            return oeStrongGlass;
         }
 
         @Override
@@ -17710,6 +17721,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             drawName && currentMessageObject.isWideChannelPost() && !currentMessageObject.isOutOwner() ||
             currentMessageObject.isImportedForward() && currentMessageObject.messageOwner.fwd_from.from_id == null
         );
+    }
+
+    public boolean hasSenderNameInBubble() {
+        return drawNameLayout && nameLayout != null;
     }
 
     private String getAuthorName() {

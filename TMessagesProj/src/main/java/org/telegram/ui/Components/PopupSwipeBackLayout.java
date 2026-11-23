@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -28,6 +29,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBarMenuSlider;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 
 import java.util.ArrayList;
 
@@ -135,6 +137,14 @@ public class PopupSwipeBackLayout extends FrameLayout {
      */
     private boolean foregroundOnGlass;
 
+    /** exteradive: мороз под сайд-панелью меню (общий снимок экрана). */
+    private Drawable frostBackground;
+
+    public void setFrostBackground(Drawable background) {
+        this.frostBackground = background;
+        invalidate();
+    }
+
     public void setForegroundOnGlass(boolean onGlass) {
         if (foregroundOnGlass != onGlass) {
             foregroundOnGlass = onGlass;
@@ -161,12 +171,18 @@ public class PopupSwipeBackLayout extends FrameLayout {
         }
         int s = canvas.save();
         if (i != 0) {
-            if (foregroundColor == 0) {
-                foregroundPaint.setColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
+            if (frostBackground != null) {
+                // exteradive: сайд-панель на морозе вместо сплошной заливки.
+                frostBackground.setBounds((int) child.getX(), 0, (int) (child.getX() + child.getMeasuredWidth()), getMeasuredHeight());
+                frostBackground.draw(canvas);
             } else {
-                foregroundPaint.setColor(foregroundColor);
+                if (foregroundColor == 0) {
+                    foregroundPaint.setColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
+                } else {
+                    foregroundPaint.setColor(foregroundColor);
+                }
+                canvas.drawRect(child.getX(), 0, child.getX() + child.getMeasuredWidth(), getMeasuredHeight(), foregroundPaint);
             }
-            canvas.drawRect(child.getX(), 0, child.getX() + child.getMeasuredWidth(), getMeasuredHeight(), foregroundPaint);
         }
         boolean b = super.drawChild(canvas, child, drawingTime);
         if (i == 0) {

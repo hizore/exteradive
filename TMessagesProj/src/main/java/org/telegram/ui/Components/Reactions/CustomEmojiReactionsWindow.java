@@ -320,6 +320,20 @@ public class CustomEmojiReactionsWindow {
     }
 
     private BlurredBackgroundDrawable blurredBackgroundDrawable;
+    /** exteradive: мороз из снимка экрана для развёрнутой панели реакций. */
+    private android.graphics.drawable.Drawable frostBackground;
+
+    public void setFrostBackground(android.graphics.drawable.Drawable frost) {
+        frostBackground = frost == null ? null
+            : frost instanceof app.exteraless.appearance.SnapshotFrostDrawable
+                ? ((app.exteraless.appearance.SnapshotFrostDrawable) frost).copyForHost(containerView)
+                : frost;
+        if (frostBackground != null) {
+            selectAnimatedEmojiDialog.searchBox.setUseCustomBackground();
+        }
+        containerView.invalidate();
+    }
+
     public void setBackgroundFactory(BlurredBackgroundDrawableViewFactory backgroundFactory, BlurredBackgroundProvider backgroundColorProvider) {
         this.selectAnimatedEmojiDialog.searchBox.setUseCustomBackground();
         this.blurredBackgroundDrawable = backgroundFactory.create(containerView, true)
@@ -888,7 +902,11 @@ public class CustomEmojiReactionsWindow {
                 shadow.setAlpha((int) (Utilities.clamp(progressClpamped / 0.05f, 1f, 0f) * 255));
                 shadow.setBounds((int) drawingRect.left - shadowPad.left, (int) drawingRect.top - shadowPad.top, (int) drawingRect.right + shadowPad.right, (int) drawingRect.bottom + shadowPad.bottom);
 
-                if (blurredBackgroundDrawable != null) {
+                if (frostBackground != null) {
+                    // exteradive: развёрнутые реакции на том же морозе.
+                    org.telegram.ui.Components.ReactionsContainerLayout.drawFrost(
+                        frostBackground, canvas, drawingRect, radius, backgroundPaint.getAlpha());
+                } else if (blurredBackgroundDrawable != null) {
                     AndroidUtilities.rectTmp.set(drawingRect);
                     AndroidUtilities.rectTmp.round(AndroidUtilities.rectTmp2);
                     AndroidUtilities.rectTmp2.inset(-dp(8), -dp(8));

@@ -20,6 +20,7 @@ import app.exteraless.chats.ChatsConfig;
 import app.exteraless.components.ActionRow;
 import app.exteraless.components.MessageDetailsPopupWrapper;
 import app.exteraless.appearance.GlassMenuHelper;
+import app.exteraless.appearance.SnapshotFrostDrawable;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
@@ -1216,6 +1217,9 @@ public class ChatActivity extends BaseFragment implements
 
     private final GlassSourceBitmap scrimBlur3SourceBitmap = new GlassSourceBitmap();
     private BlurredBackgroundDrawableViewFactory scrimBlur3Factory = new BlurredBackgroundDrawableViewFactory(scrimBlur3SourceBitmap);
+    // exteradive: настраиваемые блюры панелей — снимок экрана, размытый втрое
+    // сильнее «блюра сообщений»; см. SnapshotFrostDrawable.
+    private boolean scrimStrongBackdropWanted;
     private Bitmap scrimBlurBitmap;
     private BitmapShader scrimBlurBitmapShader;
     private Paint scrimBlurBitmapPaint;
@@ -1226,6 +1230,7 @@ public class ChatActivity extends BaseFragment implements
     private float scrimPaintAlpha = 0f;
     private boolean scrimProgressDirection;
     private View scrimView;
+    private RaisedMessage raisedMessage;
     private float scrimViewAlpha = 1f;
     private float scrimViewProgress = 0f;
     private Integer scrimViewReaction;
@@ -3764,6 +3769,9 @@ public class ChatActivity extends BaseFragment implements
 
     @Override
     public void onFragmentDestroy() {
+        if (raisedMessage != null) {
+            closeMenu();
+        }
         super.onFragmentDestroy();
         if (commentsMessagesObserver != null) {
             getNotificationCenter().removeObserver(commentsMessagesObserver, NotificationCenter.messagesDidLoad);
@@ -5845,6 +5853,9 @@ public class ChatActivity extends BaseFragment implements
 
             @Override
             public boolean onTouchEvent(MotionEvent e) {
+                if (raisedMessage != null) {
+                    return super.onTouchEvent(e);
+                }
                 if (scrimOptionsShown) {
                     return false;
                 }
@@ -7423,7 +7434,7 @@ public class ChatActivity extends BaseFragment implements
                 if (!foundTopView) {
                     scrolled = super.scrollVerticallyBy(dy, recycler, state);
                 }
-                final boolean allowPullingDownScroll = !isInPollAddOptionMode() && !hasSelectedMessages() && chatsHelper.allowSwipeToNext(isTopic);
+                final boolean allowPullingDownScroll = raisedMessage == null && !isInPollAddOptionMode() && !hasSelectedMessages() && chatsHelper.allowSwipeToNext(isTopic);
                 if (allowPullingDownScroll && dy > 0 && scrolled == 0 && (ChatObject.isChannel(currentChat) && !currentChat.megagroup || isTopic && !UserObject.isBotForum(currentUser)) && chatMode != MODE_SAVED && chatMode != MODE_WELCOME_MESSAGES && chatMode != MODE_SCHEDULED && chatListView.getScrollState() == RecyclerView.SCROLL_STATE_DRAGGING && !chatListView.isFastScrollAnimationRunning() && !chatListView.isMultiselect() && !isReport()) {
                     if (pullingDownOffset == 0 && pullingDownDrawable != null) {
                         if (nextChannels != null && !nextChannels.isEmpty()) {
@@ -12310,15 +12321,30 @@ public class ChatActivity extends BaseFragment implements
             animators.add(scrimPaintAlphaAnimator = ValueAnimator.ofFloat(0, value));
 
             if (blur) {
-                ScrimOptions.makeGlobalBlurBitmaps((bitmapBg, bitmapOptions) -> {
-                    scrimBlurBitmap = bitmapBg;
-                    scrimBlurBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                    scrimBlurBitmapPaint.setShader(scrimBlurBitmapShader = new BitmapShader(scrimBlurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
-                    scrimBlurMatrix = new Matrix();
-                    scrimBlur3SourceBitmap.setBitmap(bitmapOptions);
-                    Blur3Utils.checkBitmapSourceMatrixScale(scrimBlur3SourceBitmap, fragmentView);
-                    scrimBlur3Factory.invalidateAllLinkedViews();
-                });
+                if (scrimStrongBackdropWanted) {
+                    // exteradive: фон под приподнятым сообщением — тот же
+                    // детерминированный размытый снимок, что и у панелей.
+                    Bitmap backdrop = SnapshotFrostDrawable.captureAndBlur(contentView, 6);
+                    if (backdrop != null) {
+                        scrimBlurBitmap = backdrop;
+                        scrimBlurBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                        scrimBlurBitmapPaint.setShader(scrimBlurBitmapShader = new BitmapShader(scrimBlurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+                        scrimBlurMatrix = new Matrix();
+                        if (fragmentView != null) {
+                            fragmentView.invalidate();
+                        }
+                    }
+                } else {
+                    ScrimOptions.makeGlobalBlurBitmaps((bitmapBg, bitmapOptions) -> {
+                        scrimBlurBitmap = bitmapBg;
+                        scrimBlurBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                        scrimBlurBitmapPaint.setShader(scrimBlurBitmapShader = new BitmapShader(scrimBlurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+                        scrimBlurMatrix = new Matrix();
+                        scrimBlur3SourceBitmap.setBitmap(bitmapOptions);
+                        Blur3Utils.checkBitmapSourceMatrixScale(scrimBlur3SourceBitmap, fragmentView);
+                        scrimBlur3Factory.invalidateAllLinkedViews();
+                    });
+                }
             }
         } else {
             scrimViewProgress = scrimPaintAlpha / max;
@@ -13455,6 +13481,19 @@ public class ChatActivity extends BaseFragment implements
             Blur3Utils.checkBitmapSourceMatrixScale(scrimBlur3SourceBitmap, fragmentView);
             scrimBlur3Factory.invalidateAllLinkedViews();
         });
+    }
+
+    /**
+     * exteradive: снимок экрана чата для панелей поднятия — уменьшается в 6 раз
+     * и размывается радиусом, пропорциональным размеру (втрое сильнее «блюра
+     * сообщений»). Обновляется при каждом открытии меню.
+     */
+    private void captureStrongBlur() {
+        Bitmap strong = SnapshotFrostDrawable.captureAndBlur(contentView, 6);
+        if (strong == null) {
+            return;
+        }
+        SnapshotFrostDrawable.setSnapshot(strong);
     }
 
     @Override
@@ -17544,6 +17583,9 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void moveScrollToLastMessage(boolean skipSponsored) {
+        if (raisedMessage != null) {
+            return;
+        }
         if (chatListView != null && !messages.isEmpty() && !pinchToZoomHelper.isInOverlayMode()) {
             int position = 0;
             if (skipSponsored) {
@@ -17770,6 +17812,11 @@ public class ChatActivity extends BaseFragment implements
                     ImageReceiver imageReceiver = messageCell.getPhotoImage();
                     videoPlayerContainer.setTranslationX(imageReceiver.getImageX() + messageCell.getX());
                     float translationY = messageCell.getY() + messageCell.getPaddingTop() + imageReceiver.getImageY() + chatListView.getY() - videoPlayerContainer.getTop();
+                    // exteradive: поднятое сообщение с играющим видео — текстура
+                    // кружка следует за lift и остаётся на поднятом бабле.
+                    if (raisedMessage != null && raisedMessage.cell == messageCell) {
+                        translationY += raisedMessage.lift;
+                    }
                     videoPlayerContainer.setTranslationY(translationY);
                     FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) videoPlayerContainer.getLayoutParams();
                     if (messageObject.isRoundVideo()) {
@@ -19486,6 +19533,9 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         protected void onDetachedFromWindow() {
+            if (raisedMessage != null) {
+                closeMenu();
+            }
             super.onDetachedFromWindow();
             adjustPanLayoutHelper.onDetach();
             if (pullingDownDrawable != null) {
@@ -19504,6 +19554,20 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public boolean dispatchTouchEvent(MotionEvent ev) {
+            RaisedMessage raised = raisedMessage;
+            if (raised != null) {
+                if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    raised.panelGesture = raised.dispatchToPanels(ev);
+                    if (raisedMessage != raised || raised.panelGesture) {
+                        return true;
+                    }
+                } else if (raised.panelGesture) {
+                    raised.dispatchToPanels(ev);
+                    return true;
+                }
+                raised.dispatchOutsidePanels(ev);
+                return true;
+            }
             if (messageMetricsView != null) {
                 messageMetricsView.setIsUserActive();
             }
@@ -19656,6 +19720,9 @@ public class ChatActivity extends BaseFragment implements
         }
 
         private boolean drawChildUnpushed(Canvas canvas, View child, long drawingTime) {
+            if (raisedMessage != null && (child == raisedMessage.container || child == raisedMessage.sender)) {
+                return true;
+            }
             if ((scrimView != null || messageEnterTransitionContainer.isRunning()) && (child == sideControlsButtonsLayout || child == floatingDateView || child == floatingTopicSeparator || child == fireworksOverlay || child == quickShareSelectorOverlay || child == gifHintTextView || child == emojiHintTextView || child == undoView || child == topUndoView)) {
                 return false;
             }
@@ -19770,7 +19837,9 @@ public class ChatActivity extends BaseFragment implements
             float canvasOffsetX = chatListView.getLeft() + cell.getX();
             float canvasOffsetY = chatListView.getY() + cell.getY() + cell.getPaddingTop();
             float alpha = cell.shouldDrawAlphaLayer() ? cell.getAlpha() : 1f;
-            canvas.clipRect(chatListView.getLeft(), listTop, chatListView.getRight(), chatListView.getY() + chatListView.getMeasuredHeight() - blurredViewBottomOffset - windowInsetsStateHolder.getCurrentMaxBottomInset() - inputIslandHeightCurrent - dp(9));
+            if (raisedMessage == null) {
+                canvas.clipRect(chatListView.getLeft(), listTop, chatListView.getRight(), chatListView.getY() + chatListView.getMeasuredHeight() - blurredViewBottomOffset - windowInsetsStateHolder.getCurrentMaxBottomInset() - inputIslandHeightCurrent - dp(9));
+            }
             canvas.translate(canvasOffsetX, canvasOffsetY);
             cell.setInvalidatesParent(true);
             if (type == 0) {
@@ -19914,6 +19983,10 @@ public class ChatActivity extends BaseFragment implements
                 invalidate();
             }
 
+            RaisedMessage raised = raisedMessage;
+            if (raised != null) {
+                raised.updatePlacement();
+            }
             if (scrimView != null) {
                 if (scrimView == sideControlsButtonsLayout) {
                     if (scrimViewAlpha < 1f) {
@@ -19942,7 +20015,12 @@ public class ChatActivity extends BaseFragment implements
                         canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), scrimPaint);
                     }
                 } else {
-                    float listTop = chatListView.getY() + chatListViewPaddingTop - chatListViewPaddingVisibleOffset - AndroidUtilities.dp(4);
+                    float listTop = chatListView.getY() + chatListViewPaddingTop - chatListViewPaddingVisibleOffset - dp(4);
+                    if (raised != null) {
+                        canvas.save();
+                        canvas.translate(0, raised.lift);
+                        listTop = -raised.lift;
+                    }
                     MessageObject.GroupedMessages scrimGroup;
                     if (scrimView instanceof ChatMessageCell) {
                         scrimGroup = ((ChatMessageCell) scrimView).getCurrentMessagesGroup();
@@ -19984,11 +20062,11 @@ public class ChatActivity extends BaseFragment implements
                                 b += scrimGroup.transitionParams.cell.getTranslationY();
                             }
 
-                            if (t < chatListViewPaddingTop - chatListViewPaddingVisibleOffset - AndroidUtilities.dp(20)) {
+                            if (raised == null && t < chatListViewPaddingTop - chatListViewPaddingVisibleOffset - dp(20)) {
                                 t = chatListViewPaddingTop - chatListViewPaddingVisibleOffset - AndroidUtilities.dp(20);
                             }
 
-                            if (b > chatListView.getMeasuredHeight() + AndroidUtilities.dp(20)) {
+                            if (raised == null && b > chatListView.getMeasuredHeight() + dp(20)) {
                                 b = chatListView.getMeasuredHeight() + AndroidUtilities.dp(20);
                             }
 
@@ -20009,7 +20087,9 @@ public class ChatActivity extends BaseFragment implements
                                     - dp(9)
                                     - (mentionContainer != null ? mentionContainer.clipBottom() : 0);
 
-                            canvas.clipRect(0, listTop + (mentionContainer != null ? mentionContainer.clipTop() : 0), getMeasuredWidth(), viewClipBottom2);
+                            if (raised == null) {
+                                canvas.clipRect(0, listTop + (mentionContainer != null ? mentionContainer.clipTop() : 0), getMeasuredWidth(), viewClipBottom2);
+                            }
                             canvas.translate(0, chatListView.getY());
                             scrimGroup.transitionParams.cell.drawBackground(canvas, (int) l, (int) t, (int) r, (int) b, scrimGroup.transitionParams.pinnedTop, scrimGroup.transitionParams.pinnedBotton, selected, 0);
                             canvas.restore();
@@ -20038,7 +20118,7 @@ public class ChatActivity extends BaseFragment implements
                             clipBottom = Math.max(clipBottom, chatActivityEnterView.botCommandsMenuContainer.clipBottom());
                         }
                         viewClipTop += clipTop;
-                        viewClipBottom -= clipBottom;
+                        viewClipBottom = raised == null ? viewClipBottom - clipBottom : getHeight() - raised.lift;
 
                         if (cell == null || !cell.getTransitionParams().animateBackgroundBoundsInner) {
                             viewClipLeft = Math.max(viewClipLeft, chatListView.getLeft() + child.getX());
@@ -20243,6 +20323,9 @@ public class ChatActivity extends BaseFragment implements
                         }
                         drawReactionsAfter.clear();
                     }
+                    if (raised != null) {
+                        canvas.restore();
+                    }
                 }
 
                 if (scrimViewReaction == null && scrimViewAlpha < 1f) {
@@ -20323,6 +20406,14 @@ public class ChatActivity extends BaseFragment implements
 
             emojiAnimationsOverlay.draw(canvas);
 
+            if (raised != null && raisedMessage == raised) {
+                long drawingTime = getDrawingTime();
+                if (raised.sender != null) {
+                    super.drawChild(canvas, raised.sender, drawingTime);
+                }
+                super.drawChild(canvas, raised.container, drawingTime);
+            }
+
             if (restoreToCount >= 0) {
                 canvas.restore();
             }
@@ -20343,6 +20434,7 @@ public class ChatActivity extends BaseFragment implements
                 || child == messagesSearchListContainer
                 || child == topicsPanel // its dim over the cutout too, the panel under the navigation bar
                 || child instanceof SimpleActionBarMenuOverlay // over the header too: the menus grow out of its buttons
+                || raisedMessage != null && child == raisedMessage.container
             );
         }
 
@@ -28301,6 +28393,9 @@ public class ChatActivity extends BaseFragment implements
                     needAnimateToMessage = obj;
                 }
                 if (obj.isOut() && obj.wasJustSent) {
+                    if (raisedMessage != null) {
+                        return;
+                    }
                     scrollToLastMessage(true, false);
                     return;
                 }
@@ -28780,7 +28875,7 @@ public class ChatActivity extends BaseFragment implements
                     if (hasAyuDeleted) {
                         shouldScrollToBottom = wasAtBottom;
                     }
-                    if (shouldScrollToBottom) {
+                    if (shouldScrollToBottom && raisedMessage == null) {
                         newUnreadMessageCount = 0;
                         if (!firstLoading && chatMode != MODE_SCHEDULED) {
                             if (paused) {
@@ -28813,7 +28908,7 @@ public class ChatActivity extends BaseFragment implements
                         scrollToMessage = ((ChatActionCell) child).getMessageObject();
                     }
                     int scrollToIndex = messages.indexOf(scrollToMessage);
-                    if (child != null && scrollToIndex >= 0) {
+                    if (raisedMessage == null && child != null && scrollToIndex >= 0) {
                         chatLayoutManager.scrollToPositionWithOffset(chatAdapter.messagesStartRow + scrollToIndex, getScrollingOffsetForView(child));
                     }
                 }
@@ -28839,7 +28934,7 @@ public class ChatActivity extends BaseFragment implements
             }
         }
 
-        if (chatMode == MODE_SCHEDULED && !arr.isEmpty()) {
+        if (raisedMessage == null && chatMode == MODE_SCHEDULED && !arr.isEmpty()) {
             MessageObject messageObject = arr.get(0);
             int mid = messageObject.getId();
             if (mid < 0) {
@@ -34086,6 +34181,9 @@ public class ChatActivity extends BaseFragment implements
                 return false;
             }
 
+            final boolean useRaisedMenu = optionsView == null && v instanceof ChatMessageCell
+                && v.getParent() == chatListView && !isInsideContainer && !inPreviewMode
+                && NaConfig.INSTANCE.getMessageMenuLiftBubble().Bool();
             final AtomicBoolean waitForLangDetection = new AtomicBoolean(false);
             final AtomicReference<Runnable> onLangDetectionDone = new AtomicReference(null);
 
@@ -34095,15 +34193,15 @@ public class ChatActivity extends BaseFragment implements
             final boolean isEphemeral = message != null && message.isEphemeral();
             final boolean nekoXShowReactionsView = !disabledReactions() && (NaConfig.INSTANCE.getShowReactions().Bool() || onDoubleTapped); // Show reactions and hide them from tap; openExtera: + разбивка по типам чатов
             boolean isReactionsViewAvailable = nekoXShowReactionsView && !isEphemeral && !suggestEdit && !isSecretChat() && !isInScheduleMode() && currentUser == null && primaryMessage.hasReactions() && (!ChatObject.isChannel(currentChat) || currentChat.megagroup) && !ChatObject.isMonoForum(currentChat) && !availableReacts.isEmpty() && primaryMessage.messageOwner.reactions.can_see_list && !primaryMessage.isSecretMedia();
-            final boolean isReactionsAvailable;
+            final boolean isReactionsAllowed;
             if (suggestEdit || isEphemeral) {
-                isReactionsAvailable = false;
+                isReactionsAllowed = false;
             } else if (message.isForwardedChannelPost()) {
                 TLRPC.ChatFull chatInfo = getMessagesController().getChatFull(-message.getFromChatId());
                 if (chatInfo == null) {
-                    isReactionsAvailable = !message.isAyuDeleted();
+                    isReactionsAllowed = !message.isAyuDeleted();
                 } else {
-                    isReactionsAvailable = nekoXShowReactionsView && !isSecretChat()
+                    isReactionsAllowed = nekoXShowReactionsView && !isSecretChat()
                         && !isQuickRepliesOrWelcomeMessagesMode()
                         && !isInScheduleMode()
                         && primaryMessage.isReactionsAvailable()
@@ -34114,7 +34212,7 @@ public class ChatActivity extends BaseFragment implements
                         ) && !message.isAyuDeleted();
                 }
             } else {
-                isReactionsAvailable = nekoXShowReactionsView && !isSecretChat()
+                isReactionsAllowed = nekoXShowReactionsView && !isSecretChat()
                     && !isQuickRepliesOrWelcomeMessagesMode()
                     && !isInScheduleMode()
                     && primaryMessage.isReactionsAvailable()
@@ -34129,6 +34227,8 @@ public class ChatActivity extends BaseFragment implements
                     )
                     && (currentChat == null || ChatObject.isChannelAndNotMegaGroup(currentChat) || ChatObject.canUserDoAction(currentChat, ChatObject.ACTION_SEND_REACTIONS)) && !message.isAyuDeleted();
             }
+            final boolean isReactionsAvailable = isReactionsAllowed
+                && (!useRaisedMenu || !NaConfig.INSTANCE.getHideReactionsBar().Bool());
             final boolean showMessageSeen = !suggestEdit && !isEphemeral && !isReactionsViewAvailable && !isInScheduleMode() && currentChat != null && message.isOutOwner() && message.isSent() && !message.isEditing() && !message.isSending() && !message.isSendError() && !message.isContentUnread() && !message.isUnread() && (ConnectionsManager.getInstance(currentAccount).getCurrentTime() - message.messageOwner.date < getMessagesController().chatReadMarkExpirePeriod) && (ChatObject.isMegagroup(currentChat) || !ChatObject.isChannel(currentChat)) && chatInfo != null && chatInfo.participants_count <= getMessagesController().chatReadMarkSizeThreshold && !(message.messageOwner.action instanceof TLRPC.TL_messageActionChatJoinedByRequest) && chatMode != MODE_SAVED && message.canSetReaction() && !ChatObject.isMonoForum(currentChat);
             final boolean showMessageAuthor = !suggestEdit && !isEphemeral && currentChat != null && !message.isOut() && ChatObject.isMonoForum(currentChat) && ChatObject.canManageMonoForum(currentAccount, currentChat) && -currentChat.linked_monoforum_id == message.getFromChatId();
             final boolean showPrivateMessageSeen = !suggestEdit && !isEphemeral && !isReactionsViewAvailable && currentChat == null && currentEncryptedChat == null && (currentUser != null && !UserObject.isUserSelf(currentUser) && !UserObject.isReplyUser(currentUser) && !UserObject.isAnonymous(currentUser) && !currentUser.bot && !UserObject.isService(currentUser.id)) && (userInfo == null || !userInfo.read_dates_private) && !isInScheduleMode() && message.isOutOwner() && message.isSent() && !message.isEditing() && !message.isSending() && !message.isSendError() && !message.isContentUnread() && !message.isUnread() && (ConnectionsManager.getInstance(currentAccount).getCurrentTime() - message.messageOwner.date < getMessagesController().pmReadDateExpirePeriod) && !(message.messageOwner.action instanceof TLRPC.TL_messageActionChatJoinedByRequest) && !isAyuDeleted
@@ -34154,17 +34254,48 @@ public class ChatActivity extends BaseFragment implements
             // Гейт тот же, что в exteraGram: настройка + доступный блюр.
             // Флаг выключен или блюр недоступен -> ниже ничего не меняется, popup остаётся прежним.
             final boolean glassMenu = GlassMenuHelper.isEnabled(currentAccount, themeDelegate);
-            if (glassMenu) {
-                GlassMenuHelper.applyToPopup(scrimBlur3Factory, themeDelegate, popupLayout);
+            // exteradive: настраиваемые блюры панелей поднятия — собственный
+            // детерминированный снимок экрана (SnapshotFrostDrawable), втрое
+            // сильнее «блюра сообщений». От тумблера «стеклянного меню» не зависят.
+            final boolean menuBlurStrong = NaConfig.INSTANCE.getBlurMessageMenu().Bool();
+            final boolean sidePanelBlurStrong = NaConfig.INSTANCE.getBlurSidePanel().Bool();
+            final boolean reactionsBlurStrong = NaConfig.INSTANCE.getBlurReactionsPanel().Bool();
+            final boolean liftedBlur = true; // exteradive: всегда включен и не отключается
+            // exteradive: панели окрашиваются в цвет ЧУЖОГО бабла — всегда
+            // chat_inBubble, даже когда поднято исходящее сообщение.
+            final int messageTint = getThemedColor(Theme.key_chat_inBubble);
+            if (menuBlurStrong || sidePanelBlurStrong || reactionsBlurStrong || liftedBlur) {
+                captureStrongBlur();
+            }
+            // Источник штатного стекла обновляется всегда: часть панелей может
+            // оставаться на обычном фоне/стекле при выключенных тумблерах.
+            updateScrimSourceBitmap();
+            if (menuBlurStrong) {
+                popupLayout.setHideOwnBackgroundDrawable(true);
+                // exteradive: мороз рисуется явно в dispatchDraw попапа — как в
+                // ряду реакций; BACKGROUND view путь на устройстве не показывал
+                // панель вовсе (меню казалось прозрачным).
+                popupLayout.setBackground(null);
+                popupLayout.setFrostBackground(GlassMenuHelper.frostPanel(popupLayout, messageTint, 12));
+            } else {
+                if (glassMenu) {
+                    GlassMenuHelper.applyToPopup(scrimBlur3Factory, themeDelegate, popupLayout);
+                }
+                if (!useRaisedMenu || !glassMenu) {
+                    popupLayout.setBackground(scrimBlur3Factory.create(popupLayout, true)
+                        .setColorProvider(BlurredBackgroundProviderImpl.messageMenuBackground(resourceProvider))
+                        .setRadius(dp(12))
+                        .setPadding(dp(8)));
+                }
+            }
+            // exteradive: submenu контекстного меню — за его тумблером;
+            // «боковая панель» в настройках — это шторка (DrawerContainer).
+            // Страницы (подменю, «кто просмотрел») — полупрозрачное стекло:
+            // блюр и просматриваемый фон должны быть видны (opacity 0.55).
+            if (menuBlurStrong && popupLayout.getSwipeBack() != null) {
+                popupLayout.getSwipeBack().setFrostBackground(GlassMenuHelper.frostPanel(popupLayout.getSwipeBack(), messageTint, 0, 0.55f));
             }
             MessageSeenView messageSeenView = null;
-
-            updateScrimSourceBitmap();
-
-            popupLayout.setBackground(scrimBlur3Factory.create(popupLayout, true)
-                .setColorProvider(BlurredBackgroundProviderImpl.messageMenuBackground(resourceProvider))
-                .setRadius(dp(12))
-                .setPadding(dp(8)));
 
             boolean addGap = false;
 
@@ -34515,12 +34646,22 @@ public class ChatActivity extends BaseFragment implements
                     FrameLayout backContainer = new FrameLayout(contentView.getContext());
 
                     LinearLayout linearLayout = new LinearLayout(contentView.getContext());
-                    ThemeBind.backgroundColor(linearLayout, Theme.key_actionBarDefaultSubmenuBackground, getResourceProvider());
+                    // exteradive: мороз рисует PopupSwipeBackLayout под страницей,
+                    // поэтому сама страница должна быть прозрачной, иначе блюра
+                    // не видно вовсе. Разделитель внутри — тоже прозрачный.
+                    ActionBarPopupWindow.GapView seenGap = new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate);
+                    if (menuBlurStrong) {
+                        linearLayout.setBackground(null);
+                        seenGap.setColor(0);
+                        seenGap.setDividerVisible(false);
+                    } else {
+                        ThemeBind.backgroundColor(linearLayout, Theme.key_actionBarDefaultSubmenuBackground, getResourceProvider());
+                    }
                     linearLayout.setOrientation(LinearLayout.VERTICAL);
                     RecyclerListView listView2 = finalMessageSeenView.createListView();
                     backContainer.addView(cell);
                     linearLayout.addView(backContainer);
-                    linearLayout.addView(new ActionBarPopupWindow.GapView(contentView.getContext(), themeDelegate), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
+                    linearLayout.addView(seenGap, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
                     backContainer.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -35279,7 +35420,7 @@ public class ChatActivity extends BaseFragment implements
                 @Override
                 public boolean dispatchTouchEvent(MotionEvent ev) {
                     boolean b = super.dispatchTouchEvent(ev);
-                    if (ev.getAction() == MotionEvent.ACTION_DOWN && !b) {
+                    if (ev.getAction() == MotionEvent.ACTION_DOWN && !b && !isRaised()) {
                         closeMenu();
                     }
                     return b;
@@ -35313,7 +35454,14 @@ public class ChatActivity extends BaseFragment implements
             } else {
                 final boolean tags = getUserConfig().getClientUserId() == getDialogId();
                 reactionsLayout = new ReactionsContainerLayout(tags ? ReactionsContainerLayout.TYPE_TAGS : ReactionsContainerLayout.TYPE_DEFAULT, ChatActivity.this, contentView.getContext(), currentAccount, getResourceProvider());
-                reactionsLayout.setBackgroundFactory(scrimBlur3Factory, BlurredBackgroundProviderImpl.messageMenuReactionsBackground(resourceProvider));
+                // exteradive: настраиваемый блюр панели реакций х3 — в обычном
+                // (ряд над меню) и развёрнутом виде. Иначе — штатное стекло.
+                if (reactionsBlurStrong) {
+                    // exteradive: мороз из снимка экрана, окраска в цвет бабла.
+                    reactionsLayout.setFrostBackground(GlassMenuHelper.frostPill(reactionsLayout, messageTint));
+                } else {
+                    reactionsLayout.setBackgroundFactory(scrimBlur3Factory, BlurredBackgroundProviderImpl.messageMenuReactionsBackground(resourceProvider));
+                }
                 if (tags) {
                     reactionsLayout.setHint(getUserConfig().isPremium() ? LocaleController.getString(R.string.SavedTagReactionsHint2) : AndroidUtilities.replaceSingleTag(LocaleController.getString(R.string.SavedTagReactionsPremiumHint), Theme.key_windowBackgroundWhiteBlueText2, 0, () -> {
                         closeMenu(false);
@@ -35326,8 +35474,12 @@ public class ChatActivity extends BaseFragment implements
                     }));
                 }
                 if (isReactionsAvailable && (!tags || (!getMessagesController().premiumFeaturesBlocked() && (getUserConfig().isPremium())))) {
-                    int pad = 22;
-                    int sPad = 24;
+                    int pad = useRaisedMenu ? 4 : 22;
+                    int sPad = useRaisedMenu ? 0 : 24;
+                    if (useRaisedMenu) {
+                        reactionsLayout.recyclerListView.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+                        reactionsLayout.setMirrorX(!message.isOutOwner());
+                    }
                     reactionsLayout.setPadding(dp(4) + (LocaleController.isRTL ? 0 : sPad), dp(4), dp(4) + (LocaleController.isRTL ? sPad : 0), dp(pad));
 
                     ReactionsContainerLayout finalReactionsLayout = reactionsLayout;
@@ -35370,7 +35522,7 @@ public class ChatActivity extends BaseFragment implements
                     scrimPopupContainerLayout.setReactionsLayout(reactionsLayout);
                     scrimPopupContainerLayout.setClipChildren(false);
                     // openExtera: стекло под панелью реакций
-                    if (glassMenu) {
+                    if (glassMenu && !reactionsBlurStrong) {
                         GlassMenuHelper.applyToReactions(scrimBlur3Factory, themeDelegate, reactionsLayout);
                     }
                     MessageObject messageWithReactions = message;
@@ -35436,7 +35588,9 @@ public class ChatActivity extends BaseFragment implements
 
                     FrameLayout fl = new FrameLayout(contentView.getContext());
                     // openExtera: нижняя плашка тоже стеклянная
-                    if (glassMenu) {
+                    if (menuBlurStrong) {
+                        fl.setBackground(GlassMenuHelper.frostPanel(fl, messageTint, 12));
+                    } else if (glassMenu) {
                         fl.setBackground(GlassMenuHelper.createPanelBackground(scrimBlur3Factory, themeDelegate, fl));
                     } else {
                         fl.setBackground(shadowDrawable2);
@@ -35465,7 +35619,9 @@ public class ChatActivity extends BaseFragment implements
 
                     FrameLayout fl = new FrameLayout(contentView.getContext());
                     // openExtera: нижняя плашка тоже стеклянная
-                    if (glassMenu) {
+                    if (menuBlurStrong) {
+                        fl.setBackground(GlassMenuHelper.frostPanel(fl, messageTint, 12));
+                    } else if (glassMenu) {
                         fl.setBackground(GlassMenuHelper.createPanelBackground(scrimBlur3Factory, themeDelegate, fl));
                     } else {
                         fl.setBackground(shadowDrawable2);
@@ -35536,12 +35692,27 @@ public class ChatActivity extends BaseFragment implements
             }
             // openExtera: на стекле сплошной разделитель между группами пунктов заменяется
             // еле заметной подложкой
-            if (glassMenu) {
+            if (glassMenu && !menuBlurStrong) {
                 GlassMenuHelper.applyToGaps(popupLayout, GlassMenuHelper.separatorColor(true, themeDelegate));
+            } else if (menuBlurStrong || useRaisedMenu) {
+                // exteradive: в поднятом меню и на сильном блюре сплошных
+                // разделителей не существует: раньше здесь оставался тёмный
+                // GapView и рисовал чёрную полосу внутри панели.
+                GlassMenuHelper.applyToGaps(popupLayout, 0);
+                ItemOptions.setGapBackgroundColor(popupLayout, 0);
             }
             scrimPopupWindow = new ActionBarPopupWindow(scrimPopupContainerLayout, LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT) {
                 @Override
+                public boolean isShowing() {
+                    return super.isShowing() || raisedMessage != null && raisedMessage.container == scrimPopupContainerLayout;
+                }
+
+                @Override
                 public void dismiss() {
+                    if (useRaisedMenu) {
+                        dismiss(false);
+                        return;
+                    }
                     super.dismiss();
                     if (scrimPopupWindow != this) {
                         return;
@@ -35566,12 +35737,38 @@ public class ChatActivity extends BaseFragment implements
 
                 @Override
                 public void dismiss(boolean animated) {
+                    if (useRaisedMenu) {
+                        if (scrimPopupWindow == this) {
+                            if (finalReactionsLayout1 != null) {
+                                finalReactionsLayout1.dismissParent(false);
+                            }
+                            finishRaisedMessage();
+                        }
+                        return;
+                    }
                     super.dismiss(animated);
                     if (finalReactionsLayout1 != null) {
                         finalReactionsLayout1.dismissParent(animated);
                     }
                 }
             };
+            if (useRaisedMenu) {
+                if (glassMenu && scrimBlur3SourceBitmap.getBitmap() == null) {
+                    GlassMenuHelper.captureBlur(scrimBlur3SourceBitmap, scrimBlur3Factory, fragmentView);
+                }
+                ActionBarPopupWindow menuWindow = scrimPopupWindow;
+                Runnable showRaised = () -> {
+                    if (scrimPopupWindow == menuWindow && fragmentView != null) {
+                        showRaisedMessage((ChatMessageCell) v, scrimPopupContainerLayout, popupLayout, finalReactionsLayout1);
+                    }
+                };
+                if (waitForLangDetection.get()) {
+                    onLangDetectionDone.set(showRaised);
+                } else {
+                    showRaised.run();
+                }
+                return true;
+            }
             scrimPopupWindow.setPauseNotifications(true);
             scrimPopupWindow.setDismissAnimationDuration(220);
             scrimPopupWindow.setOutsideTouchable(true);
@@ -35588,7 +35785,14 @@ public class ChatActivity extends BaseFragment implements
             scrimPopupWindow.getContentView().setFocusableInTouchMode(true);
             popupLayout.setFitItems(true);
 
-            ItemOptions.setGapBackgroundColor(popupLayout, Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultSubmenuItem), 0.06f));
+            // exteradive: светлых полос-разделителей не существует ни на сильном
+            // блюре, ни в поднятом режиме — фон под ними идентичен панели.
+            if (!menuBlurStrong && !useRaisedMenu) {
+                ItemOptions.setGapBackgroundColor(popupLayout, Theme.multAlpha(getThemedColor(Theme.key_actionBarDefaultSubmenuItem), 0.06f));
+            } else {
+                ItemOptions.setGapBackgroundColor(popupLayout, 0);
+                GlassMenuHelper.applyToGaps(popupLayout, 0);
+            }
 
             int popupX = v.getLeft() + (int) x - scrimPopupContainerLayout.getMeasuredWidth() + backgroundPaddings.left - AndroidUtilities.dp(28);
             if (popupX < AndroidUtilities.dp(6)) {
@@ -35927,6 +36131,398 @@ public class ChatActivity extends BaseFragment implements
             }
         } else {
             greetingsViewContainer.resetPremiumLock();
+        }
+    }
+
+    private LinearLayout createRaisedSender(ChatMessageCell cell) {
+        if (!NaConfig.INSTANCE.getShowLiftSenderInfo().Bool()) {
+            return null;
+        }
+        MessageObject message = cell.getMessageObject();
+        TLObject sender = getMessagesController().getUserOrChat(message.getFromChatId());
+        if (sender == null && message.isOutOwner()) {
+            sender = getUserConfig().getCurrentUser();
+        }
+        if (sender == null) {
+            return null;
+        }
+        LinearLayout row = new LinearLayout(getContext());
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        boolean avatarOnly = cell.hasSenderNameInBubble();
+        // exteradive: плашка всегда в цвет ЧУЖОГО сообщения.
+        final int chipTint = getThemedColor(Theme.key_chat_inBubble);
+        // exteradive: плашка автора приподнятого сообщения — тот же сильный
+        // живой блюр, что и панели (х3). Блюр поднятых всегда включён.
+        row.setBackground(GlassMenuHelper.frostPanel(row, chipTint, 17));
+        row.setPadding(dp(4), dp(4), dp(avatarOnly ? 4 : 10), dp(4));
+        // exteradive: тап по плашке — профиль отправителя.
+        final TLObject senderFinal = sender;
+        row.setClickable(true);
+        row.setOnClickListener(v -> {
+            if (getParentActivity() == null) {
+                return;
+            }
+            Bundle args = new Bundle();
+            if (senderFinal instanceof TLRPC.User) {
+                args.putLong("user_id", ((TLRPC.User) senderFinal).id);
+            } else if (senderFinal instanceof TLRPC.Chat) {
+                args.putLong("chat_id", ((TLRPC.Chat) senderFinal).id);
+            } else {
+                return;
+            }
+            closeMenu(true);
+            ProfileActivity fragment = new ProfileActivity(args);
+            fragment.setPlayProfileAnimation(0);
+            presentFragment(fragment);
+        });
+        BackupImageView avatar = new BackupImageView(getContext());
+        avatar.setRoundRadius(dp(13));
+        AvatarDrawable placeholder = new AvatarDrawable();
+        placeholder.setInfo(sender);
+        avatar.setForUserOrChat(sender, placeholder);
+        row.addView(avatar, LayoutHelper.createLinear(26, 26));
+        if (!avatarOnly) {
+            TextView name = new TextView(getContext());
+            // exteradive: getShortName отдаёт только имя; нужен полный ник
+            // (имя + фамилия), как в шапке чата.
+            name.setText(DialogObject.getName(sender));
+            // exteradive: ник не обрезаем — длиный переносится на вторую строку,
+            // плашка подстраивается по высоте (senderSpace() берёт measuredHeight).
+            name.setMaxLines(2);
+            name.setEllipsize(null);
+            name.setHorizontallyScrolling(false);
+            name.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            name.setTypeface(AndroidUtilities.bold());
+            ThemeBind.textColor(name, Theme.key_actionBarDefaultSubmenuItem, getResourceProvider());
+            row.addView(name, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 6, 0, 0, 0));
+        }
+        return row;
+    }
+
+    private void showRaisedMessage(ChatMessageCell cell, ChatScrimPopupContainerLayout container,
+                                   ActionBarPopupWindow.ActionBarPopupWindowLayout popup, ReactionsContainerLayout reactions) {
+        RaisedMessage raised = new RaisedMessage(cell, container, popup);
+        if (raised.message == null || !raised.updateBubble() || contentView.getWidth() == 0 || contentView.getHeight() == 0) {
+            closeMenu();
+            return;
+        }
+        // exteradive: блюр приподнятых сообщений — всегда включён, тумблер убран.
+        // exteradive: блюр приподнятых всегда включён, но только как снимок-фон
+        // под баблом. «Мороз обоев» внутри самого поднятого бабла (oeStrongGlass)
+        // отключён навсегда: на устройстве он рисовался пустотой, и поднятый
+        // бабл исчезал целиком (панели висели над невидимым сообщением).
+        scrimStrongBackdropWanted = true;
+        cell.oeStrongGlass = false;
+        if (NaConfig.INSTANCE.getHideMessageMenu().Bool()) {
+            popup.setVisibility(View.GONE);
+        }
+        popup.setFitItems(true);
+        int width = contentView.getWidth();
+        int height = contentView.getHeight();
+        int top = Math.max(0, Math.round(chatListView.getY() + chatListViewPaddingTop - chatListViewPaddingVisibleOffset));
+        int bottom = Math.min(height, getScrimPopupVisibleHeight(height));
+        if (raised.sender != null) {
+            // exteradive: почти вся ширина экрана, чтобы длинный ник влезал целиком.
+            raised.sender.measure(View.MeasureSpec.makeMeasureSpec(Math.max(0, width - dp(20)), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        }
+        raised.panels = RaisedMessagePanels.attach(container, false);
+        raised.panels.setViewport(top, bottom);
+        // exteradive: плашка автора должна получать касания (клик в профиль).
+        raised.panels.setSenderView(raised.sender);
+        raisedMessage = raised;
+        chatListView.stopScroll();
+        chatListView.cancelClickRunnables(true);
+        forceScrollToTop = false;
+        chatLayoutManager.setCanScrollVertically(true);
+        raised.previousAccessibility = chatListView.getImportantForAccessibility();
+        updateMessageListAccessibilityVisibility();
+        dimBehindView(cell, scrimStrongBackdropWanted, true);
+        contentView.addView(container, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        if (raised.sender != null) {
+            contentView.addView(raised.sender, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        }
+        raised.updatePlacement();
+        container.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+        float shift = raised.panels.getInitialShiftY();
+        // стартовый кад = на dp(30) ниже финала (совпадает с первым кадром
+        // анимации), чтобы бабл не мелькнул в конечной точке до начала анимации
+        raised.lift = shift - dp(30);
+        raised.updatePlacement();
+        // exteradive: анимация поднятия — бабл с панелями въезжает снизу вверх
+        // в целевую позицию (анимация идёт всегда, даже когда композиция
+        // помещается без сдвига), по завершении позиция бесшовно фиксируется
+        // скроллом списка.
+        container.setAlpha(0f);
+        if (raised.sender != null) {
+            raised.sender.setAlpha(0f);
+        }
+        startRaisedAnimation(raised, shift);
+        if (reactions != null && reactions.getParent() == container) {
+            reactions.startEnterAnimation(false);
+        }
+        hideHints(false);
+        if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
+            chatActivityEnterView.getEditField().setAllowDrawCursor(false);
+        }
+    }
+
+    /**
+     * exteradive: анимация поднятия сообщения. Всё действо (бабл, панель
+     * реакций, меню, плашка автора) въезжает снизу: стартовая позиция — на
+     * dp(30) ниже финальной, дальше плавный подъём в целевой lift вместе с
+     * проявлением панелей. Анимация идёт даже когда композиция помещается
+     * сразу (targetShift≈0) — сообщение всё равно заметно приподнимается.
+     * В конце lift бесшовно переводится в скролл списка: экранная позиция
+     * бабла не меняется, меняется только якорь в списке.
+     */
+    private void startRaisedAnimation(RaisedMessage raised, float targetShift) {
+        final float hop = dp(36);
+        final float[] progress = {0f};
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        // мягкий «долгий хвост» — подъём без резкой остановки
+        animator.setInterpolator(new CubicBezierInterpolator(0.22f, 0.08f, 0.16f, 1f));
+        animator.setDuration(420);
+        animator.addUpdateListener(animation -> {
+            if (raisedMessage != raised) {
+                animation.cancel();
+                return;
+            }
+            progress[0] = (float) animation.getAnimatedValue();
+            // подъём в целевую позицию снизу: старт = targetShift - hop
+            raised.lift = targetShift - (1f - progress[0]) * hop;
+            float alpha = Math.min(1f, progress[0] * 1.35f);
+            raised.container.setAlpha(alpha);
+            if (raised.sender != null) {
+                raised.sender.setAlpha(alpha);
+            }
+            if (fragmentView != null) {
+                fragmentView.invalidate();
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (raisedMessage != raised) {
+                    return;
+                }
+                raised.lift = targetShift;
+                raised.container.setAlpha(1f);
+                if (raised.sender != null) {
+                    raised.sender.setAlpha(1f);
+                }
+                if (Math.abs(raised.lift) >= 1f && !chatListView.isComputingLayout()) {
+                    float originalTop = raised.bubble.top;
+                    chatListView.scrollBy(0, -Math.round(raised.lift));
+                    if (raised.updateBubble()) {
+                        raised.lift -= raised.bubble.top - originalTop;
+                    }
+                    raised.updatePlacement();
+                }
+                if (fragmentView != null) {
+                    fragmentView.invalidate();
+                }
+            }
+        });
+        animator.start();
+        raised.liftAnimator = animator;
+    }
+
+    private void finishRaisedMessage() {
+        RaisedMessage raised = raisedMessage;
+        if (raised != null) {
+            raised.cancelListGesture();
+            if (raised.liftAnimator != null) {
+                raised.liftAnimator.cancel();
+                raised.liftAnimator = null;
+            }
+        }
+        scrimStrongBackdropWanted = false;
+        raisedMessage = null;
+        scrimPopupWindow = null;
+        menuDeleteItem = null;
+        scrimPopupWindowItems = null;
+        boolean hideDim = scrimPopupWindowHideDimOnDismiss;
+        scrimPopupWindowHideDimOnDismiss = true;
+        if (raised == null) {
+            return;
+        }
+        // exteradive: у снятого с приподнятия бабла стекло снова обычное.
+        if (raised.cell.oeStrongGlass) {
+            raised.cell.oeStrongGlass = false;
+            raised.cell.invalidate();
+        }
+        if (Bulletin.getVisibleBulletin() == messageSeenPrivacyBulletin && messageSeenPrivacyBulletin != null) {
+            messageSeenPrivacyBulletin.hide();
+            messageSeenPrivacyBulletin = null;
+        }
+        contentView.removeView(raised.container);
+        if (raised.sender != null) {
+            contentView.removeView(raised.sender);
+        }
+        chatListView.setImportantForAccessibility(raised.previousAccessibility);
+        if (scrimView == raised.cell) {
+            raised.cell.setInvalidatesParent(false);
+            setScrimView(null);
+        }
+        if (hideDim) {
+            dimBehindView(false);
+        }
+        if (chatActivityEnterView != null && chatActivityEnterView.getEditField() != null) {
+            chatActivityEnterView.getEditField().setAllowDrawCursor(true);
+        }
+        contentView.invalidate();
+        chatListView.invalidate();
+    }
+
+    private final class RaisedMessage {
+        final ChatMessageCell cell;
+        final ChatScrimPopupContainerLayout container;
+        final ActionBarPopupWindow.ActionBarPopupWindowLayout popup;
+        final LinearLayout sender;
+        RaisedMessagePanels panels;
+        int previousAccessibility;
+        boolean closing;
+        final MessageObject message;
+        final RectF bubble = new RectF();
+        final RectF visibleBubble = new RectF();
+        final int touchSlop;
+        boolean listGesture;
+        boolean panelGesture;
+        boolean moved;
+        boolean tapInsideBubble;
+        float downX;
+        float downY;
+        float lift;
+        ValueAnimator liftAnimator;
+
+        RaisedMessage(ChatMessageCell cell, ChatScrimPopupContainerLayout container,
+                      ActionBarPopupWindow.ActionBarPopupWindowLayout popup) {
+            this.cell = cell;
+            this.container = container;
+            this.popup = popup;
+            message = cell.getMessageObject();
+            sender = message == null ? null : createRaisedSender(cell);
+            touchSlop = ViewConfiguration.get(cell.getContext()).getScaledTouchSlop();
+        }
+
+        int senderSpace() {
+            return sender == null ? 0 : sender.getMeasuredHeight() + dp(6);
+        }
+
+        void updatePlacement() {
+            if (!updateBubble()) {
+                if (!closing) {
+                    closing = true;
+                    contentView.post(() -> {
+                        if (raisedMessage == this) {
+                            closeMenu();
+                        }
+                    });
+                }
+                return;
+            }
+            visibleBubble.set(bubble);
+            visibleBubble.offset(0, lift);
+            boolean outgoing = message.isOutOwner();
+            panels.updatePlacement(visibleBubble, senderSpace(), outgoing);
+            if (sender != null) {
+                int width = sender.getMeasuredWidth();
+                // exteradive: край плашки = ВИДИМЫЙ край тела бабла. MessageDrawable
+                // рисует тело с внутренним отступом от bounds фона: dp(2) для
+                // media-сообщений и dp(8) для текстовых — итого тело всегда на
+                // одной линии независимо от типа.
+                float inset = message.messageOwner != null && message.messageOwner.media != null ? dp(2) : dp(8);
+                float x = outgoing ? visibleBubble.right - inset - width : visibleBubble.left + inset;
+                float maxLeft = contentView.getWidth() - dp(8) - width;
+                sender.setX(Math.max(0f, Math.min(x, Math.max(0f, maxLeft))));
+                sender.setY(visibleBubble.top - senderSpace());
+            }
+        }
+
+        boolean dispatchToPanels(MotionEvent event) {
+            float x = event.getX() - container.getX();
+            float y = event.getY() - container.getY();
+            boolean onSender = panels != null && panels.containsSender(x, y);
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && !panels.contains(x, y)) {
+                return false;
+            }
+            MotionEvent local = MotionEvent.obtain(event);
+            local.offsetLocation(-container.getX(), -container.getY());
+            if (onSender && sender != null) {
+                // exteradive: плашка автора — отдельный вид на экране чата.
+                local.offsetLocation(-sender.getX(), -sender.getY());
+                sender.dispatchTouchEvent(local);
+            } else {
+                container.dispatchTouchEvent(local);
+            }
+            local.recycle();
+            return true;
+        }
+
+        boolean updateBubble() {
+            if (cell.getParent() != chatListView || cell.getMessageObject() != message) {
+                return false;
+            }
+            bubble.setEmpty();
+            MessageObject.GroupedMessages group = cell.getCurrentMessagesGroup();
+            for (int i = 0; i < chatListView.getChildCount(); i++) {
+                View child = chatListView.getChildAt(i);
+                if (!(child instanceof ChatMessageCell)) {
+                    continue;
+                }
+                ChatMessageCell peer = (ChatMessageCell) child;
+                if (peer != cell && (group == null || peer.getCurrentMessagesGroup() != group)) {
+                    continue;
+                }
+                float x = chatListView.getX() + peer.getX();
+                float y = chatListView.getY() + peer.getY() + peer.getPaddingTop();
+                bubble.union(x + peer.getBackgroundDrawableLeft() + peer.getDeltaLeft(),
+                    y + peer.getBackgroundDrawableTop() + peer.getDeltaTop(),
+                    x + peer.getBackgroundDrawableRight() + peer.getDeltaRight(),
+                    y + peer.getBackgroundDrawableBottom() + peer.getDeltaBottom());
+            }
+            return !bubble.isEmpty();
+        }
+
+        void cancelListGesture() {
+            if (!listGesture) {
+                return;
+            }
+            listGesture = false;
+            long now = SystemClock.uptimeMillis();
+            MotionEvent cancel = MotionEvent.obtain(now, now, MotionEvent.ACTION_CANCEL, 0, 0, 0);
+            chatListView.onTouchEvent(cancel);
+            cancel.recycle();
+        }
+
+        void dispatchOutsidePanels(MotionEvent event) {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN) {
+                downX = event.getX();
+                downY = event.getY();
+                tapInsideBubble = visibleBubble.contains(downX, downY);
+                moved = chatListView.getScrollState() == RecyclerView.SCROLL_STATE_SETTLING;
+                listGesture = true;
+            } else if (action == MotionEvent.ACTION_POINTER_DOWN || Math.abs(event.getX() - downX) > touchSlop || Math.abs(event.getY() - downY) > touchSlop) {
+                moved = true;
+            }
+            if (!listGesture) {
+                return;
+            }
+            // Let RecyclerView own slop, nested scrolling, velocity and fling without dispatching to any cell.
+            MotionEvent local = MotionEvent.obtain(event);
+            local.offsetLocation(-chatListView.getX(), -chatListView.getY());
+            chatListView.onTouchEvent(local);
+            local.recycle();
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                listGesture = false;
+                if (raisedMessage == this && action == MotionEvent.ACTION_UP && !moved && !tapInsideBubble) {
+                    closeMenu();
+                }
+            }
         }
     }
 
@@ -38225,7 +38821,14 @@ public class ChatActivity extends BaseFragment implements
             if (invoked) showMessagesSearchListView(false);
             return false;
         } else if (scrimPopupWindow != null) {
-            if (invoked) closeMenu();
+            if (invoked) {
+                PopupSwipeBackLayout swipeBack = raisedMessage == null ? null : raisedMessage.popup.getSwipeBack();
+                if (swipeBack != null && swipeBack.isForegroundOpen()) {
+                    swipeBack.closeForeground();
+                } else {
+                    closeMenu();
+                }
+            }
             return false;
         } else if (checkRecordLocked(invoked, false)) {
             return false;
@@ -41053,7 +41656,7 @@ public class ChatActivity extends BaseFragment implements
         if (animatorSearchResultAsListVisibility.getValue()) {
             return false;
         }
-        return swipeBackEnabled && !scrimOptionsShown && chatActivityEnterView.swipeToBackEnabled() && pullingDownOffset == 0
+        return swipeBackEnabled && raisedMessage == null && !scrimOptionsShown && chatActivityEnterView.swipeToBackEnabled() && pullingDownOffset == 0
             && (quickShareSelectorOverlay == null || !quickShareSelectorOverlay.isActive());
     }
 
@@ -41068,7 +41671,7 @@ public class ChatActivity extends BaseFragment implements
         if (animatorSearchResultAsListVisibility.getValue()) {
             return false;
         }
-        return swipeBackEnabled && !scrimOptionsShown && (forwardingPreviewView == null || !forwardingPreviewView.isShowing())
+        return swipeBackEnabled && raisedMessage == null && !scrimOptionsShown && (forwardingPreviewView == null || !forwardingPreviewView.isShowing())
             && (quickShareSelectorOverlay == null || !quickShareSelectorOverlay.isActive());
     }
 

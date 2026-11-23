@@ -3,12 +3,12 @@ package org.telegram.ui.Components;
 import static org.telegram.messenger.AndroidUtilities.dp;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.Canvas;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 
 public class ChatScrimPopupContainerLayout extends LinearLayout {
@@ -22,20 +22,75 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     private float bottomViewYOffset;
     private float expandSize;
     private float bottomViewReactionsOffset;
+    private RaisedMessagePanels raisedPanels;
 
     public ChatScrimPopupContainerLayout(Context context) {
         super(context);
         setOrientation(LinearLayout.VERTICAL);
     }
 
+    RaisedMessagePanels setRaised(boolean compact) {
+        if (raisedPanels == null) {
+            raisedPanels = new RaisedMessagePanels(this, reactionsLayout, popupWindowLayout, bottomView, compact);
+            setOnTouchListener(null);
+            setClickable(false);
+            setLongClickable(false);
+            setClipChildren(true);
+            setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            requestLayout();
+        }
+        return raisedPanels;
+    }
+
+    public boolean isRaised() {
+        return raisedPanels != null;
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (raisedPanels != null && event.getActionMasked() == MotionEvent.ACTION_DOWN
+                && !raisedPanels.contains(event.getX(), event.getY())) {
+            return false;
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return raisedPanels != null || super.onTouchEvent(event);
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        if (raisedPanels == null) {
+            super.dispatchDraw(canvas);
+            return;
+        }
+        int save = canvas.save();
+        raisedPanels.clipToViewport(canvas);
+        super.dispatchDraw(canvas);
+        canvas.restoreToCount(save);
+    }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (raisedPanels != null) {
+            raisedPanels.layout();
+            return;
+        }
         super.onLayout(changed, l, t, r, b);
         updateBottomViewPosition();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (raisedPanels != null) {
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            int height = MeasureSpec.getSize(heightMeasureSpec);
+            setMeasuredDimension(width, height);
+            raisedPanels.measure(width, height);
+            return;
+        }
         if (maxHeight != 0) {
             heightMeasureSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST);
         }
@@ -127,6 +182,10 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     }
 
     private void updatePopupTranslation() {
+        if (raisedPanels != null) {
+            raisedPanels.position();
+            return;
+        }
         float x = (1f - progressToSwipeBack) * popupLayoutLeftOffset;
         popupWindowLayout.setTranslationX(x);
         if (bottomView != null) {
@@ -148,7 +207,9 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     public void setPopupWindowLayout(ActionBarPopupWindow.ActionBarPopupWindowLayout popupWindowLayout) {
         this.popupWindowLayout = popupWindowLayout;
         popupWindowLayout.setOnSizeChangedListener(() -> {
-            if (bottomView != null) {
+            if (raisedPanels != null) {
+                raisedPanels.position();
+            } else if (bottomView != null) {
                 bottomViewYOffset = popupWindowLayout.getVisibleHeight() - popupWindowLayout.getMeasuredHeight();
                 updateBottomViewPosition();
             }
@@ -165,7 +226,7 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     }
 
     private void updateBottomViewPosition() {
-        if (bottomView != null) {
+        if (raisedPanels == null && bottomView != null) {
             bottomView.setTranslationY(Math.min(bottomViewYOffset, -hiddenSwipeBackHeight()) + expandSize + bottomViewReactionsOffset);
         }
     }
@@ -183,6 +244,9 @@ public class ChatScrimPopupContainerLayout extends LinearLayout {
     }
 
     public void setExpandSize(float expandSize) {
+        if (raisedPanels != null || popupWindowLayout == null) {
+            return;
+        }
         popupWindowLayout.setTranslationY(expandSize);
         this.expandSize = expandSize;
         updateBottomViewPosition();

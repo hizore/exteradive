@@ -116,6 +116,11 @@ public class MessageDrawable extends Drawable {
 
         /** Точный прямоугольник обоев на экране (те же bounds, что при их рисовании), или null для fallback на весь экран. */
         Rect oeGetWallpaperScreenBounds();
+
+        /** Приподнятое сообщение: мороз берётся втрое сильнее обычного «блюра сообщений». */
+        default boolean oeIsStrongGlass() {
+            return false;
+        }
     }
 
     public oeGlassBitmapSource oeGlassSource;
@@ -748,6 +753,11 @@ public class MessageDrawable extends Drawable {
         // Честная настройка блюра: заметность = кривая factor^0.65 * сила блюра.
         // 0% силы — стекла нет вовсе, 100% — максимум мороза.
         float strength01 = AndroidUtilities.lerp(0.15f, 1f, Math.max(0f, Math.min(100, SharedConfig.bubbleBlurStrength)) / 100f);
+        if (oeGlassSource != null && oeGlassSource.oeIsStrongGlass()) {
+            // exteradive: приподнятое сообщение — стекло втрое плотнее вместе с втрое
+            // большим радиусом самого битмапа (oeGetStrongBlurredWallpaper).
+            strength01 = Math.min(1f, strength01 * 3f);
+        }
         oeGlassPaint.setAlpha((int) (Math.min(255, alpha) * (float) Math.pow(oeOpacityFactor, 0.65f) * strength01));
         return oeGlassPaint;
     }

@@ -452,6 +452,13 @@ public class ActionBarPopupWindow extends PopupWindow {
 
         @Override
         protected void dispatchDraw(Canvas canvas) {
+            // exteradive: явная отрисовка «мороза» под содержимым меню: view
+            // background у попапа на устройстве не показывался, и меню
+            // выглядело полностью прозрачным.
+            if (frostBackground != null) {
+                frostBackground.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
+                frostBackground.draw(canvas);
+            }
             if (swipeBackGravityRight) {
                 setTranslationX(getMeasuredWidth() * (1f - backScaleX));
                 if (topView != null) {
@@ -466,7 +473,7 @@ public class ActionBarPopupWindow extends PopupWindow {
             if (swipeBackGravityBottom) {
                 setTranslationY(getMeasuredHeight() * (1f - backScaleY));
             }
-            if (backgroundDrawable != null) {
+            if (backgroundDrawable != null && !hideOwnBackgroundDrawable) {
                 int start = gapStartY - (scrollView == null ? 0 : scrollView.getScrollY());
                 int end = gapEndY - (scrollView == null ? 0 : scrollView.getScrollY());
                 boolean hasGap = false;
@@ -674,6 +681,29 @@ public class ActionBarPopupWindow extends PopupWindow {
 
         public void setParentWindow(ActionBarPopupWindow popupWindow) {
             window = popupWindow;
+        }
+
+        /**
+         * exteradive: когда фон панели рисует сам View (мороз из снимка экрана),
+         * штатный девятипатч попапа нужно отключить: он непрозрачен, перекрывает
+         * блюр, а в зоне разделителя не рисуется — из-за чего остаётся светлая
+         * полоса.
+         */
+        private boolean hideOwnBackgroundDrawable;
+
+        /** exteradive: явная морозная подложка под содержимым меню. */
+        private Drawable frostBackground;
+
+        public void setFrostBackground(Drawable drawable) {
+            frostBackground = drawable;
+            invalidate();
+        }
+
+        public void setHideOwnBackgroundDrawable(boolean hide) {
+            if (hideOwnBackgroundDrawable != hide) {
+                hideOwnBackgroundDrawable = hide;
+                invalidate();
+            }
         }
 
         public void setReactionsTransitionProgress(float transitionEnterProgress) {

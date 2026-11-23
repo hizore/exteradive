@@ -529,6 +529,9 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         if (backgroundFactory != null) {
             reactionsWindow.setBackgroundFactory(backgroundFactory, backgroundColorProvider);
         }
+        if (frostBackground != null) {
+            reactionsWindow.setFrostBackground(frostBackground);
+        }
         reactionsWindow.setLongPressEnabled(delegate == null || delegate.allowLongPress());
         invalidateLoopViews();
         reactionsWindow.onDismissListener(() -> {
@@ -751,6 +754,9 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
             }
             if (type == TYPE_STORY || delegate.drawBackground()) {
                 delegate.drawRoundRect(canvas, rect, radius, getX(), getY(), 255, false);
+            } else if (frostBackground != null) {
+                // exteradive: мороз точно по форме пилюли.
+                drawFrost(frostBackground, canvas, rect, radius, 255);
             } else if (glassBackground != null) {
                 // openExtera: стеклянная плашка вместо заливки bgPaint.
                 // Ветка восстановлена по поведению:
@@ -758,9 +764,11 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
                 GlassMenuHelper.draw(glassBackground, canvas, rect, radius, 255);
             } else {
                 if (blurredBackgroundDrawable != null) {
+                    // exteradive: сильная подложка повторяет форму «пилюли» точно:
+                    // одинаковый радиус и без высупа по краям (иначе из-под
+                    // скругления вылезал прямоугольник).
                     rect.round(AndroidUtilities.rectTmp2);
-                    AndroidUtilities.rectTmp2.inset(-dp(8), -dp(8));
-
+                    blurredBackgroundDrawable.setRadius(radius);
                     blurredBackgroundDrawable.setBounds(AndroidUtilities.rectTmp2);
                     blurredBackgroundDrawable.setAlpha(bgPaint.getAlpha());
                     blurredBackgroundDrawable.draw(canvas);
@@ -933,6 +941,11 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         if (type == TYPE_STORY) {
             return;
         }
+        // exteradive: в поднятом режиме эти два «кружка» только вылезали из-под
+        // скругления пилюли реакций — не рисуем их совсем.
+        if (frostBackground != null) {
+            return;
+        }
         canvas.save();
         if (isTop) {
             canvas.clipRect(0, 0, getMeasuredWidth(), AndroidUtilities.lerp(rect.top, getMeasuredHeight(), CubicBezierInterpolator.DEFAULT.getInterpolation(flipVerticalProgress)) - (int) Math.ceil(rect.height() / 2f * (1f - transitionProgress)) + 1);
@@ -950,6 +963,9 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         if (delegate.drawBackground()) {
             rectF.set(cx - br, cy - br, cx + br, cy + br);
             delegate.drawRoundRect(canvas, rectF, br, getX(), getY(), alpha, false);
+        } else if (frostBackground != null) {
+            rectF.set(cx - br, cy - br, cx + br, cy + br);
+            drawFrost(frostBackground, canvas, rectF, br, alpha);
         } else if (glassBackground != null) {
             rectF.set(cx - br, cy - br, cx + br, cy + br);
             GlassMenuHelper.draw(glassBackground, canvas, rectF, br, alpha);
@@ -977,6 +993,9 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         if (delegate.drawBackground()) {
             rectF.set(cx - sr, cy - sr, cx + sr, cy + sr);
             delegate.drawRoundRect(canvas, rectF, sr, getX(), getY(), alpha, false);
+        } else if (frostBackground != null) {
+            rectF.set(cx - sr, cy - sr, cx + sr, cy + sr);
+            drawFrost(frostBackground, canvas, rectF, sr, alpha);
         } else if (glassBackground != null) {
             rectF.set(cx - sr, cy - sr, cx + sr, cy + sr);
             GlassMenuHelper.draw(glassBackground, canvas, rectF, sr, alpha);
@@ -1811,6 +1830,36 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
         glassBackgroundColorProvider = provider;
         glassBackground = factory.create(this, true).setColorProvider(provider);
         invalidate();
+    }
+
+    /**
+     * exteradive: мороз из снимка экрана — рисуется точно по форме «пилюли»,
+     * поэтому из-под скругления ничего не выступает. Передается и в
+     * развёрнутое окно реакций.
+     */
+    private android.graphics.drawable.Drawable frostBackground;
+
+    public void setFrostBackground(android.graphics.drawable.Drawable frost) {
+        frostBackground = frost;
+        invalidate();
+    }
+
+    public android.graphics.drawable.Drawable getFrostBackground() {
+        return frostBackground;
+    }
+
+    /** Рисует мороз в произвольной области; радиус берется формы панели. */
+    public static void drawFrost(android.graphics.drawable.Drawable frost, Canvas canvas, RectF rect, float radius, int alpha) {
+        if (frost == null) {
+            return;
+        }
+        if (frost instanceof app.exteraless.appearance.SnapshotFrostDrawable) {
+            ((app.exteraless.appearance.SnapshotFrostDrawable) frost).setCornerRadius(radius);
+        }
+        rect.round(AndroidUtilities.rectTmp2);
+        frost.setBounds(AndroidUtilities.rectTmp2);
+        frost.setAlpha(alpha);
+        frost.draw(canvas);
     }
 
     /** Фабрика и провайдер нужны, чтобы применить то же стекло к CustomEmojiReactionsWindow. */

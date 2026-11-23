@@ -6,6 +6,8 @@ import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.core.graphics.ColorUtils;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBarPopupWindow;
@@ -53,6 +55,61 @@ public abstract class GlassMenuHelper {
             .setStrokeWidth(0.0f, 0.0f);
     }
 
+    /**
+     * exteradive: сильные блюры (панели приподнятого сообщения). Тонировка заметно
+     * прозрачнее обычного стекла — иначе размытие под ней не видно совсем.
+     */
+    private static BlurredBackgroundProviderBuilder strongGlass(Theme.ResourcesProvider resourcesProvider) {
+        return strongGlass(resourcesProvider, Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
+    }
+
+    /** Тонировка панелей в цвет сообщения (чужое — входящий бабл). */
+    private static BlurredBackgroundProviderBuilder strongGlass(Theme.ResourcesProvider resourcesProvider, int baseColor) {
+        final boolean dark = resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
+        return new BlurredBackgroundProviderBuilder(resourcesProvider)
+            .setBackgroundColor((r, isDark) -> Theme.multAlpha(baseColor, isDark ? 0.54f : 0.48f))
+            .setStrokeColorTop(0, 0)
+            .setStrokeColorBottom(0, 0)
+            .setStrokeColorFull(0, 0)
+            .setStrokeWidth(0.0f, 0.0f);
+    }
+
+    /**
+     * exteradive: единая морозная панель — размытый снимок экрана, тонировка в
+     * цвет сообщения, hairline-кромка сверху для объёма и одинаковый радиус.
+     * Все панели поднятого сообщения строятся только через неё, поэтому
+     * выглядят согласованно и не зависят от системного тумблера блюра.
+     * <p>
+     * Цвет бабла в темах сам по себе полупрозрачный, поэтому он сначала
+     * «раскладывается» поверх сплошного фона меню: иначе панель выходила
+     * насквозь прозрачной, а не окрашенной.
+     */
+    public static SnapshotFrostDrawable frostPanel(View host, int baseColor, float radiusDp) {
+        return frostPanel(host, baseColor, radiusDp, 1f);
+    }
+
+    public static SnapshotFrostDrawable frostPanel(View host, int baseColor, float radiusDp, float opacity) {
+        final boolean dark = Theme.isCurrentThemeDark();
+        final int flat = ColorUtils.compositeColors(baseColor,
+            Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground));
+        float factor = Math.max(0f, Math.min(1f, opacity));
+        final int tint = Theme.multAlpha(flat, (dark ? 0.9f : 0.87f) * factor);
+        return new SnapshotFrostDrawable(host)
+            .setCornerRadius(AndroidUtilities.dp(radiusDp))
+            .setTintColor(tint)
+            .setFallbackColor(flat)
+            .setStroke(dark ? 0x1FFFFFFF : 0x14000000, AndroidUtilities.dpf2(0.8f));
+    }
+
+    /** Тот же мороз для «пилюли» реакций: радиус задаётся по форме при отрисовке. */
+    public static SnapshotFrostDrawable frostPill(View host, int baseColor) {
+        return frostPill(host, baseColor, 1f);
+    }
+
+    public static SnapshotFrostDrawable frostPill(View host, int baseColor, float opacity) {
+        return frostPanel(host, baseColor, 0, opacity);
+    }
+
     public static BlurredBackgroundProvider scrimMenuBackground(Theme.ResourcesProvider resourcesProvider) {
         return scrimMenuGlass(resourcesProvider)
             .setShadowColor(0x26000000, 0)
@@ -64,6 +121,64 @@ public abstract class GlassMenuHelper {
         return scrimMenuGlass(resourcesProvider)
             .setShadowColor(0, 0)
             .build();
+    }
+
+    public static BlurredBackgroundProvider strongMenuBackground(Theme.ResourcesProvider resourcesProvider) {
+        return strongGlass(resourcesProvider)
+            .setShadowColor(0x26000000, 0)
+            .setShadowLayer(AndroidUtilities.dpf2(4.0f), 0.0f, 0.0f)
+            .build();
+    }
+
+    public static BlurredBackgroundProvider strongMenuBackground(Theme.ResourcesProvider resourcesProvider, int baseColor) {
+        return strongGlass(resourcesProvider, baseColor)
+            .setShadowColor(0x26000000, 0)
+            .setShadowLayer(AndroidUtilities.dpf2(4.0f), 0.0f, 0.0f)
+            .build();
+    }
+
+    public static BlurredBackgroundProvider strongMenuBackgroundFill(Theme.ResourcesProvider resourcesProvider) {
+        return strongGlass(resourcesProvider)
+            .setShadowColor(0, 0)
+            .build();
+    }
+
+    public static BlurredBackgroundProvider strongMenuBackgroundFill(Theme.ResourcesProvider resourcesProvider, int baseColor) {
+        return strongGlass(resourcesProvider, baseColor)
+            .setShadowColor(0, 0)
+            .build();
+    }
+
+    public static BlurredBackgroundDrawable createStrongPanelBackground(BlurredBackgroundDrawableViewFactory factory,
+                                                                         Theme.ResourcesProvider resourcesProvider,
+                                                                         View view) {
+        return createStrongPanelBackground(factory, resourcesProvider, view,
+            Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
+    }
+
+    public static BlurredBackgroundDrawable createStrongPanelBackground(BlurredBackgroundDrawableViewFactory factory,
+                                                                         Theme.ResourcesProvider resourcesProvider,
+                                                                         View view,
+                                                                         int baseColor) {
+        return factory.create(view, true)
+            .setColorProvider(strongMenuBackground(resourcesProvider, baseColor))
+            .setRadius(AndroidUtilities.dp(12.0f))
+            .setPadding(AndroidUtilities.dp(8.0f))
+            .setHasPadding(true);
+    }
+
+    public static BlurredBackgroundDrawable createStrongFill(BlurredBackgroundDrawableViewFactory factory,
+                                                             Theme.ResourcesProvider resourcesProvider,
+                                                             View view) {
+        return createStrongFill(factory, resourcesProvider, view,
+            Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground, resourcesProvider));
+    }
+
+    public static BlurredBackgroundDrawable createStrongFill(BlurredBackgroundDrawableViewFactory factory,
+                                                             Theme.ResourcesProvider resourcesProvider,
+                                                             View view,
+                                                             int baseColor) {
+        return factory.create(view, true).setColorProvider(strongMenuBackgroundFill(resourcesProvider, baseColor));
     }
 
     public static BlurredBackgroundDrawable createPanelBackground(BlurredBackgroundDrawableViewFactory factory,

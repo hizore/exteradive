@@ -934,6 +934,8 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
     // динамически проглядывали сквозь прозрачность.
     private Bitmap oeCachedBlurredWallpaper;
     private Bitmap oeCachedBlurSource;
+    private Bitmap oeCachedStrongBlurredWallpaper;
+    private Bitmap oeStrongCachedBlurSource;
 
     public Bitmap oeGetBlurredWallpaper() {
         if (!SharedConfig.bubbleBlur) {
@@ -941,6 +943,19 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             oeCachedBlurSource = null;
             return null;
         }
+        return oeBuildWallpaperFrost(1);
+    }
+
+    /**
+     * exteradive: мороз для приподнятого сообщения и панелей над чатом —
+     * те же обои, но радиус второй проходки втрое больше «блюра сообщений».
+     * Не зависит от тумблера Blur Messages: у панелей свои настройки.
+     */
+    public Bitmap oeGetStrongBlurredWallpaper() {
+        return oeBuildWallpaperFrost(3);
+    }
+
+    private Bitmap oeResolveWallpaperSource() {
         Drawable drawable = backgroundDrawable;
         if (drawable == null) {
             drawable = oldBackgroundDrawable;
@@ -951,18 +966,24 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
         if (drawable instanceof ChatBackgroundDrawable) {
             drawable = ((ChatBackgroundDrawable) drawable).getDrawable(false);
         }
-        Bitmap source = null;
         if (drawable instanceof BitmapDrawable) {
-            source = ((BitmapDrawable) drawable).getBitmap();
+            return ((BitmapDrawable) drawable).getBitmap();
         } else if (drawable instanceof MotionBackgroundDrawable) {
-            source = ((MotionBackgroundDrawable) drawable).getBitmap();
+            return ((MotionBackgroundDrawable) drawable).getBitmap();
         }
+        // Сплошной цвет без файла обоев — блюр невозможен и не нужен.
+        return null;
+    }
+
+    private Bitmap oeBuildWallpaperFrost(int strength) {
+        Bitmap source = oeResolveWallpaperSource();
         if (source == null || source.isRecycled()) {
-            // Сплошной цвет без файла обоев — блюр невозможен и не нужен.
             return null;
         }
-        if (source == oeCachedBlurSource && oeCachedBlurredWallpaper != null && !oeCachedBlurredWallpaper.isRecycled()) {
-            return oeCachedBlurredWallpaper;
+        Bitmap cached = strength == 1 ? oeCachedBlurredWallpaper : oeCachedStrongBlurredWallpaper;
+        Bitmap cachedSource = strength == 1 ? oeCachedBlurSource : oeStrongCachedBlurSource;
+        if (source == cachedSource && cached != null && !cached.isRecycled()) {
+            return cached;
         }
         // Блюрим до ~1/3 разрешения: детали обоев остаются различимы сквозь бабл.
         try {
@@ -972,12 +993,18 @@ public class SizeNotifierFrameLayout extends FrameLayout implements Theme.Colora
             if (blurred != null && !blurred.isRecycled() && blurred != source) {
                 // Вторая проходка с явным сильным радиусом: первое размытие (radius
                 // зажат снизу 10px) давало едва заметный мороз, читавшийся только
-                // при полной непрозрачности стекла.
-                int strongRadius = Math.max(10, Math.max(blurred.getWidth(), blurred.getHeight()) / 12);
+                // при полной непрозрачности стекла. Сила умножается на коэффициент:
+                // база — «блюр сообщений», х3 — приподнятое сообщение и панели.
+                int strongRadius = strength * Math.max(10, Math.max(blurred.getWidth(), blurred.getHeight()) / 12);
                 Utilities.stackBlurBitmap(blurred, strongRadius);
                 blurred.setHasAlpha(false);
-                oeCachedBlurSource = source;
-                oeCachedBlurredWallpaper = blurred;
+                if (strength == 1) {
+                    oeCachedBlurSource = source;
+                    oeCachedBlurredWallpaper = blurred;
+                } else {
+                    oeStrongCachedBlurSource = source;
+                    oeCachedStrongBlurredWallpaper = blurred;
+                }
                 return blurred;
             }
         } catch (Throwable t) {
