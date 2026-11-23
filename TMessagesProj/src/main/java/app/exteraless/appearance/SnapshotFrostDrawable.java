@@ -75,11 +75,9 @@ public final class SnapshotFrostDrawable extends Drawable {
             }
             root.draw(canvas);
             float strength = Math.max(0f, Math.min(1f, blurStrength));
-            // exteradive: кривая силы блюра по всей шкале: 0% — почти резко,
-            // 100% — радиус в половину короткой стороны кадра. Раньше даже при
-            // 0% оставался радиус min/20, на уменьшенном в 6 раз кадре это
-            // «сплошная каша» — ползунок ничего не менял.
-            int base = Math.max(2, Math.min(w, h) / 2);
+            // exteradive: та же perceptual'ная кривая, что у PixelCopy-пути:
+            // максимум = min(стороны)/10, 0% — почти резкий кадр.
+            int base = Math.max(4, Math.min(w, h) / 10);
             int radius = (int) (base * strength * strength);
             if (radius > 1) {
                 Utilities.stackBlurBitmap(bitmap, radius);
@@ -156,7 +154,11 @@ public final class SnapshotFrostDrawable extends Drawable {
         final int h = Math.max(1, src.getHeight() / ds);
         Bitmap small = Bitmap.createScaledBitmap(src, w, h, false);
         float strength = Math.max(0f, Math.min(1f, blurStrength));
-        int base = Math.max(2, Math.min(w, h) / 2);
+        // exteradive: perceptual'ная кривая: максимум = min(стороны)/10 (в кадре
+        // /6 это ~18px ≈ 110px экрана). Раньше потолок был min/2 — при 80%
+        // получаась однородная каша, неотличимая от сплошной тонировки, и
+        // ползунок «ничего не менял».
+        int base = Math.max(4, Math.min(w, h) / 10);
         int radius = (int) (base * strength * strength);
         if (radius > 1) {
             Utilities.stackBlurBitmap(small, radius);

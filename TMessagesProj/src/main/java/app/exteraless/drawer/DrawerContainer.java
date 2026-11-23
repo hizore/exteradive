@@ -1048,11 +1048,9 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             captureDrawerBlur();
         }
         final float opacity = Math.max(0f, Math.min(1f, SharedConfig.sidePanelOpacity / 100f));
-        // exteradive: ползунок непрозрачности правит альфу ВСЕГО морозного
-        // слоя (снимок + тонировка), иначе при сплошном снимке под тонировкой
-        // он визуально ничего не менял. Тонировка фиксированно лёгкая, чтобы
-        // блюр читался.
-        final float factor = 0.55f;
+        // exteradive: тонировка лёгкая (0.42), чтобы структура блюра читалась;
+        // ползунок непрозрачности правит альфу всего морозного слоя.
+        final float factor = 0.42f;
         drawerPanel.setBackgroundColor(0);
         app.exteraless.appearance.SnapshotFrostDrawable frost = app.exteraless.appearance.GlassMenuHelper
             .frostPanel(drawerPanel, drawerBg, 0, factor)
