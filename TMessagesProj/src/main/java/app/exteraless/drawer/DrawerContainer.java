@@ -1045,15 +1045,18 @@ public class DrawerContainer extends FrameLayout implements NotificationCenter.N
             captureDrawerBlur();
         }
         final float opacity = Math.max(0f, Math.min(1f, SharedConfig.sidePanelOpacity / 100f));
-        // 0.15..0.75 — раньше тонировка выходила почти сплошной и «блюра» не
-        // было видно. Фон самой панели делаем прозрачным: мороз рисует
-        // drawChild явно под содержимым.
-        final float factor = 0.15f + 0.6f * opacity;
+        // exteradive: ползунок непрозрачности правит альфу ВСЕГО морозного
+        // слоя (снимок + тонировка), иначе при сплошном снимке под тонировкой
+        // он визуально ничего не менял. Тонировка фиксированно лёгкая, чтобы
+        // блюр читался.
+        final float factor = 0.55f;
         drawerPanel.setBackgroundColor(0);
-        drawerFrost = app.exteraless.appearance.GlassMenuHelper
+        app.exteraless.appearance.SnapshotFrostDrawable frost = app.exteraless.appearance.GlassMenuHelper
             .frostPanel(drawerPanel, drawerBg, 0, factor)
             .setFallbackColor(Theme.multAlpha(drawerBg, factor))
             .setBitmap(lastSnapshot);
+        frost.setAlpha((int) (255 * Math.max(0.15f, opacity)));
+        drawerFrost = frost;
     }
 
     /** Снимает экран под шторкой в размытый битмап (панель ещё не показана). */

@@ -77,6 +77,13 @@ public class SeekBarWaveform {
     private float[] fromHeights;
     private float[] toHeights;
 
+    // exteradive: непрерывная «плеерная» волна для голосового в бабле
+    private final Path wavePath = new Path();
+    private static Paint paintWaveInactive;
+    private static Paint paintWaveActive;
+    private float wavePhase;
+    private long waveLastT;
+
     public SeekBarWaveform(Context context) {
         if (paintInner == null) {
             paintInner = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -330,6 +337,16 @@ public class SeekBarWaveform {
 
         float appearProgress = appearFloat.set(1f);
 
+        // exteradive: волна голосового «как в плеере» — непрерывная плавная
+        // линия вместо полоски штрихов. Амплитуда волны берётся из реальной
+        // огибающей сообщения, фаза медленно плывёт при воспроизведении.
+        // Морфинг (fromHeights/toHeights при переходах) и «взрыв» секретных
+        // голосовых остаются на старой штриховой отрисовке.
+        if (heights != null && fromHeights == null && toHeights == null && !exploding && explosionRate <= 0) {
+            drawSmoothWave(canvas, parentView, appearProgress);
+            return;
+        }
+
         if (path == null) {
             path = new Path();
         } else {
@@ -429,6 +446,90 @@ public class SeekBarWaveform {
                 .setColor(outerColor)
                 .setEmitArea(emitArea)
                 .draw(canvas, explosionRate);
+        }
+    }
+
+    private void drawSmoothWave(Canvas canvas, View parentView, float appearProgress) {
+        final float pitch = AndroidUtilities.dpf2(3);
+        int n = Math.min(heights.length, (int) (width / pitch) + 1);
+        if (n < 2) {
+            return;
+        }
+        if (paintWaveInactive == null) {
+            paintWaveInactive = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paintWaveInactive.setStyle(Paint.Style.STROKE);
+            paintWaveInactive.setStrokeCap(Paint.Cap.ROUND);
+            paintWaveInactive.setStrokeJoin(Paint.Join.ROUND);
+            paintWaveActive = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paintWaveActive.setStyle(Paint.Style.STROKE);
+            paintWaveActive.setStrokeCap(Paint.Cap.ROUND);
+            paintWaveActive.setStrokeJoin(Paint.Join.ROUND);
+        }
+        final float waveStroke = AndroidUtilities.dpf2(2.6f);
+        paintWaveInactive.setStrokeWidth(waveStroke);
+        paintWaveActive.setStrokeWidth(waveStroke);
+
+        isUnread = messageObject != null && messageObject.isContentUnread() && !messageObject.isOut() && progress <= 0;
+
+        // фаза плывёт только при воспроизведении — «живая» волна плеера
+        long now = SystemClock.elapsedRealtime();
+        float dt = waveLastT == 0 ? 0.016f : Math.min(0.05f, (now - waveLastT) / 1000f);
+        waveLastT = now;
+        final boolean isPlaying = messageObject != null && MediaController.getInstance().isPlayingMessage(messageObject);
+        float loadingT = loadingFloat.set(loading && !isPlaying ? 1f : 0f);
+        if (isPlaying) {
+            wavePhase = (wavePhase + 6f * dt) % (2f * (float) Math.PI);
+        }
+        if (parentView != null && (isPlaying || appearProgress < 1f || loadingT > 0f || loading)) {
+            parentView.invalidate();
+        }
+
+        final boolean reverse = delegate != null && delegate.reverseWaveform();
+        final float cy = (height - dp(14)) / 2f + dp(7);
+        final float lambda = dp(24);
+        final float step = dp(2);
+        final float waveW = (n - 1) * pitch + pitch * 0.5f;
+        wavePath.rewind();
+        boolean first = true;
+        for (float px = 0; ; px += step) {
+            boolean last = px >= waveW;
+            float cx = last ? waveW : px;
+            int bar = MathUtils.clamp((int) (cx / pitch + 0.5f), 0, n - 1);
+            int idx = reverse ? heights.length - 1 - bar : bar;
+            float amp = AndroidUtilities.dpf2(heights[idx]) * waveScaling;
+            // волна появляется слева направо вместе со штатным appear-эффектом
+            float bart = MathUtils.clamp(appearProgress * n - bar, 0f, 1f);
+            amp *= bart;
+            float ap = Math.max(AndroidUtilities.dpf2(2), Math.min(dp(7), amp));
+            float y = cy + ap * (float) Math.sin((double) cx / lambda * 2.0 * Math.PI * (reverse ? -1.0 : 1.0) - wavePhase);
+            if (first) {
+                wavePath.moveTo(cx, y);
+                first = false;
+            } else {
+                wavePath.lineTo(cx, y);
+            }
+            if (last) {
+                break;
+            }
+        }
+
+        // цвета — та же логика, что у drawFill: непрочитанное сплошь «прогрессным»
+        // цветом, морфинг загрузки смешивает inactive к inner, сыгранный хвост — outer
+        int inactive = isUnread ? outerColor : (selected ? selectedColor : innerColor);        inactive = ColorUtils.blendARGB(inactive, innerColor, loadingT);
+        paintWaveInactive.setColor(inactive);
+        paintWaveInactive.setAlpha((int) (255 * this.alpha));
+        paintWaveActive.setColor(outerColor);
+        paintWaveActive.setAlpha((int) (255 * (1f - loadingT) * this.alpha));
+
+        canvas.save();
+        canvas.clipRect(0, 0, waveW, height);
+        canvas.drawPath(wavePath, paintWaveInactive);
+        canvas.restore();
+        if (progress > 0.001f && loadingT < 1f) {
+            canvas.save();
+            canvas.clipRect(0, 0, progress * waveW, height);
+            canvas.drawPath(wavePath, paintWaveActive);
+            canvas.restore();
         }
     }
 
