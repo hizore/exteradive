@@ -53,7 +53,10 @@ public final class PlayerArt {
     }
 
     public static Integer cachedSeed(MessageObject messageObject) {
-        String key = key(messageObject);
+        return cachedSeed(key(messageObject));
+    }
+
+    static Integer cachedSeed(String key) {
         return key == null ? null : seeds.get(key);
     }
 
@@ -112,8 +115,7 @@ public final class PlayerArt {
         return TextUtils.isEmpty(url) ? null : ImageLocation.getForPath(url);
     }
 
-    public static void requestSeed(MessageObject messageObject, Bitmap bitmap, int fallback, SeedCallback callback) {
-        String key = key(messageObject);
+    static void requestSeed(String key, Bitmap bitmap, int fallback, SeedCallback callback) {
         if (key == null) {
             return;
         }

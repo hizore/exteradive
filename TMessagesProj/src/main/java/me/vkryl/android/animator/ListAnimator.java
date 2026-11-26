@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import me.vkryl.core.ArrayUtils;
 import me.vkryl.core.lambda.Destroyable;
@@ -492,7 +493,7 @@ public final class ListAnimator<T> implements Iterable<ListAnimator.Entry<T>> {
       if (this.actualList.size() != items.size())
         return false;
       for (int i = 0; i < items.size(); i++) {
-        if (!this.actualList.get(i).equals(items.get(i)))
+        if (!Objects.equals(this.actualList.get(i).item, items.get(i)))
           return false;
       }
       return true;
@@ -525,8 +526,11 @@ public final class ListAnimator<T> implements Iterable<ListAnimator.Entry<T>> {
       return;
     }
 
-    if (compareContents(newItems))
+    if (compareContents(newItems)) {
+      // The same items can resize (e.g. a compact player) during a layout pass.
+      measure(true);
       return;
+    }
 
     onBeforeListChanged();
 

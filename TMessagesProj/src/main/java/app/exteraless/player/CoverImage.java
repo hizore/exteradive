@@ -9,6 +9,9 @@ import android.graphics.drawable.BitmapDrawable;
 
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesController;
+import org.telegram.tgnet.TLObject;
+import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 
 public class CoverImage extends BackupImageView {
@@ -23,7 +26,7 @@ public class CoverImage extends BackupImageView {
     private boolean disc;
     private final RectF rect = new RectF();
     private final PlayerIcon note;
-    private final PlayerIcon mic;
+    private AvatarDrawable speakerAvatar;
     private final PlayerIcon video;
     private int radius;
     private String currentKey;
@@ -34,7 +37,6 @@ public class CoverImage extends BackupImageView {
     public CoverImage(Context context, int noteSizeDp) {
         super(context);
         note = PlayerIcon.stroke(PlayerIcon.NOTE, noteSizeDp);
-        mic = PlayerIcon.stroke(PlayerIcon.MIC, noteSizeDp);
         video = PlayerIcon.stroke(PlayerIcon.VIDEO_MESSAGE, noteSizeDp);
         getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
             if (set) {
@@ -50,6 +52,7 @@ public class CoverImage extends BackupImageView {
 
     public void setRadius(int r) {
         radius = r;
+        if (speakerAvatar != null) speakerAvatar.setRoundRadius(r);
         setRoundRadius(r);
         invalidate();
     }
@@ -57,7 +60,6 @@ public class CoverImage extends BackupImageView {
     public void setColors(int background, int foreground) {
         placeholderPaint.setColor(background);
         note.setColor(foreground);
-        mic.setColor(foreground);
         video.setColor(foreground);
         invalidate();
     }
@@ -79,6 +81,26 @@ public class CoverImage extends BackupImageView {
     }
 
     public void setMessage(MessageObject messageObject) {
+        if (messageObject != null) getImageReceiver().setCurrentAccount(messageObject.currentAccount);
+        if (messageObject != null && messageObject.isVoice() && !messageObject.isVoiceOnce()) {
+            int account = messageObject.currentAccount;
+            long id = Md3Player.speakerId(messageObject);
+            TLObject peer = id == 0 ? null : MessagesController.getInstance(account).getUserOrChat(id);
+            ImageLocation photo = peer == null ? null : ImageLocation.getForUserOrChat(account, peer, ImageLocation.TYPE_SMALL);
+            String name = Md3Player.miniTitle(messageObject);
+            String key = "voice:" + account + ':' + id + ':' + (photo == null ? 0 : photo.photoId) + ':' + name;
+            message = messageObject;
+            if (key.equals(currentKey)) return;
+            currentKey = key;
+            if (speakerAvatar == null) speakerAvatar = new AvatarDrawable();
+            if (peer != null) speakerAvatar.setInfo(account, peer);
+            else speakerAvatar.setInfo(id, name, null);
+            speakerAvatar.setRoundRadius(radius);
+            // This is a player cover: its corners follow the mini-player's cover setting.
+            getImageReceiver().setAvatarCornersApplied(true);
+            setForUserOrChat(peer, speakerAvatar);
+            return;
+        }
         if (messageObject == null || messageObject.isVoice() || messageObject.isRoundVideo()) {
             if (messageObject != null && message == messageObject) return;
             currentKey = null;
@@ -137,14 +159,30 @@ public class CoverImage extends BackupImageView {
 
     private void onBitmap(Bitmap bitmap) {
         final MessageObject target = message;
-        if (bitmap == null || target == null || !target.isMusic() || listener == null) {
+        if (bitmap == null || !Md3Player.supportsMiniPlayer(target) || listener == null) {
             return;
         }
-        PlayerArt.requestSeed(target, bitmap, fallbackSeed, seed -> {
-            if (target == message && listener != null) {
-                listener.onSeed(target, seed);
+        String key = paletteKey();
+        PlayerArt.requestSeed(key, bitmap, fallbackSeed, seed -> {
+            if (key.equals(paletteKey()) && listener != null) {
+                listener.onSeed(message, seed);
             }
         });
+    }
+
+    private String paletteKey() {
+        return message != null && message.isVoice() ? currentKey : PlayerArt.key(message);
+    }
+
+    int paletteSeed(int fallback) {
+        String key = paletteKey();
+        Integer cached = key == null ? null : PlayerArt.cachedSeed(key);
+        if (cached != null) return cached;
+        return message != null && message.isVoice() && speakerAvatar != null ? speakerAvatar.getColor() : fallback;
+    }
+
+    void requestPalette() {
+        onBitmap(getImageReceiver().getBitmap());
     }
 
     @Override
@@ -152,7 +190,7 @@ public class CoverImage extends BackupImageView {
         if (!getImageReceiver().hasBitmapImage()) {
             rect.set(0, 0, getWidth(), getHeight());
             canvas.drawRoundRect(rect, radius, radius, placeholderPaint);
-            PlayerIcon icon = message != null && message.isRoundVideo() ? video : message != null && message.isVoice() ? mic : note;
+            PlayerIcon icon = message != null && message.isRoundVideo() ? video : note;
             icon.setBounds(0, 0, getWidth(), getHeight());
             icon.draw(canvas);
         }

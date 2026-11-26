@@ -107,7 +107,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 
 import app.exteraless.player.Md3Player;
-import app.exteraless.player.PlayerBarView;
+import app.exteraless.player.PlayerMiniView;
 import me.vkryl.android.animator.ListAnimator;
 import me.vkryl.android.animator.ReplaceAnimator;
 import me.vkryl.core.lambda.Destroyable;
@@ -1222,6 +1222,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
         currentStyle = style;
         showingMd3Bar = shouldShowMd3Bar();
+        frameLayout.setVisibility(showingMd3Bar ? GONE : VISIBLE);
+        setClickable(!showingMd3Bar);
         if (!showingMd3Bar) {
             if (md3Bar != null) {
                 md3Bar.setVisibility(GONE);
@@ -1566,7 +1568,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, AndroidUtilities.dp2(getStyleHeight()));
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(dp(getStyleHeight()), MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -1664,11 +1666,15 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     float micAmplitude;
 
     public int getStyleHeight() {
-        return currentStyle == STYLE_INACTIVE_GROUP_CALL ? 48 : showingMd3Bar ? PlayerBarView.HEIGHT_DP : 36;
+        return currentStyle == STYLE_INACTIVE_GROUP_CALL ? 48 : showingMd3Bar ? PlayerMiniView.inlineHeightDp() : 36;
     }
 
-    private PlayerBarView md3Bar;
+    private PlayerMiniView md3Bar;
     private boolean showingMd3Bar;
+
+    boolean hasOwnPlayerSurface() {
+        return showingMd3Bar;
+    }
 
     private boolean shouldShowMd3Bar() {
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
@@ -1680,32 +1686,40 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         boolean changed = value != showingMd3Bar;
         showingMd3Bar = value;
         if (value && md3Bar == null) {
-            md3Bar = new PlayerBarView(getContext(), fragment, resourcesProvider, this::performClick, () -> closeButton.performClick());
-            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, PlayerBarView.HEIGHT_DP - 8,
-                    Gravity.TOP | Gravity.LEFT, 8, 4, 8, 4));
+            md3Bar = PlayerMiniView.inline(getContext(), fragment, resourcesProvider);
+            md3Bar.setOffsetListener(() -> {
+                if (showingMd3Bar) updatePlayerHeight();
+            });
+            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
         if (md3Bar != null) {
             md3Bar.setVisibility(value ? VISIBLE : GONE);
         }
         if (currentStyle == STYLE_AUDIO_PLAYER) {
             int stock = value ? INVISIBLE : VISIBLE;
+            frameLayout.setVisibility(value ? GONE : VISIBLE);
+            setClickable(!value);
             playButton.setVisibility(stock);
             titleTextView.setVisibility(stock);
             closeButton.setVisibility(stock);
+            if (value) silentButton.setVisibility(GONE);
             if (playbackSpeedButton != null) {
                 playbackSpeedButton.setVisibility(stock);
             }
         }
         if (changed) {
-            frameLayout.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, getStyleHeight(), Gravity.TOP | Gravity.LEFT, 0, 0, 0, 0));
-            if (topPadding > 0 && topPadding != AndroidUtilities.dp2(getStyleHeight())) {
-                setTopPadding(AndroidUtilities.dp2(getStyleHeight()));
-            }
-            requestLayout();
+            updatePlayerHeight();
         }
         if (value) {
-            md3Bar.update();
+            md3Bar.update(false);
         }
+    }
+
+    private void updatePlayerHeight() {
+        final int height = getStyleHeight();
+        frameLayout.setLayoutParams(LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, height, Gravity.TOP | Gravity.LEFT));
+        if (topPadding > 0) setTopPadding(AndroidUtilities.dp2(height));
+        requestLayout();
     }
 
     public boolean isCallTypeVisible() {
@@ -2050,6 +2064,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 }
                 visible = true;
                 setVisibility(VISIBLE);
+            }
+            if (showingMd3Bar) {
+                lastMessageObject = null;
+                return; // The card binds its own title, progress and transport controls.
             }
             if (MediaController.getInstance().isMessagePaused()) {
                 playPauseDrawable.setPause(false, !create);

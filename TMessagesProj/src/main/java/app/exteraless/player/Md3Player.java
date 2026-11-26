@@ -6,7 +6,13 @@ import android.os.Bundle;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.DialogObject;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
+import org.telegram.tgnet.TLObject;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -39,8 +45,31 @@ public final class Md3Player {
                 || message.isRoundVideo() && !message.isRoundOnce());
     }
 
+    // A forward belongs to the recorded speaker, even when we forwarded it ourselves.
+    // A name-only forward must never acquire the forwarder's photo.
+    static long speakerId(MessageObject message) {
+        TLRPC.Message owner = message.messageOwner;
+        if (owner.fwd_from != null) {
+            return DialogObject.getPeerDialogId(owner.fwd_from.from_id);
+        }
+        long id = DialogObject.getPeerDialogId(owner.from_id);
+        if (id != 0) return id;
+        if (owner.post) return DialogObject.getPeerDialogId(owner.peer_id);
+        if (message.isOut()) return UserConfig.getInstance(message.currentAccount).getClientUserId();
+        return DialogObject.isUserDialog(message.getDialogId()) ? message.getDialogId() : 0;
+    }
+
     static String miniTitle(MessageObject message) {
-        return message.isMusic() ? message.getMusicTitle() : message.getMusicAuthor();
+        if (message.isMusic()) return message.getMusicTitle();
+        long id = speakerId(message);
+        if (id != 0) {
+            if (id == UserConfig.getInstance(message.currentAccount).getClientUserId()) return LocaleController.getString(R.string.FromYou);
+            TLObject peer = MessagesController.getInstance(message.currentAccount).getUserOrChat(id);
+            if (peer instanceof TLRPC.User) return UserObject.getUserName((TLRPC.User) peer);
+            if (peer instanceof TLRPC.Chat) return ((TLRPC.Chat) peer).title;
+        }
+        String name = message.messageOwner.fwd_from == null ? null : message.messageOwner.fwd_from.from_name;
+        return android.text.TextUtils.isEmpty(name) ? LocaleController.getString(R.string.AudioUnknownArtist) : name;
     }
 
     static String miniSubtitle(MessageObject message) {

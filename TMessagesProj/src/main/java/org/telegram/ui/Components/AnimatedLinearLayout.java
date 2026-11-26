@@ -3,8 +3,10 @@ package org.telegram.ui.Components;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.RectF;
-import android.util.Log;
+import android.graphics.Region;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -211,6 +213,38 @@ public class AnimatedLinearLayout extends LinearLayout {
 
     protected ListAnimator.Entry<Holder> getEntry(int index) {
         return listAnimator.getEntry(index);
+    }
+
+    private float playerGapTop = -1, playerGapBottom = -1;
+
+    /** Keep glass behind the animated rows on either side of the player's own card. */
+    protected void drawPanelGlass(Canvas canvas, Drawable glass, FragmentContextView contextView) {
+        playerGapTop = playerGapBottom = -1;
+        final Holder player = contextView != null && contextView.hasOwnPlayerSurface()
+                ? viewHolders.get(contextView.getParent() == this ? contextView : contextView.getParent()) : null;
+        if (player != null && player.hasInAnimator) {
+            playerGapTop = 0;
+            playerGapBottom = getHeight();
+            for (ListAnimator.Entry<Holder> entry : listAnimator) {
+                if (entry.item == player || entry.getVisibility() <= 0f) continue;
+                if (comparator.compare(entry.item, player) < 0) {
+                    playerGapTop = Math.max(playerGapTop, getPaddingTop() + entry.getRectF().bottom);
+                } else {
+                    playerGapBottom = Math.min(playerGapBottom, getPaddingTop() + entry.getRectF().top);
+                }
+            }
+        }
+        if (glass == null || (playerGapTop == 0 && playerGapBottom == getHeight())) return;
+        canvas.save();
+        if (playerGapTop < playerGapBottom) {
+            canvas.clipRect(0, playerGapTop, getWidth(), playerGapBottom, Region.Op.DIFFERENCE);
+        }
+        glass.draw(canvas);
+        canvas.restore();
+    }
+
+    protected boolean inPlayerGap(float y) {
+        return playerGapTop >= 0 && y >= playerGapTop && y <= playerGapBottom;
     }
 
     private static final Comparator<Holder> comparator = Comparator.comparingInt((Holder it) -> it.priority)

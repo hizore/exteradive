@@ -9,14 +9,11 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Layout;
@@ -33,16 +30,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
 import androidx.annotation.StringRes;
-import androidx.core.graphics.ColorUtils;
-import androidx.core.math.MathUtils;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.ChatMessageCell;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
 import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 
@@ -51,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import app.exteraless.player.PlayerColors;
 import tw.nekomimi.nekogram.NekoConfig;
 
 @SuppressLint("ViewConstructor")
@@ -58,7 +51,6 @@ public class ProfileActionsView extends View {
 
     private final List<Action> actions = new ArrayList<>();
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint shaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint badgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float parentExpanded;
 
@@ -118,18 +110,13 @@ public class ProfileActionsView extends View {
     final float top;
     final float textPadding;
 
-    private int color = 0;
-    private boolean hasColorById;
-    private RadialGradient radialGradient;
-    private final Matrix matrix = new Matrix();
+    private int paletteSeed;
+    private PlayerColors palette;
 
     public boolean myProfile;
 
     public ProfileActionsView(Context context, int targetHeight) {
         super(context);
-
-        paint.setColor(Color.BLACK);
-        paint.setAlpha(40);
 
         xpadding = dpf2(16);
         ypadding = dpf2(8);
@@ -178,50 +165,16 @@ public class ProfileActionsView extends View {
     public void setParentExpanded(float expanded) {
         if (parentExpanded != expanded) {
             parentExpanded = expanded;
-            checkPaints();
             invalidate();
         }
     }
 
-    public void setActionsColor(int color, boolean hasColorById) {
-        if (radialGradient == null || this.color != color || this.hasColorById != hasColorById) {
-            this.color = color;
-            this.hasColorById = hasColorById;
-            createColorShader();
-            checkPaints();
+    public void setPalette(int seed, boolean dark) {
+        if (palette == null || paletteSeed != seed || palette.dark != dark) {
+            paletteSeed = seed;
+            palette = PlayerColors.fromSeed(seed, dark);
+            invalidate();
         }
-    }
-
-    private boolean isButtonColorLight() {
-        return AndroidUtilities.computePerceivedBrightness(color) > 0.72f;
-    }
-
-    private void checkPaints() {
-
-    }
-
-    private void createColorShader() {
-        if (color == 0) return;
-        if (!hasColorById) {
-            paint.setColor(color);
-//            paint.setAlpha(40);
-            return;
-        }
-        int w = getMeasuredWidth();
-        if (w <= 0) return;
-
-        float betweenPadding = xpadding / 2f;
-        float width = (w - betweenPadding * Math.max(0, activeCount - 1) - xpadding * 2f) / Math.max(1, activeCount);
-
-        this.radialGradient = new RadialGradient(
-                width / 2f,
-                targetHeight / 2f,
-                hasColorById ? width * 0.65f : 1f,
-                Theme.multAlpha(color, 0.8f),
-                color,
-                Shader.TileMode.CLAMP
-        );
-        shaderPaint.setShader(radialGradient);
     }
 
     @Override
@@ -258,7 +211,7 @@ public class ProfileActionsView extends View {
 
         float height = Math.max(0f, currentHeight - ypadding - top);
 
-        if (height <= 0f || activeCount == 0) {
+        if (height <= 0f || activeCount == 0 || palette == null) {
             hideUnusedGlass();
             return;
         }
@@ -306,25 +259,14 @@ public class ProfileActionsView extends View {
                 action.rect.width() / 2.0f * (1.0f - action.getScale()),
                 action.rect.height() / 2.0f * (1.0f - action.getScale())
             );
-            if (glassFactory != null) {
-                drawGlass(canvas, AndroidUtilities.rectTmp, r, action.getAlpha() * alphaFraction1);
-                continue;
+            final float alpha = action.getAlpha() * alphaFraction1;
+            if (glassFactory != null && parentExpanded > 0f) {
+                drawGlass(canvas, AndroidUtilities.rectTmp, r, alpha);
             }
-            int wasAlpha = paint.getAlpha();
-            int newAlpha = (int) (action.getAlpha() * alphaFraction1 * wasAlpha);
-            paint.setAlpha((int) (newAlpha * (radialGradient != null ? 0.1f : 1f)));
-            paint.setShadowLayer(0, 0, 0, 0);
-
+            paint.setColor(action == firstAction ? palette.primaryContainer : palette.surfaceHigh);
+            // Let the expanded photo show through the tonal surface without losing label contrast.
+            paint.setAlpha(Math.round(255 * alpha * (1f - .14f * parentExpanded)));
             canvas.drawRoundRect(AndroidUtilities.rectTmp, r, r, paint);
-            if (radialGradient != null) {
-                int wasAlpha2 = shaderPaint.getAlpha();
-                shaderPaint.setAlpha((int) (action.getAlpha() * alphaFraction1 * wasAlpha2));
-                matrix.setTranslate(AndroidUtilities.rectTmp.left, AndroidUtilities.rectTmp.top);
-                radialGradient.setLocalMatrix(matrix);
-                canvas.drawRoundRect(AndroidUtilities.rectTmp, r, r, shaderPaint);
-                shaderPaint.setAlpha(wasAlpha2);
-            }
-            paint.setAlpha(wasAlpha);
         }
         hideUnusedGlass();
 
@@ -372,22 +314,17 @@ public class ProfileActionsView extends View {
         );
     }
 
-    private int lastColorFilterColor;
-    private ColorFilter lastColorFilter;
-
     private void drawAction(Canvas canvas, Action action, float fraction, float alpha) {
         if (action == null || action.isDeleted) {
             return;
         }
 
-        final boolean isButtonColorLight = isButtonColorLight();
-        // over the photo the buttons are the dimmed photo on every Android (see ProfileButtonsGlass): white icons there
-        final float useFilledWhiteIcon = !isButtonColorLight ? 1 : MathUtils.clamp((parentExpanded - 0.75f) / 0.25f, 0, 1);
-
-        final int textColor = ColorUtils.blendARGB(Color.BLACK, Color.WHITE, useFilledWhiteIcon);
-        if (lastColorFilter == null || lastColorFilterColor != textColor) {
-            lastColorFilterColor = textColor;
-            lastColorFilter = new PorterDuffColorFilter(textColor, PorterDuff.Mode.SRC_IN);
+        final boolean primary = action == firstAction;
+        final int textColor = primary ? palette.onPrimaryContainer : palette.onSurface;
+        final int iconColor = primary ? palette.onPrimary : palette.onSecondaryContainer;
+        if (action.iconFilter == null || action.iconColor != iconColor) {
+            action.iconColor = iconColor;
+            action.iconFilter = new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN);
         }
 
         canvas.save();
@@ -400,7 +337,8 @@ public class ProfileActionsView extends View {
 
         updateBounds(action);
 
-        badgePaint.setColor(ColorUtils.setAlphaComponent(textColor, Math.round(alpha * (action == firstAction ? 47 : 24))));
+        badgePaint.setColor(primary ? palette.primary : palette.secondaryContainer);
+        badgePaint.setAlpha(Math.round(255 * alpha));
         final float radius = action.badge.height() * .5f;
         canvas.drawRoundRect(action.badge, radius, radius, badgePaint);
         final float textY = action.badge.bottom + textPadding;
@@ -417,33 +355,23 @@ public class ProfileActionsView extends View {
             canvas.scale(action.iconScale, action.iconScale, action.bounds.centerX(), action.bounds.centerY());
         }
         if (!isAnimatingCallAction || action.key != KEY_CALL) {
-            final float outlineAlpha = (1f - useFilledWhiteIcon) * alpha;
-            final float filledAlpha = useFilledWhiteIcon * alpha;
-            if (action.drawableAnimated != null) {
-                if (action.key == KEY_NOTIFICATION) {
-                    drawActionDrawable(canvas, action.drawableOutline, outlineAlpha);
-                    drawActionDrawable(canvas, action.drawableAnimated, filledAlpha);
-                } else {
-                    drawActionDrawable(canvas, action.drawableAnimated, alpha);
-                }
-            } else {
-                drawActionDrawable(canvas, action.drawableOutline, outlineAlpha);
-                drawActionDrawable(canvas, action.drawableFilled, filledAlpha);
-            }
+            Drawable icon = action.drawableAnimated != null ? action.drawableAnimated : primary ? action.drawableFilled : action.drawableOutline;
+            if (icon == null) icon = primary ? action.drawableOutline : action.drawableFilled;
+            drawActionDrawable(canvas, icon, action.iconFilter, alpha);
         }
 
         canvas.restore();
         drawLoading(canvas, action, alpha);
     }
 
-    private void drawActionDrawable(Canvas canvas, Drawable drawable, float alpha) {
+    private void drawActionDrawable(Canvas canvas, Drawable drawable, ColorFilter filter, float alpha) {
         if (drawable == null) {
             return;
         }
 
         final int a = (int) (alpha * 255);
 
-        drawable.setColorFilter(lastColorFilter);
+        drawable.setColorFilter(filter);
         drawable.setAlpha(a);
         drawable.draw(canvas);
     }
@@ -745,12 +673,7 @@ public class ProfileActionsView extends View {
         }
 
         AndroidUtilities.runOnUIThread(() -> {
-            int oldCount = activeCount;
             activeCount = out.size();
-
-            if (oldCount != activeCount && radialGradient != null) {
-                createColorShader();
-            }
 
             int c = actions.size();
             for (int i = 0; i < c; i++) {
@@ -983,6 +906,8 @@ public class ProfileActionsView extends View {
         private Drawable drawableFilled;
         private Drawable drawableOutline;
         private RLottieDrawable drawableAnimated;
+        private int iconColor;
+        private ColorFilter iconFilter;
         private Text text;
         private float textScale = 1.0f;
         private int labelWidth;

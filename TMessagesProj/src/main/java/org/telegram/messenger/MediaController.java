@@ -2019,6 +2019,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             if (voiceMessagesPlaylist != null && !voiceMessagesPlaylist.isEmpty()) {
                 MessageObject messageObject = voiceMessagesPlaylist.get(0);
                 if (channelId == messageObject.messageOwner.peer_id.channel_id) {
+                    int size = voiceMessagesPlaylist.size();
                     for (int a = 0; a < markAsDeletedMessages.size(); a++) {
                         Integer key = markAsDeletedMessages.get(a);
                         messageObject = voiceMessagesPlaylistMap.get(key);
@@ -2027,6 +2028,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                             voiceMessagesPlaylist.remove(messageObject);
                         }
                     }
+                    if (voiceMessagesPlaylist.size() != size) notifyVoicePlaylistChanged();
                 }
             }
         } else if (id == NotificationCenter.removeAllMessagesFromDialog) {
@@ -2106,6 +2108,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 long did = (Long) args[0];
                 if (did == messageObject.getDialogId()) {
                     ArrayList<MessageObject> arr = (ArrayList<MessageObject>) args[1];
+                    int size = voiceMessagesPlaylist.size();
                     for (int a = 0; a < arr.size(); a++) {
                         messageObject = arr.get(a);
                         if ((messageObject.isVoice() || messageObject.isRoundVideo()) && !messageObject.isVoiceOnce() && !messageObject.isRoundOnce() && (!voiceMessagesPlaylistUnread || messageObject.isContentUnread() && !messageObject.isOut())) {
@@ -2113,6 +2116,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                             voiceMessagesPlaylistMap.put(messageObject.getId(), messageObject);
                         }
                     }
+                    if (voiceMessagesPlaylist.size() != size) notifyVoicePlaylistChanged();
                 }
             }
         } else if (id == NotificationCenter.playerDidStartPlaying) {
@@ -3113,6 +3117,20 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         return playingMessageObject == null || (!playingMessageObject.isVoice() && !playingMessageObject.isRoundVideo()) || voiceMessagesPlaylist == null || voiceMessagesPlaylist.size() <= 1 || !voiceMessagesPlaylist.contains(playingMessageObject) || voiceMessagesPlaylist.indexOf(playingMessageObject) >= (voiceMessagesPlaylist.size() - 1);
     }
 
+    public void skipSpokenMessage(boolean next) {
+        MessageObject current = playingMessageObject;
+        if (current == null || !(current.isVoice() || current.isRoundVideo()) || current.isVoiceOnce() || current.isRoundOnce()) return;
+        int index = voiceMessagesPlaylist == null ? -1 : voiceMessagesPlaylist.indexOf(current);
+        if (!next && (index <= 0 || current.audioProgressSec > 10)) {
+            seekToProgress(current, 0);
+        } else if (index >= 0) {
+            int target = index + (next ? 1 : -1);
+            if (target >= 0 && target < voiceMessagesPlaylist.size()) {
+                playMessage(voiceMessagesPlaylist.get(target), isSilent);
+            }
+        }
+    }
+
     public void playNextMessage() {
         playNextMessageWithoutOrder(false);
     }
@@ -3348,6 +3366,13 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 MessageObject messageObject = voiceMessagesPlaylist.get(a);
                 voiceMessagesPlaylistMap.put(messageObject.getId(), messageObject);
             }
+        }
+        notifyVoicePlaylistChanged();
+    }
+
+    private void notifyVoicePlaylistChanged() {
+        if (playingMessageObject != null && (playingMessageObject.isVoice() || playingMessageObject.isRoundVideo())) {
+            NotificationCenter.getInstance(playingMessageObject.currentAccount).postNotificationName(NotificationCenter.voicePlaylistChanged);
         }
     }
 

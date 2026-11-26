@@ -6,8 +6,6 @@ import static org.telegram.messenger.AndroidUtilities.dpf2;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
@@ -19,7 +17,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
-import androidx.palette.graphics.Palette;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Emoji;
@@ -40,9 +37,12 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.ProfileMusicView;
 import org.telegram.ui.Components.ScaleStateListAnimator;
 
-import app.exteraless.appearance.AppearanceConfig;
+import java.util.HashSet;
 
-public class ProfileMusicCard extends FrameLayout {
+import app.exteraless.appearance.AppearanceConfig;
+import app.exteraless.player.PlayerColors;
+
+public class ProfileMusicCard extends FrameLayout implements Theme.Colorable {
 
     private static final long MUSIC_EMOJI_ID = 5271627010681108586L;
 
@@ -64,14 +64,16 @@ public class ProfileMusicCard extends FrameLayout {
     private final Theme.ResourcesProvider resourcesProvider;
     private final FrameLayout cardLayout;
     private final BackupImageView imageView;
+    private final TextView labelView;
     private final TextView nameView;
     private final TextView artistView;
     private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emoji;
     private final GradientDrawable background;
 
-    private boolean hasCover;
-    private int backgroundColor;
-    private int accentColor;
+    private Integer coverSeed;
+    private boolean loadingCover;
+    private PlayerColors palette;
+    private int paletteSeed;
     private long currentEmojiId = -1;
     private long currentDocumentId = -1;
     private long imageToken;
@@ -84,23 +86,16 @@ public class ProfileMusicCard extends FrameLayout {
         this.resourcesProvider = resourcesProvider;
         setPadding(dp(12), 0, dp(12), 0);
 
-        background = new GradientDrawable() {
-            @Override
-            protected void onBoundsChange(Rect bounds) {
-                super.onBoundsChange(bounds);
-                setGradientRadius(bounds.width() * 2f);
-            }
-        };
+        background = new GradientDrawable();
         background.setDither(true);
-        background.setGradientType(GradientDrawable.RADIAL_GRADIENT);
-        background.setGradientCenter(1f, 0.5f);
+        background.setOrientation(LocaleController.isRTL ? GradientDrawable.Orientation.RIGHT_LEFT : GradientDrawable.Orientation.LEFT_RIGHT);
         background.setCornerRadius(dpf2(AppearanceConfig.sectionRadius()));
 
         cardLayout = new FrameLayout(context) {
             @Override
             protected void dispatchDraw(@NonNull Canvas canvas) {
-                emoji.setColor(accentColor);
-                drawPattern(canvas, emoji, getWidth(), getHeight(), hasCover ? 1f : 0.4f);
+                emoji.setColor(palette.primary);
+                drawPattern(canvas, emoji, getWidth(), getHeight(), .40f);
                 super.dispatchDraw(canvas);
             }
         };
@@ -135,7 +130,7 @@ public class ProfileMusicCard extends FrameLayout {
         imageView.getImageReceiver().setDelegate(new ImageReceiver.ImageReceiverDelegate() {
             @Override
             public void didSetImage(ImageReceiver imageReceiver, boolean set, boolean thumb, boolean memCache) {
-                if (set && !thumb) {
+                if (loadingCover && set && !thumb) {
                     extractColors(imageReceiver.getBitmap());
                 }
             }
@@ -146,8 +141,17 @@ public class ProfileMusicCard extends FrameLayout {
         texts.setOrientation(LinearLayout.VERTICAL);
         row.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
 
+        labelView = new TextView(context);
+        labelView.setText(LocaleController.getString(R.string.AccDescrProfileMusic));
+        labelView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        labelView.setTypeface(AndroidUtilities.bold());
+        labelView.setLetterSpacing(.04f);
+        labelView.setSingleLine(true);
+        labelView.setEllipsize(TextUtils.TruncateAt.END);
+        texts.addView(labelView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
         nameView = new TextView(context);
-        nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        nameView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
         nameView.setTypeface(AndroidUtilities.bold());
         nameView.setSingleLine(true);
         nameView.setEllipsize(TextUtils.TruncateAt.END);
@@ -158,11 +162,10 @@ public class ProfileMusicCard extends FrameLayout {
         artistView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         artistView.setSingleLine(true);
         artistView.setEllipsize(TextUtils.TruncateAt.END);
-        artistView.setAlpha(0.6f);
         NotificationCenter.listenEmojiLoading(artistView);
         texts.addView(artistView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
 
-        applyThemeColors();
+        updateColors();
     }
 
     public void setOnCardClickListener(Runnable listener) {
@@ -202,12 +205,11 @@ public class ProfileMusicCard extends FrameLayout {
 
     private void applyCover(TLRPC.Document document) {
         imageToken++;
-        hasCover = false;
-        backgroundColor = 0;
-        accentColor = 0;
+        coverSeed = null;
         TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(document.thumbs, 1000);
         ImageLocation location = thumb != null ? ImageLocation.getForDocument(thumb, document) : null;
         String artworkUrl = location == null ? MessageObject.getArtworkUrl(document, false) : null;
+        loadingCover = location != null || !TextUtils.isEmpty(artworkUrl);
         if (location != null) {
             imageView.setImage(location, null, (Drawable) null, 0, document);
         } else if (!TextUtils.isEmpty(artworkUrl)) {
@@ -215,84 +217,47 @@ public class ProfileMusicCard extends FrameLayout {
         } else {
             imageView.setImageResource(R.drawable.nocover_big, getThemedColor(Theme.key_player_button));
         }
-        applyThemeColors();
+        updateColors();
     }
 
     private void extractColors(Bitmap bitmap) {
         if (bitmap == null || bitmap.isRecycled() || paletteToken == imageToken) {
             return;
         }
-        final long token = imageToken;
-        paletteToken = token;
-        final Bitmap copy;
-        try {
-            copy = bitmap.copy(Bitmap.Config.ARGB_8888, false);
-        } catch (Throwable ignore) {
-            return;
-        }
-        if (copy == null) {
-            return;
-        }
+        final Bitmap sample = PlayerColors.sample(bitmap);
+        if (sample == null) return;
+        final long token = paletteToken = imageToken;
+        final int fallback = PlayerColors.fallbackSeed(resourcesProvider);
         Utilities.globalQueue.postRunnable(() -> {
-            int base;
-            try {
-                Palette palette = Palette.from(copy).generate();
-                Palette.Swatch swatch = palette.getDarkVibrantSwatch();
-                if (swatch == null) swatch = palette.getMutedSwatch();
-                if (swatch == null) swatch = palette.getDarkMutedSwatch();
-                if (swatch == null) swatch = palette.getDominantSwatch();
-                base = swatch != null ? swatch.getRgb() : AndroidUtilities.getDominantColor(copy);
-            } catch (Throwable ignore) {
-                return;
-            }
-            double contrast = ColorUtils.calculateContrast(Color.WHITE, base);
-            if (contrast > 15) {
-                base = adjustHsl(base, 2f);
-            } else if (contrast < 10) {
-                base = adjustHsl(base, 0.5f);
-            }
-            if (ColorUtils.calculateContrast(Color.WHITE, base) < 3) {
-                base = ColorUtils.blendARGB(base, Color.BLACK, 0.3f);
-            }
-            float[] hsl = new float[3];
-            ColorUtils.colorToHSL(base, hsl);
-            final float luminance;
-            if (hsl[2] <= 0.25f) {
-                luminance = 2f;
-            } else if (hsl[2] <= 0.5f) {
-                luminance = 1.5f;
-            } else if (hsl[2] <= 0.75f) {
-                luminance = 1f;
-            } else {
-                luminance = 0.5f;
-            }
-            final int resolved = base;
-            final int accent = adjustHsl(base, luminance);
+            final int seed = PlayerColors.seedFromSample(sample, fallback);
+            sample.recycle();
             AndroidUtilities.runOnUIThread(() -> {
-                if (token != imageToken) {
-                    return;
-                }
-                hasCover = true;
-                backgroundColor = resolved;
-                accentColor = accent;
-                applyColors();
+                if (token != imageToken) return;
+                coverSeed = seed;
+                updateColors();
             });
         });
     }
 
-    private void applyThemeColors() {
-        backgroundColor = hasCover ? backgroundColor : getThemedColor(Theme.key_windowBackgroundWhite);
-        accentColor = hasCover ? accentColor : getThemedColor(Theme.key_windowBackgroundWhiteBlackText);
-        applyColors();
+    @Override
+    public void updateColors() {
+        final int seed = coverSeed != null ? coverSeed : PlayerColors.fallbackSeed(resourcesProvider);
+        final boolean dark = PlayerColors.isDark(resourcesProvider);
+        if (palette != null && paletteSeed == seed && palette.dark == dark) return;
+        paletteSeed = seed;
+        palette = PlayerColors.fromSeed(seed, dark);
+        background.setColors(new int[]{palette.surfaceHigh, palette.primaryContainer});
+        background.setStroke(dp(1), ColorUtils.setAlphaComponent(palette.outlineVariant, 0x99));
+        labelView.setTextColor(palette.primary);
+        nameView.setTextColor(palette.onSurface);
+        artistView.setTextColor(palette.onSurfaceVariant);
+        cardLayout.invalidate();
     }
 
-    private void applyColors() {
-        background.mutate();
-        background.setColors(new int[]{backgroundColor, hasCover ? adjustHsl(backgroundColor, 1.5f) : backgroundColor});
-        int textColor = hasCover ? Color.WHITE : getThemedColor(Theme.key_windowBackgroundWhiteBlackText);
-        nameView.setTextColor(textColor);
-        artistView.setTextColor(textColor);
-        cardLayout.invalidate();
+    @Override
+    public void addColorKeys(HashSet<Integer> colors) {
+        colors.add(Theme.key_featuredStickers_addButton);
+        colors.add(Theme.key_windowBackgroundWhite);
     }
 
     private float coverCornerRadius() {
@@ -301,13 +266,6 @@ public class ProfileMusicCard extends FrameLayout {
 
     private int getThemedColor(int key) {
         return Theme.getColor(key, resourcesProvider);
-    }
-
-    private static int adjustHsl(int color, float luminance) {
-        float[] hsl = new float[3];
-        ColorUtils.colorToHSL(color, hsl);
-        hsl[2] = Math.min(hsl[2] * luminance, 1f);
-        return ColorUtils.HSLToColor(hsl);
     }
 
     private static void drawPattern(Canvas canvas, Drawable pattern, float w, float h, float alpha) {

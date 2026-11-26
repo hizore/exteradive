@@ -56,7 +56,7 @@ public class ChatActivityTopPanelLayout extends AnimatedLinearLayout {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         return super.dispatchTouchEvent(ev)
-                || ev.getAction() == MotionEvent.ACTION_DOWN && backgroundDrawable != null && backgroundDrawable.getBounds().contains((int) ev.getX(), (int) ev.getY());
+                || ev.getAction() == MotionEvent.ACTION_DOWN && backgroundDrawable != null && !inPlayerGap(ev.getY()) && backgroundDrawable.getBounds().contains((int) ev.getX(), (int) ev.getY());
     }
 
     private final Path clipPath = new Path();
@@ -106,9 +106,7 @@ public class ChatActivityTopPanelLayout extends AnimatedLinearLayout {
     protected void dispatchDraw(@NonNull Canvas canvas) {
         if (getMetadata().getTotalVisibility() == 0) return;
 
-        if (backgroundDrawable != null) {
-            backgroundDrawable.draw(canvas);
-        }
+        drawPanelGlass(canvas, backgroundDrawable, callFragmentContextView);
 
         boolean callDrawn = false;
         if (callFragmentContextView != null) {
@@ -151,7 +149,7 @@ public class ChatActivityTopPanelLayout extends AnimatedLinearLayout {
             final float position = entry.getPosition();
             final float alpha = entry.getVisibility() * Math.min(1, position);
 
-            if (alpha <= 0) {
+            if (alpha <= 0 || inPlayerGap(top)) {
                 continue;
             }
 

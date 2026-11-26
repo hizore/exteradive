@@ -186,6 +186,7 @@ public class NotificationCenter {
     public static final int messagePlayingDidReset = totalEvents++;
     public static final int messagePlayingPlayStateChanged = totalEvents++;
     public static final int messagePlayingDidStart = totalEvents++;
+    public static final int voicePlaylistChanged = totalEvents++;
     public static final int messagePlayingDidSeek = totalEvents++;
     public static final int messagePlayingGoingToStop = totalEvents++;
     public static final int recordProgressChanged = totalEvents++;

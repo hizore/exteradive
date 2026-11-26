@@ -39,6 +39,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
@@ -62,6 +63,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     private final BaseFragment fragment;
     private final Theme.ResourcesProvider resourcesProvider;
     private final boolean preview;
+    private final boolean inline;
     private boolean dark;
     private int seed;
     private final LinearLayout card;
@@ -124,18 +126,27 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     private float lift;
 
     public PlayerMiniView(Context context, BaseFragment fragment, Theme.ResourcesProvider resourcesProvider) {
-        this(context, fragment, resourcesProvider, false);
+        this(context, fragment, resourcesProvider, false, false);
     }
 
     public static PlayerMiniView preview(Context context) {
-        return new PlayerMiniView(context, null, null, true);
+        return new PlayerMiniView(context, null, null, true, false);
     }
 
-    private PlayerMiniView(Context context, BaseFragment fragment, Theme.ResourcesProvider resourcesProvider, boolean preview) {
+    public static PlayerMiniView inline(Context context, BaseFragment fragment, Theme.ResourcesProvider resourcesProvider) {
+        return new PlayerMiniView(context, fragment, resourcesProvider, false, true);
+    }
+
+    public static int inlineHeightDp() {
+        return (PlayerStyle.miniCompact() ? COMPACT_HEIGHT_DP : HEIGHT_DP) + 8;
+    }
+
+    private PlayerMiniView(Context context, BaseFragment fragment, Theme.ResourcesProvider resourcesProvider, boolean preview, boolean inline) {
         super(context);
         this.fragment = fragment;
         this.resourcesProvider = resourcesProvider;
         this.preview = preview;
+        this.inline = inline;
         dark = PlayerColors.isDark(resourcesProvider);
         seed = PlayerColors.fallbackSeed(resourcesProvider);
         colors = PlayerColors.fromSeed(seed, dark);
@@ -164,13 +175,16 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         card.setElevation(dp(6));
         if (!preview) {
             card.setOnClickListener(v -> Md3Player.open(fragment, this));
-            card.setOnLongClickListener(v -> startDrag());
-            card.setOnTouchListener(this::onCardTouch);
             card.setContentDescription(getString(R.string.OEPlayerOpen));
-            dockTop = PlayerStyle.miniTop();
-            dockProgress = dockTop ? 1f : 0f;
+            if (!inline) {
+                card.setOnLongClickListener(v -> startDrag());
+                card.setOnTouchListener(this::onCardTouch);
+                dockTop = PlayerStyle.miniTop();
+                dockProgress = dockTop ? 1f : 0f;
+            }
         }
-        addView(card, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, HEIGHT_DP, Gravity.BOTTOM, 12, 0, 12, 12));
+        addView(card, inline ? LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, HEIGHT_DP, Gravity.CENTER, 4, 0, 4, 0)
+                : LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, HEIGHT_DP, Gravity.BOTTOM, 12, 0, 12, 12));
 
         cover = new CoverImage(context, 22);
         cover.setRadius(coverRadius);
@@ -191,7 +205,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         texts.addView(artistView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         card.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 4, 0));
 
-        prevButton = addButton(context, prevIcon, R.string.AccDescrPrevious, () -> MediaController.getInstance().playPreviousMessage());
+        prevButton = addButton(context, prevIcon, R.string.AccDescrPrevious, () -> skip(false));
 
         playButton = new RingPlayButton(context, 20, 3, 22, 1.3f, 12);
         if (!preview) {
@@ -210,7 +224,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         }
         card.addView(playButton, LayoutHelper.createLinear(48, 48));
 
-        nextButton = addButton(context, nextIcon, R.string.Next, () -> MediaController.getInstance().playNextMessage());
+        nextButton = addButton(context, nextIcon, R.string.Next, () -> skip(true));
         voiceSpeedButton = new VoiceSpeedButton(context, fragment, resourcesProvider);
         card.addView(voiceSpeedButton, LayoutHelper.createLinear(44, 48));
         closeButton = addButton(context, closeIcon, R.string.AccDescrClosePlayer, Md3Player::closePlayer);
@@ -293,20 +307,9 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     private void refreshColors(boolean animated) {
-        if (PlayerStyle.miniThemeColors() || current == null || !current.isMusic()) {
-            setTargetColors(PlayerColors.fromSeed(seed, dark), animated);
-            return;
-        }
-        Integer cached = PlayerArt.cachedSeed(current);
-        if (cached != null) {
-            setTargetColors(PlayerColors.fromSeed(cached, dark), animated);
-            return;
-        }
-        Bitmap bitmap = cover.getImageReceiver().getBitmap();
-        if (bitmap != null) {
-            MessageObject target = current;
-            PlayerArt.requestSeed(target, bitmap, seed, value -> onSeed(target, value));
-        }
+        boolean fromCover = !PlayerStyle.miniThemeColors() && current != null;
+        setTargetColors(PlayerColors.fromSeed(fromCover ? cover.paletteSeed(seed) : seed, dark), animated);
+        if (fromCover) cover.requestPalette();
     }
 
     private void onSeed(MessageObject mo, int value) {
@@ -681,6 +684,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     private void applyTransform() {
+        if (inline) return; // The context panel owns visibility, position and its appearance animation.
         boolean top = atTop();
         float p = showProgress * visibility();
         float direction = top ? 1f - 2f * Utilities.clamp01(dockProgress) : 1f;
@@ -713,6 +717,8 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
             nc.addObserver(this, NotificationCenter.messagePlayingProgressDidChanged);
             nc.addObserver(this, NotificationCenter.fileLoaded);
             nc.addObserver(this, NotificationCenter.audioInfoLoaded);
+            nc.addObserver(this, NotificationCenter.voicePlaylistChanged);
+            nc.addObserver(this, NotificationCenter.updateInterfaces);
         }
         update(false);
     }
@@ -754,12 +760,20 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
             nc.removeObserver(this, NotificationCenter.messagePlayingProgressDidChanged);
             nc.removeObserver(this, NotificationCenter.fileLoaded);
             nc.removeObserver(this, NotificationCenter.audioInfoLoaded);
+            nc.removeObserver(this, NotificationCenter.voicePlaylistChanged);
+            nc.removeObserver(this, NotificationCenter.updateInterfaces);
         }
     }
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.messagePlayingProgressDidChanged) {
+        if (id == NotificationCenter.updateInterfaces) {
+            if (isShown() && current != null && current.isVoice() && current.currentAccount == account &&
+                    ((int) args[0] & (MessagesController.UPDATE_MASK_AVATAR | MessagesController.UPDATE_MASK_NAME |
+                            MessagesController.UPDATE_MASK_CHAT_AVATAR | MessagesController.UPDATE_MASK_CHAT_NAME)) != 0) bind(current);
+        } else if (id == NotificationCenter.voicePlaylistChanged) {
+            if (Md3Player.supportsSpokenMessage(current) && current.currentAccount == account) updateTransportButtons();
+        } else if (id == NotificationCenter.messagePlayingProgressDidChanged) {
             playButton.progressChanged();
             lineProgressChanged();
         } else if (id == NotificationCenter.audioInfoLoaded) {
@@ -816,7 +830,12 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
             bind(mo);
         }
         playButton.setPlaying(want && !MediaController.getInstance().isMessagePaused(), animated);
-        setShown(want, animated);
+        if (inline) {
+            shown = want;
+            showProgress = want ? 1f : 0f;
+        } else {
+            setShown(want, animated);
+        }
     }
 
     private void bind(MessageObject mo) {
@@ -838,9 +857,19 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
     private void updateTransportButtons() {
         boolean spoken = Md3Player.supportsSpokenMessage(current);
-        prevButton.setVisibility(!spoken && PlayerStyle.miniPrevious() ? VISIBLE : GONE);
-        nextButton.setVisibility(!spoken && PlayerStyle.miniNext() ? VISIBLE : GONE);
+        prevButton.setVisibility(PlayerStyle.miniPrevious() ? VISIBLE : GONE);
+        nextButton.setVisibility(PlayerStyle.miniNext() ? VISIBLE : GONE);
+        boolean hasNext = !spoken || !MediaController.getInstance().hasNoNextVoiceOrRoundVideoMessage();
+        nextButton.setEnabled(hasNext);
+        nextButton.setAlpha(hasNext ? 1f : .38f);
         voiceSpeedButton.showForVoice(spoken);
+    }
+
+    private void skip(boolean next) {
+        MediaController mc = MediaController.getInstance();
+        if (Md3Player.supportsSpokenMessage(mc.getPlayingMessageObject())) mc.skipSpokenMessage(next);
+        else if (next) mc.playNextMessage();
+        else mc.playPreviousMessage();
     }
 
     private void setShown(boolean value, boolean animated) {
