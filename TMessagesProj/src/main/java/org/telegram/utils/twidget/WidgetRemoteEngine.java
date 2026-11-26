@@ -108,6 +108,13 @@ final class WidgetRemoteEngine extends WidgetEngine {
             }
             lost(this, dead);
         }
+
+        @Override
+        public void onNullBinding(ComponentName name) {
+            synchronized (lock) {
+                drop(this);
+            }
+        }
     }
 
     // Guarded by `lock`: the binding, made when there is none.
@@ -145,6 +152,7 @@ final class WidgetRemoteEngine extends WidgetEngine {
             try {
                 long deadline = SystemClock.elapsedRealtime() + BIND_TIMEOUT_MS;
                 while (binding.engine == null) {
+                    if (!binding.bound) throw new IllegalStateException("Widget engine service is unavailable");
                     long left = deadline - SystemClock.elapsedRealtime();
                     if (left <= 0) {
                         drop(binding); // a stuck binding is not waited on again: the next session binds afresh
@@ -187,7 +195,7 @@ final class WidgetRemoteEngine extends WidgetEngine {
 
     // Guarded by `lock`: one session of `binding` ended.
     private void released(Connection binding) {
-        if (--binding.live > 0) return;
+        if (--binding.live > 0 || !binding.bound) return;
         main.removeCallbacks(binding.idleUnbind);
         main.postDelayed(binding.idleUnbind, IDLE_UNBIND_MS);
     }
@@ -221,6 +229,7 @@ final class WidgetRemoteEngine extends WidgetEngine {
         binding.bound = false;
         main.removeCallbacks(binding.idleUnbind);
         if (connection == binding) connection = null;
+        lock.notifyAll();
         try {
             context.unbindService(binding);
         } catch (IllegalArgumentException ignored) {

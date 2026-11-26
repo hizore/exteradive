@@ -58,6 +58,9 @@ pwd = pwd ?: System.getenv('ALIAS_PASS')
 // она гасила cmake/jni-задачи, а нам нужен libtmessages.so.
 def nativeTarget = System.getenv('NATIVE_TARGET') ?: ''
 
+// Этот форк не собирает libtwidget и клиентскую часть JNI для HTML-виджетов.
+def widgetEngineEnabled = false
+
 android {
     defaultConfig.applicationId = APP_PACKAGE
 
@@ -146,7 +149,11 @@ android {
             glyphKey = System.getenv('GLYPH_API_KEY') ?: glyphKey
         }
 
-        manifestPlaceholders += [MAPS_API_KEY: mapsKey, GLYPH_API_KEY: glyphKey]
+        manifestPlaceholders += [
+            MAPS_API_KEY: mapsKey,
+            GLYPH_API_KEY: glyphKey,
+            WIDGET_ENGINE_ENABLED: widgetEngineEnabled.toString()
+        ]
 
         buildConfigField 'String', 'BUILD_VERSION_STRING', '"' + APP_VERSION_NAME + '"'
         buildConfigField 'String', 'BUILD_COMMIT_ID', '"' + shortCommit + '"'
@@ -157,6 +164,7 @@ android {
         buildConfigField 'long', 'BUILD_TIMESTAMP', buildTimestamp + 'L'
         buildConfigField 'boolean', 'DEBUG_TOOLS', String.valueOf(project.findProperty('debugTools') == 'true')
         buildConfigField 'boolean', 'DEBUG_PRIVATE_VERSION', 'false'
+        buildConfigField 'boolean', 'WIDGET_ENGINE_ENABLED', widgetEngineEnabled.toString()
 
         externalNativeBuild {
             cmake {

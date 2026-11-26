@@ -158,7 +158,10 @@ public final class WidgetEngineService extends Service {
     public void onCreate() {
         super.onCreate();
         long start = SystemClock.uptimeMillis();
-        if (!WidgetSandboxNative.available()) throw new IllegalStateException("libtwidget is missing");
+        if (!WidgetSandboxNative.available()) {
+            Log.w(TAG, "Widget engine unavailable: libtwidget could not be loaded");
+            return;
+        }
         long library = SystemClock.uptimeMillis() - start;
         // Before the first session: everything widget code could reach runs under it.
         if (installSeccomp(SECCOMP_ENFORCE) == 0 && org.telegram.messenger.BuildConfig.DEBUG_PRIVATE_VERSION) seccompSelfTest();
@@ -170,7 +173,7 @@ public final class WidgetEngineService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return engine;
+        return WidgetSandboxNative.available() ? engine : null;
     }
 
     /**

@@ -8,6 +8,7 @@ import android.view.Choreographer;
 
 import org.json.JSONObject;
 import org.telegram.messenger.AppGlobalConfig;
+import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.R;
@@ -287,7 +288,7 @@ public final class WidgetSandboxSession {
      * switch is on. Background thread.
      */
     public static void prewarmEngine(Context context) {
-        if (!WidgetEngine.isolated || disabledByConfig()) return;
+        if (disabledByConfig() || !WidgetEngine.isolated) return;
         android.app.ActivityManager activityManager = (android.app.ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (activityManager == null || activityManager.isLowRamDevice()) return;
         try {
@@ -317,10 +318,11 @@ public final class WidgetSandboxSession {
     private static boolean foregroundWatched;
 
     /**
-     * The kill switch (AppGlobalConfig#widgetsDisabled): true when the config of any logged-in account turns
-     * widgets off. No native session is created then, so no widget code runs in the client. Any thread.
+     * Widgets are disabled when the build has no native engine or any logged-in account turns them off
+     * (AppGlobalConfig#widgetsDisabled). Any thread.
      */
     public static boolean disabledByConfig() {
+        if (!BuildConfig.WIDGET_ENGINE_ENABLED) return true;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated() && AppGlobalConfig.getInstance(a).widgetsDisabled.get()) {
                 return true;
@@ -337,7 +339,7 @@ public final class WidgetSandboxSession {
         if (Looper.myLooper() == Looper.getMainLooper())
             throw new IllegalStateException("Start WidgetSandboxSession off UI");
         // The last gate before any widget code runs: every session, the chat's and the debug runners', comes here.
-        if (disabledByConfig()) throw new IllegalStateException("Widgets are disabled by the app config");
+        if (disabledByConfig()) throw new IllegalStateException("Widgets are disabled");
         // Set before the session exists: nothing reads it until the creator hands this object over.
         if (this.widthPx == 0) this.widthPx = widthPx;
         Trace.beginSection("WidgetSandbox:Create");
