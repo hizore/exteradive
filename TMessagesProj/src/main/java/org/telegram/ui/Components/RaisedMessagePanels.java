@@ -317,9 +317,10 @@ public final class RaisedMessagePanels {
         return View.MeasureSpec.makeMeasureSpec(Math.max(0, size), View.MeasureSpec.AT_MOST);
     }
 
-    private static void makeIconStrip(ActionBarPopupWindowLayout popup) {
+    /** Compact the main page only; keep the original actions, labels and swipe-back pages. */
+    static LinearLayout makeIconStrip(ActionBarPopupWindowLayout popup) {
         if (popup.getItemsCount() == 0) {
-            return;
+            return null;
         }
         ViewGroup original = (ViewGroup) popup.getItemAt(0).getParent();
         HorizontalScrollView scroll = new HorizontalScrollView(popup.getContext());
@@ -400,6 +401,7 @@ public final class RaisedMessagePanels {
         popup.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         popup.setFitItems(false);
         popup.setMinimumWidth(0);
+        return row;
     }
 
     /** Ряд сгруппированных иконок (GroupedIconsView.linearLayout). */

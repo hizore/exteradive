@@ -86,6 +86,7 @@ import org.telegram.ui.MainTabsActivity;
 import org.telegram.ui.bots.BotWebViewSheet;
 import org.telegram.ui.Components.Bulletin;
 import org.telegram.ui.Components.ChatAttachAlert;
+import org.telegram.ui.Components.ChatPreviewMenu;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
@@ -358,9 +359,18 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     break;
                 }
             }
+            ChatPreviewMenu compactMenu = null;
+            if (previewMenu instanceof ChatPreviewMenu && previewMenu.getParent() == this) {
+                BaseFragment fragment = getLastFragment();
+                if (fragment != null && fragment.isInPreviewMode() && fragment.getFragmentView() != null
+                        && fragment.getFragmentView().getParent() == this) {
+                    compactMenu = (ChatPreviewMenu) previewMenu;
+                    compactMenu.measureWithCard(fragment.getFragmentView(), width, height, systemAndDisplayInsets.top, actionBarHeight);
+                }
+            }
             for (int a = 0; a < count; a++) {
                 View child = getChildAt(a);
-                if (!(child instanceof ActionBar)) {
+                if (child != compactMenu && !(child instanceof ActionBar)) {
                     if (child instanceof BaseFragment.AttachedSheetWindow) {
                         measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, getBottomTabsHeight(false) > 0 || !isSupportEdgeToEdge ? 0 : systemAndDisplayInsets.bottom);
                     } else if (child.getTag(R.id.sheet_attached_to_fragment_tag) != null || child.getFitsSystemWindows()) {
@@ -442,7 +452,6 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     return false;
                 }*/
             }
-//            processMenuButtonsTouch(ev);
             boolean passivePreview = inPreviewMode && previewMenu == null;
             if ((passivePreview || transitionAnimationPreviewMode) && (ev.getActionMasked() == MotionEvent.ACTION_DOWN || ev.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN)) {
                 return false;
@@ -493,10 +502,14 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         float lastY, startY;
         // for menu buttons to be clicked by hover:
         private float pressX, pressY;
+        private final int[] hoverRootOffset = new int[2];
         private boolean allowToPressByHover;
         public void processMenuButtonsTouch(MotionEvent event) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 startY = event.getY();
+                pressX = event.getRawX();
+                pressY = event.getRawY();
+                allowToPressByHover = false;
             }
             if (isInPreviewMode() && previewMenu == null) {
                 lastY = event.getY();
@@ -511,43 +524,41 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 }
                 return;
             }
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                pressX = event.getX();
-                pressY = event.getY();
-                allowToPressByHover = false;
-            } else if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_UP) {
+            if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
                 if (previewMenu != null && highlightActionButtons) {
-//                    movePreviewFragment(Math.min(pressY, AndroidUtilities.displaySize.y * .4f) - event.getY());
-                    if (!allowToPressByHover && Math.sqrt(Math.pow(pressX - event.getX(), 2) + Math.pow(pressY - event.getY(), 2)) > dp(30)) {
+                    if (!allowToPressByHover && Math.hypot(pressX - event.getRawX(), pressY - event.getRawY()) > dp(30)) {
                         allowToPressByHover = true;
                     }
                     if (allowToPressByHover && (previewMenu.getSwipeBack() == null || !previewMenu.getSwipeBack().isForegroundOpen())) {
-                        for (int i = 0; i < previewMenu.getItemsCount(); ++i) {
-                            ActionBarMenuSubItem button = (ActionBarMenuSubItem) previewMenu.getItemAt(i);
-                            if (button != null) {
-                                Drawable ripple = button.getBackground();
-                                button.getGlobalVisibleRect(AndroidUtilities.rectTmp2);
-                                boolean shouldBeEnabled = AndroidUtilities.rectTmp2.contains((int) event.getX(), (int) event.getY()),
-                                        enabled = ripple.getState().length == 2;
-                                if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                                    if (shouldBeEnabled != enabled) {
-                                        ripple.setState(shouldBeEnabled ? new int[]{android.R.attr.state_pressed, android.R.attr.state_enabled} : new int[]{});
-                                        if (shouldBeEnabled) {
-                                            AndroidUtilities.vibrateCursor(button);
-                                        }
-                                    }
-                                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                                    if (shouldBeEnabled) {
-                                        button.performClick();
-                                    }
+                        ChatPreviewMenu strip = previewMenu instanceof ChatPreviewMenu ? (ChatPreviewMenu) previewMenu : null;
+                        int count = strip == null ? previewMenu.getItemsCount() : strip.getActionCount();
+                        // getGlobalVisibleRect uses root-view coordinates, including clipping by the scroller.
+                        getRootView().getLocationOnScreen(hoverRootOffset);
+                        int x = (int) (event.getRawX() - hoverRootOffset[0]);
+                        int y = (int) (event.getRawY() - hoverRootOffset[1]);
+                        View selected = null;
+                        for (int i = 0; i < count; ++i) {
+                            View item = strip == null ? previewMenu.getItemAt(i) : strip.getActionAt(i);
+                            if (item instanceof ActionBarMenuSubItem) {
+                                ActionBarMenuSubItem button = (ActionBarMenuSubItem) item;
+                                boolean hit = button.isEnabled() && button.getGlobalVisibleRect(AndroidUtilities.rectTmp2)
+                                        && AndroidUtilities.rectTmp2.contains(x, y);
+                                boolean pressed = hit && event.getAction() == MotionEvent.ACTION_MOVE;
+                                if (pressed != button.isPressed()) {
+                                    button.setPressed(pressed);
+                                    if (pressed) AndroidUtilities.vibrateCursor(button);
+                                }
+                                if (hit && event.getAction() == MotionEvent.ACTION_UP) {
+                                    selected = button;
                                 }
                             }
                         }
+                        if (selected != null) selected.performClick();
                     }
                 }
             }
             if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-                if (previewMenu != null && highlightActionButtons) {
+                if (previewMenu != null && !(previewMenu instanceof ChatPreviewMenu) && highlightActionButtons) {
                     int alpha = 255;
                     alpha = Theme.moveUpDrawable.getAlpha();
                     ValueAnimator arrowAlphaUpdate = ValueAnimator.ofFloat(alpha, 0);
@@ -2639,7 +2650,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         containerViewBack.setShouldHandleBottomInsets(!preview ? edgeToEdgeSupportMode : EdgeToEdgeSupportMode.NONE);
         containerViewBack.setDrawNavigationBar(!preview && drawNavigationBar);
         int menuHeight = 0;
-        if (menu != null) {
+        if (menu instanceof ChatPreviewMenu) {
+            containerViewBack.addView(menu, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        } else if (menu != null) {
             containerViewBack.addView(menu);
             menu.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.AT_MOST));
             menuHeight = menu.getMeasuredHeight() + dp(24);
@@ -2665,7 +2678,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                     layoutParams.topMargin += AndroidUtilities.statusBarHeight;
                 }
             }
-            if (menu != null) {
+            if (menu != null && !(menu instanceof ChatPreviewMenu)) {
                 layoutParams.bottomMargin += menuHeight + dp(8);
 //                layoutParams.topMargin += AndroidUtilities.dp(32);
             }
@@ -2704,7 +2717,9 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         containerView.setTranslationY(0);
 
         if (preview) {
-            if (fragment instanceof ChatActivity) {
+            if (menu instanceof ChatPreviewMenu) {
+                fragmentView.setOutlineProvider(ViewOutlineProviderImpl.boundsWithPaddingRoundRect(0, dp(24)));
+            } else if (fragment instanceof ChatActivity) {
                 if (menu != null) {
                     fragmentView.setOutlineProvider(new ViewOutlineProvider() {
                         private final Path path = new Path();
@@ -3124,6 +3139,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
                 }
             });
             currentSpringAnimation.addEndListener((animation, canceled, value, velocity) -> {
+                removeExpandedChatPreviewMenu();
                 presentFragmentInternalRemoveOld(false, prevFragment);
                 previewOpenAnimationInProgress = false;
                 fragment.onPreviewOpenAnimationEnd();
@@ -3136,6 +3152,7 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
             return;
         }
 
+        removeExpandedChatPreviewMenu();
         presentFragmentInternalRemoveOld(false, prevFragment);
 
         AnimatorSet animatorSet = new AnimatorSet();
@@ -3164,6 +3181,13 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         try {
             AndroidUtilities.setLightStatusBar(parentActivity, fragment.isLightStatusBar());
         } catch (Exception ignore) {}
+    }
+
+    private void removeExpandedChatPreviewMenu() {
+        if (previewMenu instanceof ChatPreviewMenu) {
+            AndroidUtilities.removeFromParent(previewMenu);
+            previewMenu = null;
+        }
     }
 
     @Override
@@ -4081,6 +4105,17 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
     private boolean tabsEvents;
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        // The dialog list still owns the long press that opened the preview. Observe that
+        // gesture here, before child dispatch, then leave fresh taps/scrolls to the strip.
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            if (previewMenu instanceof ChatPreviewMenu) {
+                highlightActionButtons = false;
+            } else if (containerView != null) {
+                containerView.processMenuButtonsTouch(ev);
+            }
+        } else if (previewMenu instanceof ChatPreviewMenu && highlightActionButtons) {
+            containerViewBack.processMenuButtonsTouch(ev);
+        }
         final boolean tabs = ev.getY() > getHeight() - getBottomTabsHeight(true) - systemAndDisplayInsets.bottom;
 
         BaseFragment.AttachedSheet lastSheet = null;

@@ -202,21 +202,12 @@ object AppearanceConfig {
     }
 
     @JvmField
-    val chatPreviewMenuOpacity = addConfig("OEAppearanceChatPreviewMenuOpacity", ConfigItem.configTypeInt, 65)
-
-    @JvmField
-    val chatPreviewMenuBlurStrength = addConfig("OEAppearanceChatPreviewMenuBlurStrength", ConfigItem.configTypeInt, 65)
+    val chatPreviewMenuBlur = addConfig("OEAppearanceChatPreviewMenuBlur", ConfigItem.configTypeBool, true)
 
     @JvmStatic
-    fun chatPreviewMenuOpacity(): Int {
+    fun chatPreviewMenuBlur(): Boolean {
         ensureLoaded()
-        return chatPreviewMenuOpacity.Int().coerceIn(0, 100)
-    }
-
-    @JvmStatic
-    fun chatPreviewMenuBlurStrength(): Int {
-        ensureLoaded()
-        return chatPreviewMenuBlurStrength.Int().coerceIn(0, 100)
+        return chatPreviewMenuBlur.Bool()
     }
 
     @JvmStatic
@@ -717,15 +708,7 @@ object AppearanceConfig {
             if (configLoaded && !force) return
             if (ApplicationLoader.applicationContext == null) return
             val preferences = getPreferences()
-            val oldKey = "OEAppearanceChatPreviewMenuTransparency"
-            if (preferences.contains(oldKey)) {
-                val editor = preferences.edit().remove(oldKey)
-                if (!preferences.contains(chatPreviewMenuOpacity.key)) {
-                    val transparency = (preferences.all[oldKey] as? Int ?: 35).coerceIn(0, 100)
-                    editor.putInt(chatPreviewMenuOpacity.key, 100 - transparency)
-                }
-                editor.apply()
-            }
+            migrateChatPreviewMenuBlur(preferences)
             for (item in configs) {
                 try {
                     when (item.type) {
@@ -751,6 +734,22 @@ object AppearanceConfig {
             configLoaded = true
         }
         migrateLegacyKeys()
+    }
+
+    private fun migrateChatPreviewMenuBlur(preferences: SharedPreferences) {
+        val strengthKey = "OEAppearanceChatPreviewMenuBlurStrength"
+        val opacityKey = "OEAppearanceChatPreviewMenuOpacity"
+        val transparencyKey = "OEAppearanceChatPreviewMenuTransparency"
+        if (!preferences.contains(strengthKey) && !preferences.contains(opacityKey) && !preferences.contains(transparencyKey)) return
+
+        val editor = preferences.edit().remove(strengthKey).remove(opacityKey).remove(transparencyKey)
+        if (!preferences.contains(chatPreviewMenuBlur.key)) {
+            val old = preferences.all
+            val strength = old[strengthKey] as? Int ?: 65
+            val opacity = old[opacityKey] as? Int ?: (100 - (old[transparencyKey] as? Int ?: 35).coerceIn(0, 100))
+            editor.putBoolean(chatPreviewMenuBlur.key, strength > 0 && opacity < 100)
+        }
+        editor.apply()
     }
 
     private fun migrateLegacyKeys() {

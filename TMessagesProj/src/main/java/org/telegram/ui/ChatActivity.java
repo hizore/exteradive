@@ -34289,12 +34289,7 @@ public class ChatActivity extends BaseFragment implements
             // оставаться на обычном фоне/стекле при выключенных тумблерах.
             updateScrimSourceBitmap();
             if (menuBlurStrong) {
-                popupLayout.setHideOwnBackgroundDrawable(true);
-                // exteradive: мороз рисуется явно в dispatchDraw попапа — как в
-                // ряду реакций; BACKGROUND view путь на устройстве не показывал
-                // панель вовсе (меню казалось прозрачным).
-                popupLayout.setBackground(null);
-                popupLayout.setFrostBackground(GlassMenuHelper.frostPanel(popupLayout, messageTint, 12));
+                GlassMenuHelper.applyFrostMenu(popupLayout, messageTint);
             } else {
                 if (glassMenu) {
                     GlassMenuHelper.applyToPopup(scrimBlur3Factory, themeDelegate, popupLayout);
@@ -34305,14 +34300,6 @@ public class ChatActivity extends BaseFragment implements
                         .setRadius(dp(12))
                         .setPadding(dp(8)));
                 }
-            }
-            // exteradive: страницы swipe-back («Назад»: список реакций /
-            // просмотревшие) рисуются прямо поверх единого frostBackground
-            // попапа (foregroundOnGlass = true) без второго полупрозрачного
-            // прямоугольника внутри — панель идентична остальным и без
-            // двойной рамки.
-            if (menuBlurStrong && popupLayout.getSwipeBack() != null) {
-                popupLayout.getSwipeBack().setForegroundOnGlass(true);
             }
             MessageSeenView messageSeenView = null;
 

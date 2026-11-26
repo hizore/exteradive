@@ -199,6 +199,7 @@ import org.telegram.ui.Components.ArchiveHelp;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.BlurredRecyclerView;
+import org.telegram.ui.Components.ChatPreviewMenu;
 import org.telegram.ui.Components.ColoredImageSpan;
 import org.telegram.ui.Components.DialogsActivityStatusLayout;
 import org.telegram.ui.Components.DialogsActivityTopBubblesFadeView;
@@ -8824,26 +8825,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             getMessagesController().dialogFiltersLoaded &&
             getMessagesController().dialogFilters != null &&
             getMessagesController().dialogFilters.size() > 0;
-        final ActionBarPopupWindow.ActionBarPopupWindowLayout[] previewMenu = new ActionBarPopupWindow.ActionBarPopupWindowLayout[1];
-
         LinearLayout foldersMenuView = null;
-        int[] foldersMenu = new int[1];
+        ActionBarMenuSubItem backItem = null;
         if (hasFolders) {
             foldersMenuView = new LinearLayout(getParentActivity());
             foldersMenuView.setOrientation(LinearLayout.VERTICAL);
 
-            ScrollView scrollView = new ScrollView(getParentActivity()) {
-                @Override
-                protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                    super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(
-                            (int) Math.min(
-                                    MeasureSpec.getSize(heightMeasureSpec),
-                                    Math.min(AndroidUtilities.displaySize.y * 0.35f, dp(400))
-                            ),
-                            MeasureSpec.getMode(heightMeasureSpec)
-                    ));
-                }
-            };
+            ScrollView scrollView = new ScrollView(getParentActivity());
             LinearLayout linearLayout = new LinearLayout(getParentActivity());
             linearLayout.setOrientation(LinearLayout.VERTICAL);
             scrollView.addView(linearLayout);
@@ -8864,7 +8852,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         continue;
                     }
                 }
-                ActionBarMenuSubItem folderItem = lastItem = new ActionBarMenuSubItem(getParentActivity(), 2, !backButtonAtTop && linearLayout.getChildCount() == 0, false, null);
+                ActionBarMenuSubItem folderItem = lastItem = new ActionBarMenuSubItem(getParentActivity(), 2, !backButtonAtTop && linearLayout.getChildCount() == 0, false, getResourceProvider());
                 folderItem.setChecked(contains);
                 CharSequence title = folder.name;
                 title = Emoji.replaceEmoji(title, folderItem.getTextView().getPaint().getFontMetricsInt(), false);
@@ -8901,16 +8889,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 hasFolders = false;
             } else {
                 View gap = new View(getParentActivity());
-                gap.setBackgroundColor(GlassMenuHelper.separatorColor(true, getResourceProvider()));
-                gap.setTag(R.id.fit_width_tag, 1);
-                ActionBarMenuSubItem backItem = new ActionBarMenuSubItem(getParentActivity(), backButtonAtTop, !backButtonAtTop);
+                backItem = new ActionBarMenuSubItem(getParentActivity(), backButtonAtTop, !backButtonAtTop, getResourceProvider());
                 backItem.setTextAndIcon(LocaleController.getString(R.string.Back), R.drawable.ic_ab_back);
                 backItem.setMinimumWidth(160);
-                backItem.setOnClickListener(e -> {
-                    if (previewMenu[0] != null) {
-                        previewMenu[0].getSwipeBack().closeForeground();
-                    }
-                });
                 if (backButtonAtTop) {
                     foldersMenuView.addView(backItem);
                     foldersMenuView.addView(gap, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 8));
@@ -8923,38 +8904,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        int flags = ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_SHOWN_FROM_BOTTOM;
-        if (hasFolders) {
-            flags |= ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK;
-        }
-
-        final BaseFragment[] previewActivity = new BaseFragment[1];
-        previewMenu[0] = new ActionBarPopupWindow.ActionBarPopupWindowLayout(getParentActivity(), R.drawable.popup_fixed_alert4, getResourceProvider(), flags);
+        final ChatPreviewMenu previewMenu = new ChatPreviewMenu(getParentActivity(), getResourceProvider(), hasFolders);
 
         if (hasFolders) {
-            previewMenu[0].getSwipeBack().setForegroundOnGlass(true);
-            foldersMenu[0] = previewMenu[0].addViewToSwipeBack(foldersMenuView);
-            ActionBarMenuSubItem addToFolderItem = new ActionBarMenuSubItem(getParentActivity(), true, false);
+            backItem.setOnClickListener(e -> previewMenu.getSwipeBack().closeForeground());
+            int foldersMenu = previewMenu.addViewToSwipeBack(foldersMenuView);
+            ActionBarMenuSubItem addToFolderItem = new ActionBarMenuSubItem(getParentActivity(), true, false, getResourceProvider());
             addToFolderItem.setTextAndIcon(LocaleController.getString(R.string.FilterAddTo), R.drawable.msg_addfolder);
             addToFolderItem.setMinimumWidth(160);
             addToFolderItem.setOnClickListener(e ->
-                    previewMenu[0].getSwipeBack().openForeground(foldersMenu[0])
+                    previewMenu.getSwipeBack().openForeground(foldersMenu)
             );
-            previewMenu[0].addView(addToFolderItem);
-            previewMenu[0].getSwipeBack().setOnHeightUpdateListener(height -> {
-                if (previewActivity[0] == null || previewActivity[0].getFragmentView() == null || !previewActivity[0].isInPreviewMode()) {
-                    return;
-                }
-                ViewGroup.LayoutParams lp = previewActivity[0].getFragmentView().getLayoutParams();
-                if (lp instanceof ViewGroup.MarginLayoutParams) {
-                    ((ViewGroup.MarginLayoutParams) lp).bottomMargin = dp(24 + 16 + 8) + height;
-                    previewActivity[0].getFragmentView().setLayoutParams(lp);
-                }
-            });
+            previewMenu.addView(addToFolderItem);
         }
 
         if (!isCommunityCell) {
-            ActionBarMenuSubItem markAsUnreadItem = new ActionBarMenuSubItem(getParentActivity(), !hasFolders, false);
+            ActionBarMenuSubItem markAsUnreadItem = new ActionBarMenuSubItem(getParentActivity(), !hasFolders, false, getResourceProvider());
             if (cell.getHasUnread()) {
                 markAsUnreadItem.setTextAndIcon(LocaleController.getString(R.string.MarkAsRead), R.drawable.msg_markread);
             } else {
@@ -8969,7 +8934,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
                 finishPreviewFragment();
             });
-            previewMenu[0].addView(markAsUnreadItem);
+            previewMenu.addView(markAsUnreadItem);
         }
 
         final boolean[] hasPinAction = new boolean[1];
@@ -9032,7 +8997,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
         if (hasPinAction[0]) {
-            ActionBarMenuSubItem unpinItem = new ActionBarMenuSubItem(getParentActivity(), !hasFolders && isCommunityCell, false);
+            ActionBarMenuSubItem unpinItem = new ActionBarMenuSubItem(getParentActivity(), !hasFolders && isCommunityCell, false, getResourceProvider());
             if (isDialogPinned(dialog)) {
                 unpinItem.setTextAndIcon(LocaleController.getString(R.string.UnpinMessage), R.drawable.msg_unpin);
             } else {
@@ -9089,11 +9054,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
                 }, 100);
             });
-            previewMenu[0].addView(unpinItem);
+            previewMenu.addView(unpinItem);
         }
 
         if (!DialogObject.isUserDialog(dialogId) || !UserObject.isUserSelf(getMessagesController().getUser(dialogId))) {
-            ActionBarMenuSubItem muteItem = new ActionBarMenuSubItem(getParentActivity(), false, false);
+            ActionBarMenuSubItem muteItem = new ActionBarMenuSubItem(getParentActivity(), false, false, getResourceProvider());
             if (!getMessagesController().isDialogMuted(dialogId, 0)) {
                 muteItem.setTextAndIcon(LocaleController.getString(R.string.Mute), R.drawable.msg_mute);
             } else {
@@ -9110,11 +9075,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 BulletinFactory.createMuteBulletin(this, !isMuted, null).show();
                 finishPreviewFragment();
             });
-            previewMenu[0].addView(muteItem);
+            previewMenu.addView(muteItem);
         }
 
         if (!isCommunityCell) {
-            ActionBarMenuSubItem deleteItem = new ActionBarMenuSubItem(getParentActivity(), false, true);
+            ActionBarMenuSubItem deleteItem = new ActionBarMenuSubItem(getParentActivity(), false, true, getResourceProvider());
             deleteItem.setIconColor(getThemedColor(Theme.key_text_RedRegular));
             deleteItem.setTextColor(getThemedColor(Theme.key_text_RedBold));
             deleteItem.setSelectorColorKey(Theme.key_text_RedBold, .12f);
@@ -9124,7 +9089,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 performSelectedDialogsAction(dialogIdArray, delete, false, false);
                 finishPreviewFragment();
             });
-            previewMenu[0].addView(deleteItem);
+            previewMenu.addView(deleteItem);
         }
 
 
@@ -9133,28 +9098,28 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (searchString != null) {
                 getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
             }
-            prepareChatPreviewBackdrop(showMenu ? previewMenu[0] : null);
+            prepareChatPreviewBackdrop(showMenu ? previewMenu : null);
             parentLayout.setHighlightActionButtons(true);
 
             args = new Bundle();
             args.putLong("community_id", -dialogId);
             DialogsActivity dialogsActivity = new DialogsActivity(args);
             if (!showMenu) {
-                presentFragmentAsPreview(previewActivity[0] = dialogsActivity);
+                presentFragmentAsPreview(dialogsActivity);
             } else {
-                presentFragmentAsPreviewWithMenu(previewActivity[0] = dialogsActivity, previewMenu[0]);
+                presentFragmentAsPreviewWithMenu(dialogsActivity, previewMenu);
             }
         } else if (getMessagesController().checkCanOpenChat(args, DialogsActivity.this)) {
             if (searchString != null) {
                 getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
             }
-            prepareChatPreviewBackdrop(showMenu ? previewMenu[0] : null);
+            prepareChatPreviewBackdrop(showMenu ? previewMenu : null);
             parentLayout.setHighlightActionButtons(true);
             final ChatActivity chatActivity1 = new ChatActivity(args);
             if (!showMenu) {
-                presentFragmentAsPreview(previewActivity[0] = chatActivity1);
+                presentFragmentAsPreview(chatActivity1);
             } else {
-                presentFragmentAsPreviewWithMenu(previewActivity[0] = chatActivity1, previewMenu[0]);
+                presentFragmentAsPreviewWithMenu(chatActivity1, previewMenu);
                 if (chatActivity1 != null) {
                     chatActivity1.allowExpandPreviewByClick = true;
                     try {
@@ -9316,24 +9281,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         fragmentView.invalidate();
     }
 
-    private void prepareChatPreviewBackdrop(@Nullable ActionBarPopupWindow.ActionBarPopupWindowLayout menu) {
+    private void prepareChatPreviewBackdrop(@Nullable ChatPreviewMenu menu) {
         if (menu != null) {
-            final int opacity = AppearanceConfig.chatPreviewMenuOpacity();
-            menu.setBackAlpha(Math.round(255 * opacity / 100f));
-            if (opacity < 100) {
-                // Capture before the preview is presented. At zero blur the menu reveals the sharp
-                // list, even though the rest of the preview backdrop still uses the stock blur.
-                final int strength = AppearanceConfig.chatPreviewMenuBlurStrength();
+            menu.compactActions();
+            SnapshotFrostDrawable surface = GlassMenuHelper.applyFrostMenu(menu, getThemedColor(Theme.key_chat_inBubble));
+            surface.setBitmap(null); // Use the solid fallback, never a snapshot from another chat.
+            if (AppearanceConfig.chatPreviewMenuBlur()) {
                 final ViewGroup previewRoot = parentLayout.getView();
-                SnapshotFrostDrawable.captureWindowAndBlur(getParentActivity(), strength == 0 ? 1 : 4,
-                        strength / 100f, bitmap -> {
-                            if (bitmap != null) {
-                                menu.setFrostBackground(new SnapshotFrostDrawable(menu)
-                                        .setBitmap(bitmap).setCornerRadius(dp(12)));
-                                // The preview moves by view transforms, which can reuse a cached display list.
-                                new ViewPositionWatcher(menu).subscribe(menu, previewRoot, (v, bounds) -> v.invalidate());
-                            }
-                        });
+                SnapshotFrostDrawable.captureWindowAndBlur(getParentActivity(), 6, 1f, bitmap -> {
+                    if (bitmap != null) {
+                        surface.setBitmap(bitmap);
+                        menu.invalidate();
+                        new ViewPositionWatcher(menu).subscribe(menu, previewRoot, (v, bounds) -> v.invalidate());
+                    }
+                });
             }
         }
         if (blurredView == null || fragmentView == null || fragmentView.getWidth() == 0 || fragmentView.getHeight() == 0) {

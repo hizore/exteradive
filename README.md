@@ -19,8 +19,8 @@ https://my.telegram.org (API development tools) — значение по умо
 - `TMessagesProj_Modules/` — вспомогательные media3/экспериментальные модули.
 - `local.properties` — путь к SDK и личные ключи (образец приведён ниже).
   В репозитории файла нет и он не коммитится.
-- `APK/` — релизные артефакты (`ExteraDive-arm64-v8a.apk`,
-  `ExteraDive-armeabi-v7a.apk`), в репозиторий не попадают.
+- `APK/` — релизные артефакты (`exteradive-arm64-v8a.apk`,
+  `exteradive-armeabi-v7a.apk`), в репозиторий не попадают.
 
 В репозитории намеренно нет `.gitignore`, `.gitmodules` и `.github/`: локальные
 исключения держим в `.git/info/exclude`, вложенные репозитории зафиксированы
@@ -57,8 +57,8 @@ java -cp "gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMai
 $env:NATIVE_TARGET = "armeabi-v7a"  # повторить команду выше
 ```
 
-На выходе: `TMessagesProj/build/outputs/apk/release/*.apk`. Сохрани их в
-`APK/ExteraDive-<abi>.apk`.
+После сборки каждого ABI скопируй `TMessagesProj/build/outputs/apk/release/exteradive-<abi>.apk`
+в `APK/` под тем же именем.
 
 `build.gradle` поддерживает локальные env-переменные: `BUILD_TIMESTAMP`,
 `COMMIT_ID`, `KEYSTORE_PASS`, `ALIAS_NAME`, `ALIAS_PASS`, `TELEGRAM_APP_ID`,

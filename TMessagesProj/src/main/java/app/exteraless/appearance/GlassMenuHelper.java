@@ -88,6 +88,18 @@ public abstract class GlassMenuHelper {
         return frostPanel(host, baseColor, radiusDp, 1f);
     }
 
+    /** One surface for both the main actions and the swipe-back page. */
+    public static SnapshotFrostDrawable applyFrostMenu(ActionBarPopupWindow.ActionBarPopupWindowLayout popup, int tint) {
+        SnapshotFrostDrawable frost = frostPanel(popup, tint, 12);
+        popup.setHideOwnBackgroundDrawable(true);
+        popup.setBackground(null);
+        popup.setFrostBackground(frost);
+        if (popup.getSwipeBack() != null) {
+            popup.getSwipeBack().setForegroundOnGlass(true);
+        }
+        return frost;
+    }
+
     public static SnapshotFrostDrawable frostPanel(View host, int baseColor, float radiusDp, float opacity) {
         final boolean dark = Theme.isCurrentThemeDark();
         final int flat = ColorUtils.compositeColors(baseColor,
