@@ -53,16 +53,15 @@ public final class SnapshotFrostDrawable extends Drawable {
     }
 
     /**
-     * Размытый снимок экрана. Сила блюра — 0..1: 0 ≈ почти без размытия,
-     * 1 ≈ радиус в четверть короткой стороны кадра (это «х3» от стандартного
-     * захвата стекла). Значение по умолчанию — максимальная сила.
+     * Сила блюра — 0..1. Ноль пропускает фильтр; при downscale=1 снимок
+     * остаётся в исходном разрешении. Максимальный радиус — 1/10 короткой стороны.
      */
     public static @Nullable Bitmap captureAndBlur(@Nullable View root, int downscale, float blurStrength) {
         if (root == null || root.getWidth() <= 0 || root.getHeight() <= 0) {
             return null;
         }
         try {
-            final int ds = Math.max(2, downscale);
+            final int ds = Math.max(1, downscale);
             final int w = Math.max(1, root.getWidth() / ds);
             final int h = Math.max(1, root.getHeight() / ds);
             Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
@@ -76,15 +75,7 @@ public final class SnapshotFrostDrawable extends Drawable {
             canvas.drawColor(org.telegram.ui.ActionBar.Theme.getColor(
                     org.telegram.ui.ActionBar.Theme.key_windowBackgroundWhite));
             root.draw(canvas);
-            float strength = Math.max(0f, Math.min(1f, blurStrength));
-            // exteradive: та же perceptual'ная кривая, что у PixelCopy-пути:
-            // максимум = min(стороны)/10, 0% — почти резкий кадр.
-            int base = Math.max(4, Math.min(w, h) / 10);
-            int radius = strength > 0.01f ? Math.max(2, Math.round(base * strength * strength)) : 0;
-            if (radius > 1) {
-                Utilities.stackBlurBitmap(bitmap, radius);
-            }
-            bitmap.setHasAlpha(false);
+            blurInPlace(bitmap, blurStrength);
             return bitmap;
         } catch (Throwable t) {
             FileLog.e(t);
@@ -111,59 +102,49 @@ public final class SnapshotFrostDrawable extends Drawable {
         android.view.Window window = activity == null ? null : activity.getWindow();
         View decor = window == null ? null : window.peekDecorView();
         if (window == null || decor == null || decor.getWidth() <= 0 || decor.getHeight() <= 0
-                || android.os.Build.VERSION.SDK_INT < 24) {
-            // запасной путь — старый синхронный захват (эмуляторы, API<24)
+                || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+            // PixelCopy.request(Window, ...) появился в API 26.
             cb.onResult(captureAndBlur(decor, downscale, blurStrength));
             return;
         }
-        final int ds = Math.max(2, downscale);
-        final int sw = decor.getWidth();
-        final int sh = decor.getHeight();
-        final Bitmap src;
+        final int ds = Math.max(1, downscale);
+        final Bitmap bitmap;
         try {
-            src = Bitmap.createBitmap(sw, sh, Bitmap.Config.ARGB_8888);
+            // PixelCopy scales the window into the destination; no full-size intermediate needed.
+            bitmap = Bitmap.createBitmap(Math.max(1, decor.getWidth() / ds),
+                    Math.max(1, decor.getHeight() / ds), Bitmap.Config.ARGB_8888);
         } catch (Throwable t) {
             cb.onResult(null);
             return;
         }
         try {
-            android.view.PixelCopy.request(window, src, result -> {
-                Bitmap out = null;
-                try {
-                    if (result == android.view.PixelCopy.SUCCESS) {
-                        out = blurScaled(src, ds, blurStrength);
-                    }
-                } catch (Throwable t) {
-                    FileLog.e(t);
-                } finally {
-                    if (!src.isRecycled()) {
-                        src.recycle();
+            android.view.PixelCopy.request(window, new Rect(0, 0, decor.getWidth(), decor.getHeight()), bitmap, result -> {
+                if (result == android.view.PixelCopy.SUCCESS) {
+                    try {
+                        blurInPlace(bitmap, blurStrength);
+                        AndroidUtilities.runOnUIThread(() -> cb.onResult(bitmap));
+                        return;
+                    } catch (Throwable t) {
+                        FileLog.e(t);
                     }
                 }
-                cb.onResult(out);
-            }, new android.os.Handler(android.os.Looper.getMainLooper()));
+                bitmap.recycle();
+                AndroidUtilities.runOnUIThread(() -> cb.onResult(null));
+            }, Utilities.themeQueue.getHandlerSync());
         } catch (Throwable t) {
             FileLog.e(t);
-            if (!src.isRecycled()) {
-                src.recycle();
-            }
+            bitmap.recycle();
             cb.onResult(null);
         }
     }
 
-    private static @Nullable Bitmap blurScaled(@NonNull Bitmap src, int downscale, float blurStrength) {
-        final int ds = Math.max(2, downscale);
-        final int w = Math.max(1, src.getWidth() / ds);
-        final int h = Math.max(1, src.getHeight() / ds);
-        Bitmap small = Bitmap.createScaledBitmap(src, w, h, true);
+    private static void blurInPlace(Bitmap bitmap, float blurStrength) {
         float strength = Math.max(0f, Math.min(1f, blurStrength));
-        int base = Math.max(4, Math.min(w, h) / 10);
-        int radius = strength > 0.01f ? Math.max(2, Math.round(base * strength * strength)) : 0;
-        if (radius > 1) {
-            Utilities.stackBlurBitmap(small, radius);
+        if (strength > 0f) {
+            int base = Math.max(4, Math.min(bitmap.getWidth(), bitmap.getHeight()) / 10);
+            Utilities.stackBlurBitmap(bitmap, Math.max(1, Math.round(base * strength * strength)));
         }
-        small.setHasAlpha(false);
-        return small;
+        bitmap.setHasAlpha(false);
     }
 
     private WeakReference<View> hostRef;
@@ -283,8 +264,7 @@ public final class SnapshotFrostDrawable extends Drawable {
                 shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
                 frostPaint.setShader(shader);
             }
-            // Снимок растянут на экран; панель живёт в своих координатах, поэтому
-            // из матрицы шейдера вычитаем позицию вида-хозяина на экране.
+            // Собственный снимок привязан к окну; общий может рисоваться в другом popup-окне.
             View host = hostRef.get();
             canvas.getMatrix(canvasMatrix);
             if (!canvasMatrix.invert(shaderMatrix)) {
@@ -294,7 +274,11 @@ public final class SnapshotFrostDrawable extends Drawable {
             if (host != null && host.isAttachedToWindow()) {
                 originPoint[0] = originPoint[1] = 0f;
                 canvasMatrix.mapPoints(originPoint);
-                host.getLocationOnScreen(screenLocation);
+                if (ownBitmapSet) {
+                    host.getLocationInWindow(screenLocation);
+                } else {
+                    host.getLocationOnScreen(screenLocation);
+                }
                 tx = originPoint[0] - screenLocation[0];
                 ty = originPoint[1] - screenLocation[1];
             }

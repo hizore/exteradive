@@ -475,9 +475,9 @@ public class ActionBarPopupWindow extends PopupWindow {
                 int leftEdge = swipeBackLayout != null && swipeBackLayout.stickToRight
                         ? getMeasuredWidth() - frostW : 0;
                 int l = leftEdge + bgPaddings.left;
-                int t = bgPaddings.top;
+                int t = (shownFromBottom ? (int) (getMeasuredHeight() * (1f - backScaleY)) : 0) + bgPaddings.top;
                 int r = leftEdge + frostW - bgPaddings.right;
-                int b = frostH - bgPaddings.bottom;
+                int b = (shownFromBottom ? getMeasuredHeight() : frostH) - bgPaddings.bottom;
                 if (r > l && b > t) {
                     frostBackground.setBounds(l, t, r, b);
                     frostBackground.draw(canvas);

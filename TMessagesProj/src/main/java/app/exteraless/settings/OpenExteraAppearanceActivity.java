@@ -94,6 +94,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private static final int TYPE_VOICE_WAVE_AMPLITUDE = 114;
     private static final int TYPE_VOICE_WAVE_DENSITY = 115;
     private static final int TYPE_VOICE_WAVE_SPEED = 116;
+    private static final int TYPE_CHAT_PREVIEW_MENU_TRANSPARENCY = 117;
+    private static final int TYPE_CHAT_PREVIEW_MENU_BLUR = 118;
 
     // Appearance
     private int appearanceHeaderRow;
@@ -122,6 +124,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
     private final int liftMessageBlurRow = -1; // тумблер убран: блюр поднятых всегда включён
     private int reactionsPanelBlurRow;
     private int contextMenuBlurRow;
+    private int chatPreviewMenuTransparencyRow;
+    private int chatPreviewMenuBlurStrengthRow;
     private int sidePanelBlurRow;
     // exteradive: ползунки боковой панели (шторки)
     private int sidePanelOpacityRow;
@@ -300,6 +304,8 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
         hideReactionsRow = addRow("hideReactions");
         reactionsPanelBlurRow = addRow("reactionsPanelBlur");
         contextMenuBlurRow = addRow("contextMenuBlur");
+        chatPreviewMenuTransparencyRow = addRow("chatPreviewMenuTransparency");
+        chatPreviewMenuBlurStrengthRow = addRow("chatPreviewMenuBlurStrength");
         sidePanelBlurRow = addRow("sidePanelBlur");
         sidePanelOpacityRow = addRow("sidePanelOpacity");
         sidePanelBlurStrengthRow = addRow("sidePanelBlurStrength");
@@ -1063,6 +1069,21 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                     view = blurStrengthSlider;
                     break;
                 }
+                case TYPE_CHAT_PREVIEW_MENU_TRANSPARENCY:
+                case TYPE_CHAT_PREVIEW_MENU_BLUR: {
+                    boolean transparency = viewType == TYPE_CHAT_PREVIEW_MENU_TRANSPARENCY;
+                    ConfigItem setting = transparency ? AppearanceConfig.chatPreviewMenuTransparency : AppearanceConfig.chatPreviewMenuBlurStrength;
+                    String title = getString(transparency ? R.string.OEAppearanceChatPreviewMenuTransparency : R.string.OEAppearanceChatPreviewMenuBlurStrength);
+                    AvatarCornersSeekBar slider = new AvatarCornersSeekBar(mContext, setting::setConfigInt, 0, 100, title,
+                            getString(transparency ? R.string.OEAppearanceBubbleOpacityMax : R.string.OEAppearanceSectionRadiusOff),
+                            getString(transparency ? R.string.OEAppearanceBubbleOpacityMin : R.string.OEAppearanceSectionRadiusMax));
+                    slider.seekBarView.setContentDescription(title);
+                    slider.setValueSuffix("%");
+                    slider.setValue(transparency ? AppearanceConfig.chatPreviewMenuTransparency() : AppearanceConfig.chatPreviewMenuBlurStrength());
+                    slider.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+                    view = slider;
+                    break;
+                }
                 case TYPE_SIDE_PANEL_OPACITY: {
                     // exteradive: непрозрачность боковой панели (шторки)
                     AvatarCornersSeekBar sideOpacitySlider = new AvatarCornersSeekBar(mContext,
@@ -1444,6 +1465,10 @@ public class OpenExteraAppearanceActivity extends BaseNekoSettingsActivity {
                 return TYPE_BUBBLE_OPACITY;
             } else if (position == bubbleBlurStrengthRow) {
                 return TYPE_BUBBLE_BLUR_STRENGTH;
+            } else if (position == chatPreviewMenuTransparencyRow) {
+                return TYPE_CHAT_PREVIEW_MENU_TRANSPARENCY;
+            } else if (position == chatPreviewMenuBlurStrengthRow) {
+                return TYPE_CHAT_PREVIEW_MENU_BLUR;
             } else if (position == sidePanelOpacityRow) {
                 return TYPE_SIDE_PANEL_OPACITY;
             } else if (position == sidePanelBlurStrengthRow) {

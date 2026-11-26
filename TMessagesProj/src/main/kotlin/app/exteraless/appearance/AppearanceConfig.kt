@@ -201,6 +201,24 @@ object AppearanceConfig {
         return glassMessageMenu.Bool()
     }
 
+    @JvmField
+    val chatPreviewMenuTransparency = addConfig("OEAppearanceChatPreviewMenuTransparency", ConfigItem.configTypeInt, 35)
+
+    @JvmField
+    val chatPreviewMenuBlurStrength = addConfig("OEAppearanceChatPreviewMenuBlurStrength", ConfigItem.configTypeInt, 65)
+
+    @JvmStatic
+    fun chatPreviewMenuTransparency(): Int {
+        ensureLoaded()
+        return chatPreviewMenuTransparency.Int().coerceIn(0, 100)
+    }
+
+    @JvmStatic
+    fun chatPreviewMenuBlurStrength(): Int {
+        ensureLoaded()
+        return chatPreviewMenuBlurStrength.Int().coerceIn(0, 100)
+    }
+
     @JvmStatic
     fun glassOutlineStyle(): Int {
         ensureLoaded()

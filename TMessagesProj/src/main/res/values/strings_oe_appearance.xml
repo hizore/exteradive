@@ -54,6 +54,8 @@
 
     <!-- Blur &amp; Effects -->
     <string name="OEAppearanceBlur">Blur Options</string>
+    <string name="OEAppearanceChatPreviewMenuTransparency">Chat preview menu transparency</string>
+    <string name="OEAppearanceChatPreviewMenuBlurStrength">Chat preview menu blur</string>
     <string name="OEAppearanceForceBlur">Force Blur</string>
     <string name="OEAppearanceDisableAvatarBlur">Disable Avatar Blur</string>
     <string name="OEAppearanceBlurInfo">Blur effects will be applied to all themes, overriding their default settings.</string>

@@ -9,6 +9,8 @@
 package org.telegram.ui;
 
 import app.exteraless.appearance.AppearanceConfig;
+import app.exteraless.appearance.GlassMenuHelper;
+import app.exteraless.appearance.SnapshotFrostDrawable;
 import app.exteraless.components.TranslateBeforeSendWrapper;
 import app.exteraless.drawer.DrawerContainer;
 import app.exteraless.drawer.MainMenuHelper;
@@ -8898,7 +8900,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (linearLayout.getChildCount() <= 0) {
                 hasFolders = false;
             } else {
-                ActionBarPopupWindow.GapView gap = new ActionBarPopupWindow.GapView(getParentActivity(), getResourceProvider(), Theme.key_actionBarDefaultSubmenuSeparator);
+                View gap = new View(getParentActivity());
+                gap.setBackgroundColor(GlassMenuHelper.separatorColor(true, getResourceProvider()));
                 gap.setTag(R.id.fit_width_tag, 1);
                 ActionBarMenuSubItem backItem = new ActionBarMenuSubItem(getParentActivity(), backButtonAtTop, !backButtonAtTop);
                 backItem.setTextAndIcon(LocaleController.getString(R.string.Back), R.drawable.ic_ab_back);
@@ -8929,6 +8932,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         previewMenu[0] = new ActionBarPopupWindow.ActionBarPopupWindowLayout(getParentActivity(), R.drawable.popup_fixed_alert4, getResourceProvider(), flags);
 
         if (hasFolders) {
+            previewMenu[0].getSwipeBack().setForegroundOnGlass(true);
             foldersMenu[0] = previewMenu[0].addViewToSwipeBack(foldersMenuView);
             ActionBarMenuSubItem addToFolderItem = new ActionBarMenuSubItem(getParentActivity(), true, false);
             addToFolderItem.setTextAndIcon(LocaleController.getString(R.string.FilterAddTo), R.drawable.msg_addfolder);
@@ -9124,17 +9128,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
 
 
+        final boolean showMenu = AndroidUtilities.displaySize.x <= AndroidUtilities.displaySize.y;
         if (isCommunityCell) {
             if (searchString != null) {
                 getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
             }
-            prepareBlurBitmap();
+            prepareChatPreviewBackdrop(showMenu ? previewMenu[0] : null);
             parentLayout.setHighlightActionButtons(true);
 
             args = new Bundle();
             args.putLong("community_id", -dialogId);
             DialogsActivity dialogsActivity = new DialogsActivity(args);
-            if (AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y) {
+            if (!showMenu) {
                 presentFragmentAsPreview(previewActivity[0] = dialogsActivity);
             } else {
                 presentFragmentAsPreviewWithMenu(previewActivity[0] = dialogsActivity, previewMenu[0]);
@@ -9143,10 +9148,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (searchString != null) {
                 getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
             }
-            prepareBlurBitmap();
+            prepareChatPreviewBackdrop(showMenu ? previewMenu[0] : null);
             parentLayout.setHighlightActionButtons(true);
             final ChatActivity chatActivity1 = new ChatActivity(args);
-            if (AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y) {
+            if (!showMenu) {
                 presentFragmentAsPreview(previewActivity[0] = chatActivity1);
             } else {
                 presentFragmentAsPreviewWithMenu(previewActivity[0] = chatActivity1, previewMenu[0]);
@@ -9311,12 +9316,31 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         fragmentView.invalidate();
     }
 
-    private void prepareBlurBitmap() {
-        if (blurredView == null) {
+    private void prepareChatPreviewBackdrop(@Nullable ActionBarPopupWindow.ActionBarPopupWindowLayout menu) {
+        if (menu != null) {
+            final int transparency = AppearanceConfig.chatPreviewMenuTransparency();
+            menu.setBackAlpha(Math.round(255 * (100 - transparency) / 100f));
+            if (transparency > 0) {
+                // Capture before the preview is presented. At zero blur the menu reveals the sharp
+                // list, even though the rest of the preview backdrop still uses the stock blur.
+                final int strength = AppearanceConfig.chatPreviewMenuBlurStrength();
+                final ViewGroup previewRoot = parentLayout.getView();
+                SnapshotFrostDrawable.captureWindowAndBlur(getParentActivity(), strength == 0 ? 1 : 4,
+                        strength / 100f, bitmap -> {
+                            if (bitmap != null) {
+                                menu.setFrostBackground(new SnapshotFrostDrawable(menu)
+                                        .setBitmap(bitmap).setCornerRadius(dp(12)));
+                                // The preview moves by view transforms, which can reuse a cached display list.
+                                new ViewPositionWatcher(menu).subscribe(menu, previewRoot, (v, bounds) -> v.invalidate());
+                            }
+                        });
+            }
+        }
+        if (blurredView == null || fragmentView == null || fragmentView.getWidth() == 0 || fragmentView.getHeight() == 0) {
             return;
         }
-        int w = (int) (fragmentView.getMeasuredWidth() / 9.0f);
-        int h = (int) (fragmentView.getMeasuredHeight() / 9.0f);
+        int w = Math.max(1, fragmentView.getWidth() / 9);
+        int h = Math.max(1, fragmentView.getHeight() / 9);
         Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         bitmap.eraseColor(getThemedColor(Theme.key_windowBackgroundWhite));
         Canvas canvas = new Canvas(bitmap);
