@@ -840,10 +840,7 @@ public class CallLogActivity extends BaseFragment implements NotificationCenter.
 		topPanelLayout.setPadding(dp(11), dp(14) + dp(7), dp(11), dp(14) + dp(7));
 		topPanelLayout.setOnAnimatedHeightChangedListener(this::checkUi_listViewPadding);
 
-		topPanelLayout.setBlurredBackground(getBaseSimpleGlass().factory.create(topPanelLayout)
-			.setColorProvider(BlurredBackgroundProviderImpl.topPanel(resourceProvider))
-			.setRadius(dp(24))
-			.setPadding(dp(7)));
+		topPanelLayout.setBlurredBackground(getBaseSimpleGlass().factory, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
 
 		fragmentContextViewWrapper = new FrameLayout(context);
 		topPanelLayout.addView(fragmentContextViewWrapper);

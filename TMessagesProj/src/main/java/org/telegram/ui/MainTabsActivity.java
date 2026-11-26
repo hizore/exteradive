@@ -485,6 +485,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         contentView.addView(fadeView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 0, Gravity.BOTTOM));
 
         miniPlayer = new app.exteraless.player.PlayerMiniView(context, this, resourceProvider);
+        miniPlayer.enableDocking();
         miniPlayer.setOffsetListener(this::onMiniPlayerOffsetChanged);
         contentView.addView(miniPlayer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, app.exteraless.player.PlayerMiniView.HEIGHT_DP + 16, Gravity.BOTTOM));
         contentView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
@@ -1299,17 +1300,13 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     }
 
     private void checkUi_fadeView() {
-        if (viewPager == null || fadeView == null || NaConfig.INSTANCE.getHideBottomNavigationBar().Bool()) {
+        if (viewPager == null || fadeView == null) {
             return;
         }
 
         final float animatedPosition = viewPager.getPositionAnimated();
         final float isProfile = 1f - MathUtils.clamp(Math.abs(getPositionProfile() - animatedPosition), 0, 1);
-        final float hide = 1f - AndroidUtilities.getNavigationBarThirdButtonsFactor(0, 1f, navigationBarHeight);
-        float alpha = (1f - isProfile * hide) * animatorTabsVisible.getFloatValue();
-        if (tabletLayout) {
-            alpha = 0.0f;
-        }
+        final float alpha = tabletLayout || NaConfig.INSTANCE.getHideBottomNavigationBar().Bool() ? 0f : (1f - isProfile) * animatorTabsVisible.getFloatValue();
 
         fadeView.setAlpha(alpha);
         fadeView.setTranslationY(isProfile * dp(48));
@@ -1322,10 +1319,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         }
         final boolean hidden = NaConfig.INSTANCE.getHideBottomNavigationBar().Bool();
         final int updateLayoutHeight = updateLayoutWrapper.isUpdateLayoutVisible() ? dp(UpdateLayoutWrapper.HEIGHT) : 0;
-        final int tabsHeight = hidden ? 0 : dp(MainTabsUiHelper.getTabsViewHeightDp());
-        final int gap = hidden || MainTabsUiHelper.isMaterial3NavigationBar() ? dp(12) : dp(4);
-        final float factor = hidden ? 1f : animatorTabsVisible.getFloatValue();
-        miniPlayer.setHostPosition(-(navigationBarHeight + updateLayoutHeight + tabsHeight + gap - dp(12)), factor);
+        final float tabs = hidden ? 0f : animatorTabsVisible.getFloatValue();
+        final int gap = MainTabsUiHelper.isMaterial3NavigationBar() ? dp(12) : dp(4);
+        miniPlayer.setHostPosition(-(navigationBarHeight + updateLayoutHeight + tabs * (dp(MainTabsUiHelper.getTabsViewHeightDp()) + gap - dp(12))), 1f);
         updateMiniPlayerTopAnchor();
         onMiniPlayerOffsetChanged();
     }

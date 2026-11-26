@@ -48,7 +48,6 @@ import org.telegram.ui.ActionBar.ThemeBind;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.SharedAudioCell;
 import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
-import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 import org.telegram.ui.Components.blur3.drawable.color.impl.BlurredBackgroundProviderImpl;
 
 import java.io.File;
@@ -162,6 +161,11 @@ public class ChatAttachAlertAudioLayout extends ChatAttachAlert.AttachAlertLayou
             topPanelLayout.addView(fragmentContextViewWrapper);
             topPanelLayout.setViewVisible(fragmentContextViewWrapper, true, false);
             FragmentContextView fragmentContextView = new FragmentContextView(context, alert.baseFragment, frameLayout, false, resourcesProvider) {
+                @Override
+                protected boolean hidesContextPlayer(MessageObject message) {
+                    return false; // The fragment's floating card is behind this sheet.
+                }
+
                 @Override
                 public void setVisibility(int visibility) {
                     topPanelLayout.setViewVisible(fragmentContextViewWrapper, visibility == VISIBLE);
@@ -518,10 +522,7 @@ public class ChatAttachAlertAudioLayout extends ChatAttachAlert.AttachAlertLayou
             searchField.setupBlurredBackground(factory.create(searchField, BlurredBackgroundProviderImpl.topPanel(resourcesProvider)));
         }
         if (topPanelLayout != null) {
-            final BlurredBackgroundDrawable topPanelLayoutBackground = factory.create(topPanelLayout, BlurredBackgroundProviderImpl.topPanel(resourcesProvider));
-            topPanelLayoutBackground.setRadius(dp(24));
-            topPanelLayoutBackground.setPadding(dp(7));
-            topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
+            topPanelLayout.setBlurredBackground(factory, BlurredBackgroundProviderImpl.topPanel(resourcesProvider));
         }
     }
 

@@ -1,5 +1,6 @@
 package app.exteraless.player;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -16,9 +17,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AudioPlayerAlert;
-import org.telegram.ui.LaunchActivity;
 
 import app.exteraless.appearance.AppearanceConfig;
 
@@ -107,21 +106,23 @@ public final class Md3Player {
         if (!supportsMiniPlayer(messageObject)) {
             return;
         }
-        if (messageObject.isRoundVideo()) {
-            if (fragment instanceof ChatActivity && fragment.getCurrentAccount() == messageObject.currentAccount
-                    && ((ChatActivity) fragment).getDialogId() == messageObject.getDialogId()
-                    && (((ChatActivity) fragment).getTopicId() == 0 || ((ChatActivity) fragment).getTopicId() == messageObject.getTopicId())) {
-                ((ChatActivity) fragment).scrollToMessageId(messageObject.getId(), 0, false, 0, true, 0);
-            } else if (fragment.getParentActivity() instanceof LaunchActivity) {
-                PlayerActions.showInChat((LaunchActivity) fragment.getParentActivity(), messageObject);
-            }
+        Dialog hostDialog = fragment.getVisibleDialog();
+        boolean inDialog = source != null && hostDialog != null && hostDialog.getWindow() != null
+                && source.getRootView() == hostDialog.getWindow().getDecorView();
+        if (supportsSpokenMessage(messageObject)) {
+            if (inDialog) fragment.dismissCurrentDialog();
+            PlayerActions.showInChat(fragment, messageObject);
             return;
         }
         BottomSheet sheet = create(fragment.getParentActivity(), fragment.getResourceProvider());
-        if (sheet instanceof PlayerSheet && source != null && source.canTransition()) {
+        if (sheet instanceof PlayerSheet) {
             ((PlayerSheet) sheet).setTransitionSource(source);
+        } else if (sheet instanceof AudioPlayerAlert) {
+            ((AudioPlayerAlert) sheet).setTransitionSource(source);
         }
-        fragment.showDialog(sheet);
+        // Keep an attachment picker's card and its audio preview alive underneath the player.
+        if (inDialog) sheet.show();
+        else fragment.showDialog(sheet);
     }
 
     public static boolean hidesContextPlayer(BaseFragment fragment, MessageObject messageObject) {

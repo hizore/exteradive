@@ -1432,10 +1432,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
 
         topPanelLayout = new DialogsActivityTopPanelLayout(context);
         topPanelLayout.setPadding(dp(11), dp(21), dp(11), dp(21));
-        BlurredBackgroundDrawable topPanelLayoutBackground = iBlur3FactoryLiquidGlass.create(topPanelLayout, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
-        topPanelLayoutBackground.setRadius(dp(24));
-        topPanelLayoutBackground.setPadding(dp(7));
-        topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
+        topPanelLayout.setBlurredBackground(iBlur3FactoryLiquidGlass, BlurredBackgroundProviderImpl.topPanel(resourceProvider));
         topPanelLayout.setOnAnimatedHeightChangedListener(() -> {
             blur3_InvalidateBlur();
             checkUi_listViewPadding();

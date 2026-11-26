@@ -82,26 +82,70 @@ public final class PlayerActions {
         }
     }
 
-    public static void showInChat(LaunchActivity activity, MessageObject messageObject) {
+    public static void showInChat(BaseFragment origin, MessageObject messageObject) {
+        if (origin == null || origin.getParentActivity() == null) return;
         int account = messageObject.currentAccount;
-        ensureAccount(activity, account);
+        if (UserConfig.selectedAccount != account && !origin.isInBubbleMode()) {
+            if (!(origin.getParentActivity() instanceof LaunchActivity)) return;
+            ensureAccount((LaunchActivity) origin.getParentActivity(), account);
+            origin = LaunchActivity.getSafeLastFragment();
+            if (origin == null || origin.getCurrentAccount() != account) return;
+        }
+        final long did = messageObject.getDialogId();
+        final long topicId = messageObject.getTopicId();
+        final int messageId = messageObject.getId();
+        final boolean saved = did == UserConfig.getInstance(account).getClientUserId();
+        final MessagesController messages = MessagesController.getInstance(account);
+        final boolean forum = messages.isMonoForum(did) ? messages.isMonoForumWithManageRights(did) && topicId != 0
+                : messages.isForum(did) && topicId > 0;
+        if (origin instanceof ChatActivity && origin.getCurrentAccount() == account) {
+            ChatActivity chat = (ChatActivity) origin;
+            int mode = chat.getChatMode();
+            boolean matches = mode == (messageObject.scheduled ? ChatActivity.MODE_SCHEDULED : ChatActivity.MODE_DEFAULT);
+            if (mode == ChatActivity.MODE_SAVED) {
+                matches = saved && chat.getSavedDialogId() == topicId && !messageObject.scheduled;
+            } else if (matches && (forum || chat.getThreadId() != 0)) {
+                matches = chat.getThreadId() == (forum ? topicId : messageObject.getReplyTopMsgId())
+                        || !forum && chat.getThreadId() == messageObject.getReplyMsgId();
+            }
+            if (matches && (chat.getDialogId() == did || chat.getMergeDialogId() == did)) {
+                chat.scrollToMessageId(messageId, 0, true, chat.getDialogId() == did ? 0 : 1, true, 0);
+                return;
+            }
+        }
         Bundle args = new Bundle();
-        long did = messageObject.getDialogId();
         if (DialogObject.isEncryptedDialog(did)) {
             args.putInt("enc_id", DialogObject.getEncryptedChatId(did));
         } else if (DialogObject.isUserDialog(did)) {
             args.putLong("user_id", did);
         } else {
-            TLRPC.Chat chat = MessagesController.getInstance(account).getChat(-did);
+            TLRPC.Chat chat = messages.getChat(-did);
             if (chat != null && chat.migrated_to != null) {
-                args.putLong("migrated_to", did);
-                did = -chat.migrated_to.channel_id;
+                args.putInt("migrated_to", (int) did);
+                args.putLong("chat_id", chat.migrated_to.channel_id);
+            } else {
+                args.putLong("chat_id", -did);
             }
-            args.putLong("chat_id", -did);
         }
-        args.putInt("message_id", messageObject.getId());
-        NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.closeChats);
-        activity.presentFragment(new ChatActivity(args), false, false);
+        args.putInt("message_id", messageId);
+        boolean savedThread = saved && messages.savedViewAsChats && topicId != 0 && !messageObject.scheduled;
+        if (savedThread) args.putInt("chatMode", ChatActivity.MODE_SAVED);
+        else if (messageObject.scheduled) args.putInt("chatMode", ChatActivity.MODE_SCHEDULED);
+        final BaseFragment host = origin;
+        Runnable open = () -> {
+            if (host.isFinished || host.isPaused() || !host.isInBubbleMode() && UserConfig.selectedAccount != account) return;
+            ChatActivity chat = new ChatActivity(args);
+            chat.setCurrentAccount(account);
+            if (savedThread) chat.setSavedDialog(topicId);
+            else if (forum) ForumUtilities.applyTopic(chat, MessagesStorage.TopicKey.of(did, topicId));
+            chat.setHighlightMessageId(messageId);
+            host.presentFragment(chat);
+        };
+        if (forum && messages.getTopicsController().findTopic(-did, topicId) == null) {
+            messages.getTopicsController().loadTopic(-did, topicId, open);
+        } else {
+            open.run();
+        }
     }
 
     public static void share(LaunchActivity activity, MessageObject messageObject) {

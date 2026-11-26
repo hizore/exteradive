@@ -176,12 +176,6 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         if (!preview) {
             card.setOnClickListener(v -> Md3Player.open(fragment, this));
             card.setContentDescription(getString(R.string.OEPlayerOpen));
-            if (!inline) {
-                card.setOnLongClickListener(v -> startDrag());
-                card.setOnTouchListener(this::onCardTouch);
-                dockTop = PlayerStyle.miniTop();
-                dockProgress = dockTop ? 1f : 0f;
-            }
         }
         addView(card, inline ? LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, HEIGHT_DP, Gravity.CENTER, 4, 0, 4, 0)
                 : LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, HEIGHT_DP, Gravity.BOTTOM, 12, 0, 12, 12));
@@ -437,8 +431,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     public boolean canTransition() {
-        return !preview && isAttachedToWindow() && getVisibility() == VISIBLE && shown && showProgress >= 1f && visibility() >= 0.99f && card.getWidth() > 0 && cover.getVisibility() == VISIBLE
-                && !dragging && dockAnimator == null && lift == 0f;
+        return !preview && shown && !dragging && isAttachedToWindow() && isShown() && card.getWidth() > 0 && card.getHeight() > 0;
     }
 
     public void getCardRect(RectF out) {
@@ -446,13 +439,27 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     public void getCoverRect(RectF out) {
-        locate(cover, out);
+        if (cover.getVisibility() == VISIBLE) {
+            locate(cover, out);
+        } else {
+            locate(card, out);
+            float x = out.left + out.height() / 2f, y = out.centerY();
+            out.set(x, y, x, y);
+        }
     }
 
     private static void locate(View view, RectF out) {
+        // Include the inline panel's reveal scale and the floating card's lift and dock transforms.
+        out.set(0, 0, view.getWidth(), view.getHeight());
+        while (view.getParent() instanceof View) {
+            View parent = (View) view.getParent();
+            view.getMatrix().mapRect(out);
+            out.offset(view.getLeft() - parent.getScrollX(), view.getTop() - parent.getScrollY());
+            view = parent;
+        }
         int[] loc = new int[2];
         view.getLocationOnScreen(loc);
-        out.set(loc[0], loc[1], loc[0] + view.getWidth(), loc[1] + view.getHeight());
+        out.offset(loc[0], loc[1]);
     }
 
     public float getCardRadius() {
@@ -471,7 +478,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         return cover.getImageReceiver().getBitmap();
     }
 
-    public Bitmap captureCard() {
+    public Bitmap captureCard(boolean includeCover) {
         int w = card.getWidth();
         int h = card.getHeight();
         if (w <= 0 || h <= 0) {
@@ -481,7 +488,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         try {
             Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
-            cover.setVisibility(INVISIBLE);
+            if (!includeCover && visibility == VISIBLE) cover.setVisibility(INVISIBLE);
             card.setPressed(false);
             card.jumpDrawablesToCurrentState();
             card.draw(canvas);
@@ -499,6 +506,13 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
     public void setOffsetListener(Runnable listener) {
         offsetListener = listener;
+    }
+
+    public void enableDocking() {
+        card.setOnLongClickListener(v -> startDrag());
+        card.setOnTouchListener(this::onCardTouch);
+        dockTop = PlayerStyle.miniTop();
+        dockProgress = dockTop ? 1f : 0f;
     }
 
     public float getVisibleOffset() {
@@ -857,12 +871,14 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
     private void updateTransportButtons() {
         boolean spoken = Md3Player.supportsSpokenMessage(current);
-        prevButton.setVisibility(PlayerStyle.miniPrevious() ? VISIBLE : GONE);
-        nextButton.setVisibility(PlayerStyle.miniNext() ? VISIBLE : GONE);
+        boolean voice = current != null && current.isVoice();
+        prevButton.setVisibility(!voice && PlayerStyle.miniPrevious() ? VISIBLE : GONE);
+        nextButton.setVisibility(!voice && PlayerStyle.miniNext() ? VISIBLE : GONE);
         boolean hasNext = !spoken || !MediaController.getInstance().hasNoNextVoiceOrRoundVideoMessage();
         nextButton.setEnabled(hasNext);
         nextButton.setAlpha(hasNext ? 1f : .38f);
         voiceSpeedButton.showForVoice(spoken);
+        if (!preview) card.setContentDescription(getString(spoken ? R.string.ShowInChat : R.string.OEPlayerOpen));
     }
 
     private void skip(boolean next) {

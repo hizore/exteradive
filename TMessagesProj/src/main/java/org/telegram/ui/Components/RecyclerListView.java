@@ -3260,7 +3260,7 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
                 continue;
             }
 
-            ignoreClipChild = true;
+            ignoreClipChild = !canCaptureSectionsDecorator;
             captureChild(canvas, child, drawingTime);
             ignoreClipChild = false;
         }
@@ -3313,9 +3313,13 @@ public class RecyclerListView extends RecyclerView implements IBlur3Capture {
     private boolean canCaptureSectionsDecorator;
 
     public void setCaptureSectionsDecoratorAllowed(boolean allowed) {
+        setCaptureSectionsDecoratorAllowed(allowed, false);
+    }
+
+    public void setCaptureSectionsDecoratorAllowed(boolean allowed, boolean clipSections) {
         canCaptureSectionsDecorator = allowed;
         if (allowed) {
-            setLegacySections(false);
+            setLegacySections(clipSections);
         }
     }
 

@@ -905,7 +905,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         morphCoverFromRadius = mini.getCoverRadius();
         morphFromColor = mini.getCardColor();
         recycleSnapshot();
-        morphSnapshot = mini.captureCard();
+        morphSnapshot = mini.captureCard(false);
         Bitmap bitmap = coverView instanceof CoverImage ? ((CoverImage) coverView).getImageReceiver().getBitmap() : null;
         morphCoverBitmap = bitmap != null ? bitmap : mini.getCoverBitmap();
         rectInRoot(coverView, morphCoverTo);
@@ -1072,6 +1072,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
     private void drawMorphCover(Canvas canvas) {
         float p = morphProgress;
         lerpRect(morphCoverFrom, morphCoverTo, p, morphCover);
+        if (morphCover.isEmpty()) return;
         float r = morphCoverFromRadius + (morphCoverToRadius - morphCoverFromRadius) * p;
         morphPath.rewind();
         morphPath.addRoundRect(morphCover, r, r, Path.Direction.CW);
@@ -1705,7 +1706,7 @@ public class PlayerSheet extends BottomSheet implements NotificationCenter.Notif
         o.addIf(mo.getId() > 0, R.drawable.msg_message, getString(R.string.ShowInChat), () -> {
             o.dismiss();
             dismissImmediately();
-            PlayerActions.showInChat(activity, mo);
+            PlayerActions.showInChat(LaunchActivity.getSafeLastFragment(), mo);
         });
         if (!PlayerStyle.showActions()) {
             o.addGap();

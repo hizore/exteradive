@@ -9772,10 +9772,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         checkUi_topPanelLayoutWidth();
-        topPanelLayout.setBlurredBackground(glassBackgroundDrawableFactory.create(topPanelLayout)
-            .setColorProvider(BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate))
-            .setRadius(dp(18))
-            .setPadding(dp(7)));
+        topPanelLayout.setBlurredBackground(glassBackgroundDrawableFactory, BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate));
 
         if (chatMode == MODE_SEARCH && !isFeedSearch()) {
             animatorSearchResultAsListVisibility.setValue(true, false);
@@ -41494,7 +41491,7 @@ public class ChatActivity extends BaseFragment implements
                 if (longPress && cell != null) {
                     cell.resetPressedLink(-1);
                 }
-                if (!messageObject.isVoice()) {
+                if (!messageObject.isVoice() && !(messageObject.isMusic() && app.exteraless.player.Md3Player.miniEnabled())) {
                     showDialog(app.exteraless.player.Md3Player.create(getContext(), themeDelegate));
                 }
             } else if (str.startsWith("tonaddress:")) {

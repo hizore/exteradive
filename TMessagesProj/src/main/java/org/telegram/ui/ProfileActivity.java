@@ -278,6 +278,8 @@ import org.telegram.ui.Components.ProfileGalleryView;
 import org.telegram.ui.Components.ProfileGooeyView;
 import org.telegram.ui.Components.ProfileMusicView;
 import app.exteraless.components.ProfileMusicCard;
+import app.exteraless.player.Md3Player;
+import app.exteraless.player.PlayerMiniView;
 import com.exteragram.messenger.api.dto.BadgeDTO;
 import com.exteragram.messenger.badges.BadgesController;
 import org.telegram.ui.Components.ProfileBalanceView;
@@ -1317,16 +1319,23 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         /** The list, header mask and glass capture all sample the same screen-space gradient. */
         private void drawBackdrop(Canvas canvas) {
+            drawBackdrop(canvas, 1f);
+        }
+
+        private void drawBackdrop(Canvas canvas, float opacity) {
             final int base = getThemedColor(Theme.key_windowBackgroundGray);
             final int accent = AvatarDrawable.getProfileColorForId(getDialogId(), getResourceProvider());
             final int edge = getThemedColor(Theme.key_featuredStickers_addButton);
             final int head = ColorUtils.setAlphaComponent(currentColor, 255);
             final int peer1 = color1Animated.set(color1), peer2 = color2Animated.set(color2);
             final float peer = hasColorAnimated.set(hasColorById) * (playProfileAnimation == 0 ? 1f : avatarAnimationProgress);
-            final int start = ColorUtils.blendARGB(ColorUtils.blendARGB(head, accent, .32f), peer2, peer);
-            final int shoulder = ColorUtils.blendARGB(ColorUtils.blendARGB(base, accent, .18f), peer1, peer);
-            final int middle = ColorUtils.blendARGB(ColorUtils.blendARGB(base, edge, .08f), ColorUtils.blendARGB(base, peer1, .26f), peer);
-            final int end = ColorUtils.blendARGB(ColorUtils.blendARGB(base, edge, .18f), ColorUtils.blendARGB(base, peer2, .14f), peer);
+            final int primary = ColorUtils.blendARGB(accent, peer1, peer);
+            final int secondary = ColorUtils.blendARGB(ColorUtils.blendARGB(accent, edge, .55f), peer2, peer);
+            final int softBase = ColorUtils.blendARGB(base, Color.WHITE, .14f);
+            final int start = ColorUtils.blendARGB(ColorUtils.blendARGB(head, accent, .48f), peer2, peer);
+            final int shoulder = ColorUtils.blendARGB(softBase, primary, .76f);
+            final int middle = ColorUtils.blendARGB(softBase, ColorUtils.blendARGB(primary, secondary, .45f), .58f);
+            final int end = ColorUtils.blendARGB(softBase, secondary, .70f);
             if (portraitTones[0] != start || portraitTones[1] != shoulder || portraitTones[2] != middle || portraitTones[3] != end) {
                 portraitTones[0] = start;
                 portraitTones[1] = shoulder;
@@ -1335,7 +1344,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 portraitWash.setColors(portraitTones);
             }
             portraitWash.setBounds(0, 0, fragmentView.getWidth(), fragmentView.getHeight());
-            portraitWash.setAlpha(Color.alpha(currentColor));
+            portraitWash.setAlpha(Math.round(Color.alpha(currentColor) * opacity));
             portraitWash.draw(canvas);
         }
 
@@ -2370,12 +2379,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             public int getBottomOffset(int tag) {
                 final int offset;
                 if (bottomButtonsContainer == null) {
-                    offset = navigationBarHeight + additionFloatingButtonOffset;
+                    offset = navigationBarHeight + additionFloatingButtonOffset + Math.round(miniPlayerInset);
                 } else {
                     final float stories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_STORIES, true);
                     final float archivedStories = sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_ARCHIVED_STORIES, false);
                     offset = navigationBarHeight + additionFloatingButtonOffset +
-                        (int) (dp(52) - bottomButtonsContainer.getTranslationY() - archivedStories * getBottomButtonHiddenOffset(bottomButtonContainer[1]) - stories * getBottomButtonHiddenOffset(bottomButtonContainer[0]));
+                        Math.round(Math.max(miniPlayerInset, dp(52) - bottomButtonsContainer.getTranslationY() - archivedStories * getBottomButtonHiddenOffset(bottomButtonContainer[1]) - stories * getBottomButtonHiddenOffset(bottomButtonContainer[0])));
                 }
                 final float gifts = sharedMediaLayout != null && sharedMediaLayout.giftsContainer != null ? sharedMediaLayout.getTabVisibility(SharedMediaLayout.TAB_GIFTS, false) : 0;
                 if (gifts > 0) {
@@ -3302,6 +3311,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         listView.setBottomGlowOffset(0);
                     }
+                    if (sharedMediaRow < 0) paddingBottom += miniPlayerPadding;
                     initialAnimationExtraHeight = paddingTop - actionBarHeight;
                     if (playProfileAnimation == 0) {
                         extraHeight = initialAnimationExtraHeight;
@@ -3329,6 +3339,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         listView.setBottomGlowOffset(0);
                     }
+                    if (sharedMediaRow < 0) paddingBottom += miniPlayerPadding;
                     int currentPaddingTop = listView.getPaddingTop();
                     View view = null;
                     int pos = RecyclerView.NO_POSITION;
@@ -3478,13 +3489,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         blurredView.draw(canvas);
                     }
-                }
-
-                if (!hasMainTabs) {
-                    canvas.save();
-                    canvas.translate(getInternalTranslationX(), 0);
-                    AndroidUtilities.drawNavigationBarProtection(canvas, this, getThemedColor(Theme.key_windowBackgroundWhite), navigationBarHeight, getInternalVisibility());
-                    canvas.restore();
                 }
             }
 
@@ -6144,9 +6148,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (mediaProgress > 0f) {
                 // going over to the media: the rows above them fade into the background of the pages
                 final float mediaTop = mediaProgress < 1f ? listView.getY() + sharedMediaLayout.getY() : Float.MAX_VALUE;
-                captureFillPaint.setColor(getThemedColor(Theme.key_windowBackgroundGray));
-                captureFillPaint.setAlpha((int) (255 * mediaProgress));
-                c.drawRect(p.left, p.top, p.right, Math.min(p.bottom, mediaTop), captureFillPaint);
+                c.save();
+                c.clipRect(p.left, p.top, p.right, Math.min(p.bottom, mediaTop));
+                topView.drawBackdrop(c, mediaProgress);
+                c.restore();
             }
             sharedMediaLayout.capturePages(c, p, root);
             captureHeaderImage(avatarGooey, c, p, root);
@@ -6156,6 +6161,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         };
         setupHeaderGlass();
 
+        if (!hasMainTabs) {
+            miniPlayer = new PlayerMiniView(context, this, getResourceProvider());
+            miniPlayer.setOffsetListener(() -> setMiniPlayerInset(miniPlayer.getVisibleOffset(false), miniPlayer.getTargetOffset(false)));
+            contentView.addView(miniPlayer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, PlayerMiniView.HEIGHT_DP + 16, Gravity.BOTTOM));
+        }
         ViewCompat.setOnApplyWindowInsetsListener(fragmentView, this::onApplyWindowInsets);
         return fragmentView;
     }
@@ -6472,7 +6482,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         animatorBottomButtonVisibility.setValue(buttonsTranslationY <= 0, bottomButtonsContainer.isLaidOut());
 
         final float factor = animatorBottomButtonVisibility.getFloatValue();
-        bottomButtonsContainer.setTranslationY(lerp(dp(60), 0, factor));
+        bottomButtonsContainer.setTranslationY(lerp(dp(60), 0, factor) - miniPlayerInset);
         bottomButtonsContainer.setAlpha(factor);
         bottomButtonsContainer.setVisibility(factor > 0 ? View.VISIBLE : View.INVISIBLE);
         final Bulletin bulletin = Bulletin.getVisibleBulletin();
@@ -10172,6 +10182,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (miniPlayer != null) miniPlayer.update(true);
         if (pendingInterfaceUpdateMask != 0) {
             final int mask = pendingInterfaceUpdateMask;
             pendingInterfaceUpdateMask = 0;
@@ -11893,12 +11904,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void openSavedMusic() {
+        final MediaController media = MediaController.getInstance();
         if (savedMusicList == null) {
             if (
-                MediaController.getInstance().currentSavedMusicList != null &&
-                MediaController.getInstance().currentSavedMusicList.currentAccount == currentAccount &&
-                MediaController.getInstance().currentSavedMusicList.dialogId == getDialogId()) {
-                savedMusicList = MediaController.getInstance().currentSavedMusicList;
+                media.currentSavedMusicList != null && media.currentSavedMusicList.currentAccount == currentAccount &&
+                media.currentSavedMusicList.dialogId == getDialogId()) {
+                savedMusicList = media.currentSavedMusicList;
             } else {
                 savedMusicList = new MessagesController.SavedMusicList(currentAccount, getDialogId());
                 if (userInfo != null && userInfo.saved_music != null) {
@@ -11906,23 +11917,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         }
-        if (!savedMusicList.list.isEmpty()) {
-            boolean sameList = false;
-            final MessageObject playingMessage = MediaController.getInstance().getPlayingMessageObject();
-            if (
-                MediaController.getInstance().currentSavedMusicList != savedMusicList ||
-                !MediaController.getInstance().isPlayingMessage(playingMessage) ||
-                !savedMusicList.list.contains(playingMessage)
-            ) {
-                MediaController.getInstance().cleanup();
-            } else {
-                sameList = true;
-            }
-            MediaController.getInstance().currentSavedMusicList = savedMusicList;
-            MediaController.getInstance().getPlaylist().clear();
-            MediaController.getInstance().getPlaylist().addAll(savedMusicList.list);
-            if (!sameList) MediaController.getInstance().playMessage(savedMusicList.list.get(0));
-            showDialog(app.exteraless.player.Md3Player.create(getContext(), getResourceProvider()));
+        if (media.playSavedMusic(savedMusicList) && !Md3Player.miniEnabled()) {
+            showDialog(Md3Player.create(getContext(), getResourceProvider()));
         }
     }
 
@@ -17895,42 +17891,53 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int additionNavigationBarHeight;
     private int additionFloatingButtonOffset;
     private int navigationBarHeight;
+    private PlayerMiniView miniPlayer;
+    private float miniPlayerInset;
     private int miniPlayerPadding;
 
     @Override
     public void setMiniPlayerInset(float inset, int padding) {
-        if (miniPlayerPadding == padding) {
-            return;
+        if (miniPlayerInset != inset) {
+            miniPlayerInset = inset;
+            updateBottomButtonY();
+            updateGiftsButtonOffset();
         }
-        miniPlayerPadding = padding;
-        applyPagesInsets();
+        if (miniPlayerPadding != padding) {
+            miniPlayerPadding = padding;
+            updateProfileBottomMargins();
+            applyPagesInsets();
+        }
+    }
+
+    private void updateGiftsButtonOffset() {
+        if (sharedMediaLayout != null && sharedMediaLayout.giftsContainer != null) {
+            sharedMediaLayout.giftsContainer.setButtonOffset(navigationBarHeight + additionFloatingButtonOffset + Math.round(miniPlayerInset));
+        }
+    }
+
+    private void updateProfileBottomMargins() {
+        setBottomMargin(bottomButtonsContainer, navigationBarHeight + additionFloatingButtonOffset);
+        setBottomMargin(bottomButton2Container, navigationBarHeight + additionNavigationBarHeight + miniPlayerPadding);
+    }
+
+    private static void setBottomMargin(View view, int margin) {
+        if (view == null || !(view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams)) return;
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+        if (lp.bottomMargin != margin) {
+            lp.bottomMargin = margin;
+            view.setLayoutParams(lp);
+        }
     }
 
     @NonNull
     private WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
         navigationBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-
-        ViewGroup.MarginLayoutParams lp;
-
-        if (bottomButtonsContainer != null) {
-            lp = (ViewGroup.MarginLayoutParams) bottomButtonsContainer.getLayoutParams();
-
-            final int bottomMargin = navigationBarHeight + additionFloatingButtonOffset;
-            if (lp != null && lp.bottomMargin != bottomMargin) {
-                lp.bottomMargin = bottomMargin;
-                bottomButtonsContainer.setLayoutParams(lp);
-            }
+        if (miniPlayer != null) {
+            miniPlayer.setHostPosition(-navigationBarHeight - (banFromGroup != 0 ? dp(51) : 0), 1f);
         }
-
-        if (sharedMediaLayout != null) {
-            applyPagesInsets();
-
-            if (sharedMediaLayout.giftsContainer != null) {
-                sharedMediaLayout.giftsContainer.setButtonOffset(navigationBarHeight + additionFloatingButtonOffset);
-            }
-        }
-
-        // listView.setPadding(0, 0, 0, navigationBarHeight + additionNavigationBarHeight);
+        updateProfileBottomMargins();
+        updateGiftsButtonOffset();
+        applyPagesInsets();
         return WindowInsetsCompat.CONSUMED;
     }
 
@@ -17961,7 +17968,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ViewPositionWatcher viewPositionWatcher;
 
     private IBlur3Capture iBlur3Capture;
-    private final Paint captureFillPaint = new Paint();
 
     @Override
     public GlassSourceRenderNode getGlassSource() {

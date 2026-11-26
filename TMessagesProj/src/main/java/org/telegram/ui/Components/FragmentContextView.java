@@ -774,8 +774,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             } else if (currentStyle == STYLE_AUDIO_PLAYER) {
                 MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
                 if (fragment != null && messageObject != null) {
-                    if (showingMd3Bar && messageObject.isRoundVideo()) {
-                        Md3Player.open(fragment, null);
+                    if (showingMd3Bar) {
+                        Md3Player.open(fragment, md3Bar);
                     } else if (messageObject.isMusic() || messageObject.isVoice()) {
                         final Activity activity = AndroidUtilities.findActivity(getContext());
                         if (activity instanceof LaunchActivity) {
@@ -1137,7 +1137,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             } else {
                 MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
                 if (messageObject != null && messageObject.getId() != 0 && !messageObject.isVideo()
-                        && !Md3Player.hidesContextPlayer(fragment, messageObject)) {
+                        && !hidesContextPlayer(messageObject)) {
                     show = true;
                 }
             }
@@ -1676,6 +1676,10 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         return showingMd3Bar;
     }
 
+    protected boolean hidesContextPlayer(MessageObject message) {
+        return Md3Player.hidesContextPlayer(fragment, message);
+    }
+
     private boolean shouldShowMd3Bar() {
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
         return currentStyle == STYLE_AUDIO_PLAYER && Md3Player.miniEnabled() && Md3Player.supportsMiniPlayer(messageObject);
@@ -1942,7 +1946,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
         boolean wasVisible = visible;
-        if (messageObject == null || messageObject.getId() == 0 || messageObject.isVideo() || Md3Player.hidesContextPlayer(fragment, messageObject)) {
+        if (messageObject == null || messageObject.getId() == 0 || messageObject.isVideo() || hidesContextPlayer(messageObject)) {
             lastMessageObject = null;
             boolean callAvailable = supportsCalls && VoIPService.getSharedInstance() != null && !VoIPService.getSharedInstance().isHangingUp() && VoIPService.getSharedInstance().getCallState() != VoIPService.STATE_WAITING_INCOMING && !GroupCallPip.isShowing();
             if (!isPlayingVoice() && !callAvailable && chatActivity != null && !GroupCallPip.isShowing()) {

@@ -3010,6 +3010,21 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         }
     }
 
+    public boolean playSavedMusic(MessagesController.SavedMusicList list) {
+        if (list.list.isEmpty()) return false;
+        if (currentSavedMusicList == list && playingMessageObject != null && list.list.contains(playingMessageObject)) {
+            return !isPaused || playMessage(playingMessageObject);
+        }
+        clearPlaylist();
+        currentSavedMusicList = list;
+        playlist.addAll(list.list);
+        for (MessageObject track : playlist) playlistMap.put(track.getId(), track);
+        currentPlaylistNum = 0;
+        forceLoopCurrentPlaylist = false;
+        if (SharedConfig.shuffleMusic) buildShuffledPlayList();
+        return playMessage(list.list.get(0));
+    }
+
     public boolean setPlaylist(ArrayList<MessageObject> messageObjects, MessageObject current, long mergeDialogId, PlaylistGlobalSearchParams globalSearchParams) {
         return setPlaylist(messageObjects, current, mergeDialogId, true, globalSearchParams);
     }

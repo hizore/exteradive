@@ -3527,10 +3527,7 @@ public class SharedMediaLayout extends FrameLayout implements Theme.Colorable, N
             // the content exactly in the glass: the layout's background starts 14dp in and is inset by 7dp
             topPanelLayout.setPadding(dp(11), TOP_PANEL_GLASS_TOP, dp(11), TOP_PANEL_GLASS_TOP);
 
-            BlurredBackgroundDrawable topPanelLayoutBackground = iBlur3FactoryLiquidGlass.create(topPanelLayout, glassColors);
-            topPanelLayoutBackground.setRadius(dp(24));
-            topPanelLayoutBackground.setPadding(dp(7));
-            topPanelLayout.setBlurredBackground(topPanelLayoutBackground);
+            topPanelLayout.setBlurredBackground(iBlur3FactoryLiquidGlass, glassColors);
 
             fragmentContextViewWrapper = new FrameLayout(context);
             topPanelLayout.addView(fragmentContextViewWrapper);
@@ -3569,6 +3566,12 @@ public class SharedMediaLayout extends FrameLayout implements Theme.Colorable, N
                 // SharedMediaLayout.this.setPadding(0, , 0, 0);
             });
             fragmentContextView = new FragmentContextView(context, parent, this, false, resourcesProvider) {
+                @Override
+                protected boolean hidesContextPlayer(MessageObject message) {
+                    return super.hidesContextPlayer(message) || viewType == VIEW_TYPE_PROFILE_ACTIVITY
+                            && app.exteraless.player.Md3Player.miniEnabled() && app.exteraless.player.Md3Player.supportsMiniPlayer(message);
+                }
+
                 @Override
                 public void setVisibility(int visibility) {
                     topPanelLayout.setViewVisible(fragmentContextViewWrapper, visibility == VISIBLE);
@@ -11948,7 +11951,7 @@ public class SharedMediaLayout extends FrameLayout implements Theme.Colorable, N
         }
         for (MediaPage page : mediaPages) {
             if (page != null) {
-                page.listView.setCaptureSectionsDecoratorAllowed(true);
+                page.listView.setCaptureSectionsDecoratorAllowed(true, viewType == VIEW_TYPE_PROFILE_ACTIVITY);
                 engine.addScrolledView(page.listView);
             }
         }
@@ -12016,10 +12019,11 @@ public class SharedMediaLayout extends FrameLayout implements Theme.Colorable, N
      */
     private void updatePageBackground(MediaPage page) {
         final boolean sections = page.listView.hasSections();
+        final boolean fill = pagesFullscreen && viewType != VIEW_TYPE_PROFILE_ACTIVITY;
         if (sections) {
-            page.listView.setSectionsDrawBackground(pagesFullscreen);
+            page.listView.setSectionsDrawBackground(fill);
         }
-        page.setDrawPageBackground(pagesFullscreen && !sections && page.selectedType != TAB_POLL);
+        page.setDrawPageBackground(fill && !sections && page.selectedType != TAB_POLL);
         if (page.selectedType == TAB_POLL) {
             final Drawable wallpaper = PreviewView.getBackgroundDrawable(
                 page.wallpaper != null ? page.wallpaper : page.getBackground(),
