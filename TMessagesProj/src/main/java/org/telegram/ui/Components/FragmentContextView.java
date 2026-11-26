@@ -106,6 +106,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 
+import app.exteraless.player.Md3Player;
+import app.exteraless.player.PlayerBarView;
 import me.vkryl.android.animator.ListAnimator;
 import me.vkryl.android.animator.ReplaceAnimator;
 import me.vkryl.core.lambda.Destroyable;
@@ -742,10 +744,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     ThemeBind.textColor(button, Theme.key_text_RedBold, resourcesProvider);
                 }
             } else {
-                if (app.exteraless.player.Md3Player.miniEnabled()) {
-                    MediaController.getInstance().clearMusicPlaylistState();
-                }
-                MediaController.getInstance().cleanupPlayer(true, true);
+                Md3Player.closePlayer();
             }
         });
 
@@ -778,9 +777,9 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                     if (messageObject.isMusic() || messageObject.isVoice()) {
                         final Activity activity = AndroidUtilities.findActivity(getContext());
                         if (activity instanceof LaunchActivity) {
-                            app.exteraless.player.Md3Player.create(activity, resourcesProvider).show();
+                            Md3Player.create(activity, resourcesProvider).show();
                         } else if (AndroidUtilities.isContextSafe(LaunchActivity.instance)) {
-                            app.exteraless.player.Md3Player.create(LaunchActivity.instance, resourcesProvider).show();
+                            Md3Player.create(LaunchActivity.instance, resourcesProvider).show();
                         }
                     } else {
                         long dialogId = 0;
@@ -1219,8 +1218,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
         currentStyle = style;
-        md3Music = computeMd3Music();
-        if (!md3Music) {
+        showingMd3Bar = shouldShowMd3Bar();
+        if (!showingMd3Bar) {
             if (md3Bar != null) {
                 md3Bar.setVisibility(GONE);
             }
@@ -1662,24 +1661,24 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
     float micAmplitude;
 
     public int getStyleHeight() {
-        return currentStyle == STYLE_INACTIVE_GROUP_CALL ? 48 : md3Music ? app.exteraless.player.PlayerBarView.HEIGHT_DP : 36;
+        return currentStyle == STYLE_INACTIVE_GROUP_CALL ? 48 : showingMd3Bar ? PlayerBarView.HEIGHT_DP : 36;
     }
 
-    private app.exteraless.player.PlayerBarView md3Bar;
-    private boolean md3Music;
+    private PlayerBarView md3Bar;
+    private boolean showingMd3Bar;
 
-    private boolean computeMd3Music() {
+    private boolean shouldShowMd3Bar() {
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
-        return currentStyle == STYLE_AUDIO_PLAYER && app.exteraless.player.Md3Player.miniEnabled() && messageObject != null && messageObject.isMusic();
+        return currentStyle == STYLE_AUDIO_PLAYER && Md3Player.miniEnabled() && Md3Player.supportsMiniPlayer(messageObject);
     }
 
     private void checkMd3Bar() {
-        boolean value = computeMd3Music();
-        boolean changed = value != md3Music;
-        md3Music = value;
+        boolean value = shouldShowMd3Bar();
+        boolean changed = value != showingMd3Bar;
+        showingMd3Bar = value;
         if (value && md3Bar == null) {
-            md3Bar = new app.exteraless.player.PlayerBarView(getContext(), resourcesProvider, this::performClick, () -> closeButton.performClick());
-            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, app.exteraless.player.PlayerBarView.HEIGHT_DP, Gravity.TOP | Gravity.LEFT));
+            md3Bar = new PlayerBarView(getContext(), fragment, resourcesProvider, this::performClick, () -> closeButton.performClick());
+            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, PlayerBarView.HEIGHT_DP, Gravity.TOP | Gravity.LEFT));
         }
         if (md3Bar != null) {
             md3Bar.setVisibility(value ? VISIBLE : GONE);
@@ -1925,7 +1924,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             }
         }
         boolean wasVisible = visible;
-        if (messageObject == null || messageObject.getId() == 0 || messageObject.isVideo() || app.exteraless.player.Md3Player.hidesContextPlayer(fragment, messageObject)) {
+        if (messageObject == null || messageObject.getId() == 0 || messageObject.isVideo() || Md3Player.hidesContextPlayer(fragment, messageObject)) {
             lastMessageObject = null;
             boolean callAvailable = supportsCalls && VoIPService.getSharedInstance() != null && !VoIPService.getSharedInstance().isHangingUp() && VoIPService.getSharedInstance().getCallState() != VoIPService.STATE_WAITING_INCOMING && !GroupCallPip.isShowing();
             if (!isPlayingVoice() && !callAvailable && chatActivity != null && !GroupCallPip.isShowing()) {
@@ -2755,7 +2754,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         }
         super.dispatchDraw(canvas);
 
-        if (currentStyle == STYLE_AUDIO_PLAYER && !md3Music) {
+        if (currentStyle == STYLE_AUDIO_PLAYER && !showingMd3Bar) {
             MessageObject playingMessageObject = MediaController.getInstance().getPlayingMessageObject();
             if (playingMessageObject != null) {
                 final float left = -dpf2(1);

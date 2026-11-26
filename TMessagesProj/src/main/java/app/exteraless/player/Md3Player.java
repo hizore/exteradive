@@ -3,8 +3,10 @@ package app.exteraless.player;
 import android.content.Context;
 import android.os.Bundle;
 
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
+import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
@@ -23,6 +25,31 @@ public final class Md3Player {
 
     public static boolean miniEnabled() {
         return AppearanceConfig.md3MiniPlayer();
+    }
+
+    public static boolean supportsMiniPlayer(MessageObject message) {
+        return message != null && message.getId() != 0
+                && (message.isMusic() || supportsVoice(message));
+    }
+
+    static boolean supportsVoice(MessageObject message) {
+        return message != null && message.isVoice() && !message.isVoiceOnce();
+    }
+
+    static String miniTitle(MessageObject message) {
+        return message.isVoice() ? message.getMusicAuthor() : message.getMusicTitle();
+    }
+
+    static String miniSubtitle(MessageObject message) {
+        return message.isVoice() ? LocaleController.getString(R.string.AttachAudio) : message.getMusicAuthor();
+    }
+
+    public static void closePlayer() {
+        MediaController mc = MediaController.getInstance();
+        if (miniEnabled()) {
+            mc.clearMusicPlaylistState();
+        }
+        mc.cleanupPlayer(true, true);
     }
 
     private static boolean handles(MessageObject messageObject) {
@@ -44,7 +71,7 @@ public final class Md3Player {
             return;
         }
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
-        if (messageObject == null) {
+        if (!supportsMiniPlayer(messageObject)) {
             return;
         }
         BottomSheet sheet = create(fragment.getParentActivity(), fragment.getResourceProvider());
@@ -55,7 +82,7 @@ public final class Md3Player {
     }
 
     public static boolean hidesContextPlayer(BaseFragment fragment, MessageObject messageObject) {
-        if (!miniEnabled() || fragment == null || messageObject == null || !messageObject.isMusic()) {
+        if (!miniEnabled() || fragment == null || !supportsMiniPlayer(messageObject)) {
             return false;
         }
         Bundle args = fragment.getArguments();
