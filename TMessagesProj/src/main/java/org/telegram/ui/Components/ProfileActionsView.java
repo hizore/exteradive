@@ -57,8 +57,9 @@ import tw.nekomimi.nekogram.NekoConfig;
 public class ProfileActionsView extends View {
 
     private final List<Action> actions = new ArrayList<>();
-    private final Paint paint = new Paint();
-    private final Paint shaderPaint = new Paint();
+    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint shaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float parentExpanded;
 
     public boolean isAnimatingCallAction = false;
@@ -130,10 +131,10 @@ public class ProfileActionsView extends View {
         paint.setColor(Color.BLACK);
         paint.setAlpha(40);
 
-        xpadding = dpf2(14);
-        ypadding = dpf2(12);
+        xpadding = dpf2(16);
+        ypadding = dpf2(8);
         top = dpf2(8);
-        textPadding = dpf2(4);
+        textPadding = dpf2(3);
 
         this.targetHeight = (int) (targetHeight - ypadding - top);
 
@@ -257,7 +258,7 @@ public class ProfileActionsView extends View {
 
         float height = Math.max(0f, currentHeight - ypadding - top);
 
-        if (height <= 0f) {
+        if (height <= 0f || activeCount == 0) {
             hideUnusedGlass();
             return;
         }
@@ -348,14 +349,21 @@ public class ProfileActionsView extends View {
 
     private void updateBounds(Action action) {
         final float cx = action.rect.centerX();
-        final float cy = action.rect.centerY();
-
-        final int drawableSize = dp(24);
+        final int labelWidth = Math.max(1, (int) action.rect.width() - dp(6));
+        if (action.labelWidth != labelWidth) {
+            action.labelWidth = labelWidth;
+            action.text.setMaxWidth(labelWidth);
+        }
+        final int lines = action.text.getLineCount();
+        action.textScale = lines >= 3 ? .72f : lines == 2 ? .86f : 1f;
+        final int drawableSize = dp(lines >= 3 ? 16 : 20);
         final float drawableR = drawableSize * 0.5f;
-
-        action.text.setMaxWidth(action.rect.width() - dp(2));
-        action.textScale = action.text.getLineCount() >= 3 ? 0.75f : action.text.getLineCount() >= 2 ? 0.85f : 1.0f;
-        final float drawableTop = Math.max(0, (targetHeight - action.text.getHeight() * action.textScale) / 3f + dpf2(1.33f));
+        final float badgeHeight = drawableSize + dp(lines >= 2 ? 2 : 6);
+        final float labelHeight = action.text.getHeight() * action.textScale;
+        final float badgeTop = action.rect.centerY() - (badgeHeight + textPadding + labelHeight) * .5f;
+        final float drawableTop = badgeTop + (badgeHeight - drawableSize) * .5f;
+        final float halfBadge = Math.max(0, Math.min(dp(22), action.rect.width() * .5f - dp(4)));
+        action.badge.set(cx - halfBadge, badgeTop, cx + halfBadge, badgeTop + badgeHeight);
         action.setBounds(
             (int) (cx - drawableR),
             (int) (drawableTop),
@@ -392,9 +400,12 @@ public class ProfileActionsView extends View {
 
         updateBounds(action);
 
-        final float textY = action.bounds.bottom + action.bounds.top - action.text.getHeight() * action.textScale / 2.0f - dp(4.66f);
+        badgePaint.setColor(ColorUtils.setAlphaComponent(textColor, Math.round(alpha * (action == firstAction ? 47 : 24))));
+        final float radius = action.badge.height() * .5f;
+        canvas.drawRoundRect(action.badge, radius, radius, badgePaint);
+        final float textY = action.badge.bottom + textPadding;
         canvas.save();
-        canvas.scale(action.textScale, action.textScale, cx, textY + action.text.getHeight() * action.textScale / 2.0f);
+        canvas.scale(action.textScale, action.textScale, cx, textY);
         action.text.draw(canvas, cx - action.text.getWidth() / 2f, textY, textColor, alpha);
         canvas.restore();
 
@@ -471,7 +482,7 @@ public class ProfileActionsView extends View {
     }
 
     public float getRoundRadius() {
-        return dp(16);
+        return dp(20);
     }
 
     private Action hit = null;
@@ -968,11 +979,13 @@ public class ProfileActionsView extends View {
         private final RectF from = new RectF();
 
         private final Rect bounds = new Rect();
+        private final RectF badge = new RectF();
         private Drawable drawableFilled;
         private Drawable drawableOutline;
         private RLottieDrawable drawableAnimated;
         private Text text;
         private float textScale = 1.0f;
+        private int labelWidth;
 
         public void setBounds(int l, int t, int r, int b) {
             bounds.set(l, t, r, b);
@@ -992,7 +1005,8 @@ public class ProfileActionsView extends View {
         }
 
         public void setText(CharSequence cs) {
-            this.text = new Text(cs, 11, AndroidUtilities.bold())
+            labelWidth = 0;
+            this.text = new Text(cs, 12, AndroidUtilities.bold())
                 .multiline(3)
                 .align(Layout.Alignment.ALIGN_CENTER);
         }

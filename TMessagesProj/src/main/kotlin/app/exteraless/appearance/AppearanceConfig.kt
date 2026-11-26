@@ -202,15 +202,15 @@ object AppearanceConfig {
     }
 
     @JvmField
-    val chatPreviewMenuTransparency = addConfig("OEAppearanceChatPreviewMenuTransparency", ConfigItem.configTypeInt, 35)
+    val chatPreviewMenuOpacity = addConfig("OEAppearanceChatPreviewMenuOpacity", ConfigItem.configTypeInt, 65)
 
     @JvmField
     val chatPreviewMenuBlurStrength = addConfig("OEAppearanceChatPreviewMenuBlurStrength", ConfigItem.configTypeInt, 65)
 
     @JvmStatic
-    fun chatPreviewMenuTransparency(): Int {
+    fun chatPreviewMenuOpacity(): Int {
         ensureLoaded()
-        return chatPreviewMenuTransparency.Int().coerceIn(0, 100)
+        return chatPreviewMenuOpacity.Int().coerceIn(0, 100)
     }
 
     @JvmStatic
@@ -717,6 +717,15 @@ object AppearanceConfig {
             if (configLoaded && !force) return
             if (ApplicationLoader.applicationContext == null) return
             val preferences = getPreferences()
+            val oldKey = "OEAppearanceChatPreviewMenuTransparency"
+            if (preferences.contains(oldKey)) {
+                val editor = preferences.edit().remove(oldKey)
+                if (!preferences.contains(chatPreviewMenuOpacity.key)) {
+                    val transparency = (preferences.all[oldKey] as? Int ?: 35).coerceIn(0, 100)
+                    editor.putInt(chatPreviewMenuOpacity.key, 100 - transparency)
+                }
+                editor.apply()
+            }
             for (item in configs) {
                 try {
                     when (item.type) {

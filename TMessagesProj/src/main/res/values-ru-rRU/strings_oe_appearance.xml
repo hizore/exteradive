@@ -39,7 +39,7 @@
     <string name="OEAppearanceSliderStyle">Слайдеры</string>
 
     <string name="OEAppearanceBlur">Размытие</string>
-    <string name="OEAppearanceChatPreviewMenuTransparency">Прозрачность меню превью чата</string>
+    <string name="OEAppearanceChatPreviewMenuOpacity">Непрозрачность меню превью чата</string>
     <string name="OEAppearanceChatPreviewMenuBlurStrength">Размытие меню превью чата</string>
     <string name="OEAppearanceForceBlur">Принудительное размытие</string>
     <string name="OEAppearanceDisableAvatarBlur">Отключить размытие аватарок</string>

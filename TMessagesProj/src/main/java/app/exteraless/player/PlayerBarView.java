@@ -4,6 +4,7 @@ import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.LocaleController.getString;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -27,7 +28,7 @@ import org.telegram.ui.Components.LayoutHelper;
 
 public class PlayerBarView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
 
-    public static final int HEIGHT_DP = 52;
+    public static final int HEIGHT_DP = 60;
 
     private final CoverImage cover;
     private final TextView titleView;
@@ -44,13 +45,18 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         super(context);
         PlayerColors theme = PlayerColors.fromSeed(PlayerColors.fallbackSeed(resourcesProvider), PlayerColors.isDark(resourcesProvider));
 
-        setBackground(Theme.getSelectorDrawable(false));
+        GradientDrawable surface = new GradientDrawable();
+        surface.setColor(theme.surfaceHigh);
+        surface.setCornerRadius(dp(20));
+        surface.setStroke(dp(1), ColorUtils.setAlphaComponent(theme.outlineVariant, 0x99));
+        setBackground(surface);
+        setClipToOutline(true);
         setOnClickListener(v -> onOpen.run());
         setContentDescription(getString(R.string.OEPlayerOpen));
 
         cover = new CoverImage(context, 18);
         cover.setRadius(dp(10));
-        addView(cover, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.CENTER_VERTICAL, 12, 0, 0, 0));
+        addView(cover, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
 
         LinearLayout texts = new LinearLayout(context);
         texts.setOrientation(LinearLayout.VERTICAL);
@@ -65,7 +71,7 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         artistView.setSingleLine(true);
         artistView.setEllipsize(TextUtils.TruncateAt.END);
         texts.addView(artistView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 1, 0, 0));
-        addView(texts, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 60, 0, 6 + 40 * 3 + 4, 0));
+        addView(texts, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 54, 0, 4 + 44 * 3, 0));
 
         LinearLayout buttons = new LinearLayout(context);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -82,38 +88,34 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
                 mc.pauseMessage(mo);
             }
         });
-        buttons.addView(playButton, LayoutHelper.createLinear(40, 40));
+        buttons.addView(playButton, LayoutHelper.createLinear(44, 48));
         nextButton = new ImageView(context);
         nextButton.setScaleType(ImageView.ScaleType.CENTER);
         nextButton.setImageDrawable(nextIcon);
         nextButton.setContentDescription(getString(R.string.Next));
         nextButton.setOnClickListener(v -> MediaController.getInstance().playNextMessage());
-        buttons.addView(nextButton, LayoutHelper.createLinear(40, 40));
+        buttons.addView(nextButton, LayoutHelper.createLinear(44, 48));
         voiceSpeedButton = new VoiceSpeedButton(context, fragment, resourcesProvider);
-        buttons.addView(voiceSpeedButton, LayoutHelper.createLinear(40, 40));
+        buttons.addView(voiceSpeedButton, LayoutHelper.createLinear(44, 48));
         closeButton = new ImageView(context);
         closeButton.setScaleType(ImageView.ScaleType.CENTER);
         closeButton.setImageDrawable(closeIcon);
         closeButton.setContentDescription(getString(R.string.AccDescrClosePlayer));
         closeButton.setOnClickListener(v -> onClose.run());
-        buttons.addView(closeButton, LayoutHelper.createLinear(40, 40));
-        addView(buttons, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 40, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 6, 0));
+        buttons.addView(closeButton, LayoutHelper.createLinear(44, 48));
+        addView(buttons, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 4, 0));
 
-        int text = Theme.getColor(Theme.key_inappPlayerPerformer, resourcesProvider);
-        int secondary = Theme.getColor(Theme.key_inappPlayerTitle, resourcesProvider);
-        int icons = Theme.getColor(Theme.key_inappPlayerClose, resourcesProvider);
-        titleView.setTextColor(text);
-        artistView.setTextColor(ColorUtils.setAlphaComponent(secondary, 0xbf));
-        nextIcon.setColor(icons);
-        voiceSpeedButton.setColor(icons);
-        closeIcon.setColor(icons);
-        int ripple = icons & 0x19ffffff;
+        titleView.setTextColor(theme.onSurface);
+        artistView.setTextColor(theme.onSurfaceVariant);
+        nextIcon.setColor(theme.onSurfaceVariant);
+        voiceSpeedButton.setPalette(theme);
+        closeIcon.setColor(theme.onSurfaceVariant);
+        int ripple = ColorUtils.setAlphaComponent(theme.onSurface, 0x1f);
+        setForeground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_ALL));
         nextButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        voiceSpeedButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         closeButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        playButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        int accent = Theme.getColor(Theme.key_inappPlayerPlayPause, resourcesProvider);
-        playButton.setColors(accent, ColorUtils.setAlphaComponent(accent, 51), accent);
+        playButton.setForeground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(theme.onPrimary, 0x24), Theme.RIPPLE_MASK_CIRCLE_20DP));
+        playButton.setPalette(theme);
         cover.setColors(theme.primaryContainer, theme.onPrimaryContainer);
     }
 
@@ -171,9 +173,9 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         current = mo;
         titleView.setText(Md3Player.miniTitle(mo));
         artistView.setText(Md3Player.miniSubtitle(mo));
-        boolean voice = mo.isVoice();
-        nextButton.setVisibility(voice ? GONE : VISIBLE);
-        voiceSpeedButton.showForVoice(voice);
+        boolean spoken = Md3Player.supportsSpokenMessage(mo);
+        nextButton.setVisibility(spoken ? GONE : VISIBLE);
+        voiceSpeedButton.showForVoice(spoken);
         cover.setMessage(mo);
         playButton.setMessage(mo);
         boolean paused = MediaController.getInstance().isMessagePaused();

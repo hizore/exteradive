@@ -3,18 +3,13 @@ package app.exteraless.settings;
 import static org.telegram.messenger.LocaleController.getString;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
@@ -39,9 +34,9 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
     private int appearanceRow;
     private int chatsRow;
     private int otherRow;
-    // exteradive: секция «Ссылки» — канал-первоисточник
     private int linksHeaderRow;
     private int exteralessLinkRow;
+    private int exteradiveLinkRow;
     private int linksInfoRow;
 
     @Override
@@ -58,6 +53,7 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
 
         linksHeaderRow = addRow("linksHeader");
         exteralessLinkRow = addRow("exteralessLink");
+        exteradiveLinkRow = addRow("exteradiveLink");
         linksInfoRow = addRow();
     }
 
@@ -167,51 +163,9 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
             presentFragment(new OpenExteraChatsActivity());
         } else if (position == otherRow) {
             presentFragment(new OpenExteraOtherActivity());
-        } else if (position == exteralessLinkRow) {
-            // exteradive: плашка сразу открывает канал в приложении,
-            // без внешного браузера/диалога «открыть ссылку?».
-            openExteralessChannel();
+        } else if (position == exteralessLinkRow || position == exteradiveLinkRow) {
+            getMessagesController().openByUserName(position == exteralessLinkRow ? "exteraless" : "exteradive", this, 1);
         }
-    }
-
-    private void openExteralessChannel() {
-        TLRPC.TL_contacts_resolveUsername req = new TLRPC.TL_contacts_resolveUsername();
-        req.username = "exteraless";
-        org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount)
-                .sendRequest(req, (response, error) -> {
-            if (!(response instanceof TLRPC.TL_contacts_resolvedPeer)) {
-                // резервальный путь — внешний браузер
-                AndroidUtilities.runOnUIThread(() -> {
-                    try {
-                        android.app.Activity act = getParentActivity();
-                        if (act != null) {
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/exteraless"));
-                            act.startActivity(browserIntent);
-                        }
-                    } catch (Throwable t) {
-                        org.telegram.messenger.FileLog.e(t);
-                    }
-                });
-                return;
-            }
-            TLRPC.TL_contacts_resolvedPeer resolved = (TLRPC.TL_contacts_resolvedPeer) response;
-            AndroidUtilities.runOnUIThread(() -> {
-                MessagesController mc = MessagesController.getInstance(currentAccount);
-                mc.putUsers(resolved.users, false);
-                mc.putChats(resolved.chats, false);
-                long dialogId = 0;
-                if (resolved.peer instanceof TLRPC.TL_peerChannel) {
-                    dialogId = -((TLRPC.TL_peerChannel) resolved.peer).channel_id;
-                } else if (resolved.peer instanceof TLRPC.TL_peerUser) {
-                    dialogId = ((TLRPC.TL_peerUser) resolved.peer).user_id;
-                } else if (resolved.peer instanceof TLRPC.TL_peerChat) {
-                    dialogId = -((TLRPC.TL_peerChat) resolved.peer).chat_id;
-                }
-                if (dialogId != 0) {
-                    presentFragment(org.telegram.ui.ChatActivity.of(dialogId));
-                }
-            });
-        });
     }
 
     private class ListAdapter extends BaseListAdapter {
@@ -257,9 +211,9 @@ public class OpenExteraSettingsActivity extends BaseNekoSettingsActivity {
                         cell.setTextAndIcon(getString(R.string.OpenExteraChats), R.drawable.msg_discussion, true);
                     } else if (position == otherRow) {
                         cell.setTextAndIcon(getString(R.string.OpenExteraOther), R.drawable.msg_fave, false);
-                    } else if (position == exteralessLinkRow) {
-                        // exteradive: ссылка на Telegram-канал первоисточника
-                        cell.setTextAndIcon("exteraless", R.drawable.msg_link, false);
+                    } else if (position == exteralessLinkRow || position == exteradiveLinkRow) {
+                        cell.setTextAndIcon(position == exteralessLinkRow ? "exteraless" : "exteradive",
+                                R.drawable.msg_link, position == exteralessLinkRow);
                     }
                     // ВАЖНО: только после setTextAndIcon* — они сбрасывают imageLeft в 16dp.
                     // Метрики сняты с 12.9.0 (420 dpi): иконка 88px от края экрана, текст 219px,

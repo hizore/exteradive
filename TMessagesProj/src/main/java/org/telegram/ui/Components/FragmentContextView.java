@@ -774,7 +774,9 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
             } else if (currentStyle == STYLE_AUDIO_PLAYER) {
                 MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
                 if (fragment != null && messageObject != null) {
-                    if (messageObject.isMusic() || messageObject.isVoice()) {
+                    if (showingMd3Bar && messageObject.isRoundVideo()) {
+                        Md3Player.open(fragment, null);
+                    } else if (messageObject.isMusic() || messageObject.isVoice()) {
                         final Activity activity = AndroidUtilities.findActivity(getContext());
                         if (activity instanceof LaunchActivity) {
                             Md3Player.create(activity, resourcesProvider).show();
@@ -1134,7 +1136,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
                 startJoinFlickerAnimation();
             } else {
                 MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
-                if (messageObject != null && messageObject.getId() != 0) {
+                if (messageObject != null && messageObject.getId() != 0 && !messageObject.isVideo()
+                        && !Md3Player.hidesContextPlayer(fragment, messageObject)) {
                     show = true;
                 }
             }
@@ -1678,7 +1681,8 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
         showingMd3Bar = value;
         if (value && md3Bar == null) {
             md3Bar = new PlayerBarView(getContext(), fragment, resourcesProvider, this::performClick, () -> closeButton.performClick());
-            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, PlayerBarView.HEIGHT_DP, Gravity.TOP | Gravity.LEFT));
+            addView(md3Bar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, PlayerBarView.HEIGHT_DP - 8,
+                    Gravity.TOP | Gravity.LEFT, 8, 4, 8, 4));
         }
         if (md3Bar != null) {
             md3Bar.setVisibility(value ? VISIBLE : GONE);
@@ -2238,7 +2242,7 @@ public class FragmentContextView extends FrameLayout implements NotificationCent
 
     private boolean isPlayingVoice() {
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
-        return messageObject != null && messageObject.isVoice();
+        return messageObject != null && (messageObject.isVoice() || messageObject.isRoundVideo() && !messageObject.isRoundOnce());
     }
 
     private void checkLiveStory(boolean create) {

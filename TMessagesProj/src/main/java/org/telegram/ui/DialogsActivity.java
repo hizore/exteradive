@@ -9318,9 +9318,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private void prepareChatPreviewBackdrop(@Nullable ActionBarPopupWindow.ActionBarPopupWindowLayout menu) {
         if (menu != null) {
-            final int transparency = AppearanceConfig.chatPreviewMenuTransparency();
-            menu.setBackAlpha(Math.round(255 * (100 - transparency) / 100f));
-            if (transparency > 0) {
+            final int opacity = AppearanceConfig.chatPreviewMenuOpacity();
+            menu.setBackAlpha(Math.round(255 * opacity / 100f));
+            if (opacity < 100) {
                 // Capture before the preview is presented. At zero blur the menu reveals the sharp
                 // list, even though the rest of the preview backdrop still uses the stock blur.
                 final int strength = AppearanceConfig.chatPreviewMenuBlurStrength();

@@ -17820,9 +17820,7 @@ public class ChatActivity extends BaseFragment implements
                     ImageReceiver imageReceiver = messageCell.getPhotoImage();
                     videoPlayerContainer.setTranslationX(imageReceiver.getImageX() + messageCell.getX());
                     float translationY = messageCell.getY() + messageCell.getPaddingTop() + imageReceiver.getImageY() + chatListView.getY() - videoPlayerContainer.getTop();
-                    // exteradive: поднятое сообщение с играющим видео — текстура
-                    // кружка следует за lift и остаётся на поднятом бабле.
-                    if (raisedMessage != null && raisedMessage.cell == messageCell) {
+                    if (!messageObject.isRoundVideo() && raisedMessage != null && raisedMessage.cell == messageCell) {
                         translationY += raisedMessage.lift;
                     }
                     videoPlayerContainer.setTranslationY(translationY);
@@ -19767,6 +19765,10 @@ public class ChatActivity extends BaseFragment implements
             boolean isRoundVideo = false;
             boolean isVideo = messageObject != null && messageObject.eventId == 0 && ((isRoundVideo = messageObject.isRoundVideo()) || messageObject.isVideo());
             if (child == videoPlayerContainer) {
+                if (isRoundVideo && raisedMessage != null && scrimView == raisedMessage.cell
+                        && MediaController.getInstance().isPlayingMessage(raisedMessage.message)) {
+                    return true; // Draw it once, at the lifted cell's media bounds, above the backdrop.
+                }
                 canvas.save();
                 float transitionOffset = 0;
                 if (pullingDownAnimateProgress != 0) {
@@ -20167,7 +20169,15 @@ public class ChatActivity extends BaseFragment implements
                             if (cell != null && scrimGroup == null) {
                                 cell.drawCompactScrimBackground(canvas, scrimViewProgress);
                             }
-                            child.draw(canvas);
+                            if (raised != null && child == raised.cell && raised.message.isRoundVideo()) {
+                                boolean hasLocalFrame = videoPlayerContainer != null && videoPlayerContainer.getParent() == this
+                                        && aspectRatioFrameLayout != null && aspectRatioFrameLayout.getParent() == videoPlayerContainer
+                                        && aspectRatioFrameLayout.isDrawingReady() && videoTextureView != null && videoTextureView.isAvailable()
+                                        && !raised.message.isVoiceTranscriptionOpen();
+                                raised.cell.drawRoundVideoInScrim(canvas, hasLocalFrame ? videoPlayerContainer : null);
+                            } else {
+                                child.draw(canvas);
+                            }
                             if (cell != null && cell.hasOutboundsContent()) {
                                 canvas.save();
                                 canvas.translate(0, cell.getPaddingTop());

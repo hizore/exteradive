@@ -11,6 +11,7 @@ import android.os.SystemClock;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.MessageObject;
@@ -21,6 +22,7 @@ public class RingPlayButton extends View {
     private static final long WAVE_FRAME_MS = 33;
 
     private final Paint trackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
     private final Runnable waveFrame = this::invalidate;
@@ -55,10 +57,10 @@ public class RingPlayButton extends View {
         ringPaint.setStrokeJoin(Paint.Join.ROUND);
     }
 
-    public void setColors(int ring, int track, int icon) {
-        ringColor = ring;
-        trackPaint.setColor(track);
-        iconColor = icon;
+    public void setPalette(PlayerColors colors) {
+        fillPaint.setColor(colors.primary);
+        ringColor = iconColor = colors.onPrimary;
+        trackPaint.setColor(ColorUtils.setAlphaComponent(colors.onPrimary, 72));
         invalidate();
     }
 
@@ -123,6 +125,10 @@ public class RingPlayButton extends View {
         }
         float cx = getWidth() / 2f;
         float cy = getHeight() / 2f;
+        float t = Math.max(0f, Math.min(1f, alt.value));
+        float half = Math.min(radius + dp(4), Math.min(cx, cy) - dp(1));
+        float corner = half * (1f - .42f * t);
+        canvas.drawRoundRect(cx - half, cy - half, cx + half, cy + half, corner, corner, fillPaint);
         if (ringVisible) {
             canvas.drawCircle(cx, cy, radius, trackPaint);
         }
@@ -153,7 +159,6 @@ public class RingPlayButton extends View {
             ringPaint.setColor(ringColor);
             canvas.drawPath(path, ringPaint);
         }
-        float t = Math.max(0f, Math.min(1f, alt.value));
         drawIcon(canvas, playIcon, 1f - t, 1f - 0.4f * alt.value);
         drawIcon(canvas, pauseIcon, t, 0.6f + 0.4f * alt.value);
         removeCallbacks(waveFrame);

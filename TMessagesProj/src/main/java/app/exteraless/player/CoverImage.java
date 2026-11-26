@@ -24,6 +24,7 @@ public class CoverImage extends BackupImageView {
     private final RectF rect = new RectF();
     private final PlayerIcon note;
     private final PlayerIcon mic;
+    private final PlayerIcon video;
     private int radius;
     private String currentKey;
     private MessageObject message;
@@ -34,6 +35,7 @@ public class CoverImage extends BackupImageView {
         super(context);
         note = PlayerIcon.stroke(PlayerIcon.NOTE, noteSizeDp);
         mic = PlayerIcon.stroke(PlayerIcon.MIC, noteSizeDp);
+        video = PlayerIcon.stroke(PlayerIcon.VIDEO_MESSAGE, noteSizeDp);
         getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
             if (set) {
                 onBitmap(imageReceiver.getBitmap());
@@ -56,6 +58,7 @@ public class CoverImage extends BackupImageView {
         placeholderPaint.setColor(background);
         note.setColor(foreground);
         mic.setColor(foreground);
+        video.setColor(foreground);
         invalidate();
     }
 
@@ -76,11 +79,17 @@ public class CoverImage extends BackupImageView {
     }
 
     public void setMessage(MessageObject messageObject) {
-        if (messageObject == null || messageObject.isVoice()) {
+        if (messageObject == null || messageObject.isVoice() || messageObject.isRoundVideo()) {
             if (messageObject != null && message == messageObject) return;
             currentKey = null;
             message = messageObject;
-            setImageDrawable(null);
+            ImageLocation thumb = message != null && message.isRoundVideo() && !message.isRoundOnce()
+                    && !message.needDrawBluredPreview() ? PlayerArt.thumbLocation(message) : null;
+            if (thumb == null) {
+                setImageDrawable(null);
+            } else {
+                setImage(thumb, "80_80", null, null, null, 0, 1, message);
+            }
             invalidate();
             return;
         }
@@ -128,7 +137,7 @@ public class CoverImage extends BackupImageView {
 
     private void onBitmap(Bitmap bitmap) {
         final MessageObject target = message;
-        if (bitmap == null || target == null || listener == null) {
+        if (bitmap == null || target == null || !target.isMusic() || listener == null) {
             return;
         }
         PlayerArt.requestSeed(target, bitmap, fallbackSeed, seed -> {
@@ -143,7 +152,7 @@ public class CoverImage extends BackupImageView {
         if (!getImageReceiver().hasBitmapImage()) {
             rect.set(0, 0, getWidth(), getHeight());
             canvas.drawRoundRect(rect, radius, radius, placeholderPaint);
-            PlayerIcon icon = message != null && message.isVoice() ? mic : note;
+            PlayerIcon icon = message != null && message.isRoundVideo() ? video : message != null && message.isVoice() ? mic : note;
             icon.setBounds(0, 0, getWidth(), getHeight());
             icon.draw(canvas);
         }

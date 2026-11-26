@@ -1923,6 +1923,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     SparseArray<Rect> accessibilityVirtualViewBounds = new SparseArray<>();
     boolean isRoundVideo;
     boolean isPlayingRound;
+    private boolean drawingRoundVideoInScrim;
+    private View scrimRoundPlayer;
+    private Path scrimRoundClip;
     private float roundProgressAlpha;
     private float roundToPauseProgress;
     private float roundToPauseProgress2;
@@ -13425,7 +13428,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 MediaController.getInstance().isPlayingMessage(currentMessageObject) &&
                 MediaController.getInstance().isVideoDrawingReady() &&
                 canvas.isHardwareAccelerated() &&
-                (currentMessageObject == null || !currentMessageObject.isVoiceTranscriptionOpen() || pipFloat >= 1)
+                (currentMessageObject == null || !currentMessageObject.isVoiceTranscriptionOpen() || pipFloat >= 1) &&
+                (!drawingRoundVideoInScrim || drawScrimRoundFrame(canvas))
             )) {
                 imageDrawn = true;
                 drawTime = true;
@@ -24925,6 +24929,35 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     public boolean isPlayingRound() {
         return isRoundVideo && isPlayingRound;
+    }
+
+    /** The normal chat draws the playing TextureView behind the cell. The lifted cell sits above the blur. */
+    public void drawRoundVideoInScrim(Canvas canvas, @Nullable View player) {
+        drawingRoundVideoInScrim = true;
+        scrimRoundPlayer = player;
+        try {
+            draw(canvas);
+        } finally {
+            scrimRoundPlayer = null;
+            drawingRoundVideoInScrim = false;
+        }
+    }
+
+    private boolean drawScrimRoundFrame(Canvas canvas) {
+        if (scrimRoundPlayer == null || scrimRoundPlayer.getWidth() <= 0 || scrimRoundPlayer.getHeight() <= 0) {
+            return false; // Use the cell's ordinary thumbnail until the local player surface is ready.
+        }
+        if (scrimRoundClip == null) scrimRoundClip = new Path();
+        final float w = photoImage.getImageWidth(), h = photoImage.getImageHeight();
+        final int save = canvas.save();
+        canvas.translate(photoImage.getImageX(), photoImage.getImageY());
+        scrimRoundClip.rewind();
+        scrimRoundClip.addCircle(w / 2f, h / 2f, Math.min(w, h) / 2f, Path.Direction.CW);
+        canvas.clipPath(scrimRoundClip);
+        canvas.scale(w / scrimRoundPlayer.getWidth(), h / scrimRoundPlayer.getHeight());
+        scrimRoundPlayer.draw(canvas);
+        canvas.restoreToCount(save);
+        return true;
     }
 
     public int getParentWidth() {

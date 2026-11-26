@@ -98,7 +98,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     private final CharacterStyle artistSpan = new CharacterStyle() {
         @Override
         public void updateDrawState(TextPaint tp) {
-            tp.setColor(ColorUtils.setAlphaComponent(colors.onPrimaryContainer, 0xcc));
+            tp.setColor(colors.onSurfaceVariant);
         }
     };
     private MessageObject current;
@@ -188,7 +188,6 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         artistView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         artistView.setSingleLine(true);
         artistView.setEllipsize(TextUtils.TruncateAt.END);
-        artistView.setAlpha(0.8f);
         texts.addView(artistView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         card.addView(texts, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 12, 0, 4, 0));
 
@@ -294,7 +293,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     private void refreshColors(boolean animated) {
-        if (PlayerStyle.miniThemeColors() || current == null || current.isVoice()) {
+        if (PlayerStyle.miniThemeColors() || current == null || !current.isMusic()) {
             setTargetColors(PlayerColors.fromSeed(seed, dark), animated);
             return;
         }
@@ -371,10 +370,10 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         float inset = Math.max(dp(16), cardRadius);
         float y = h - dp(4);
         float right = w - inset;
-        linePaint.setColor(ColorUtils.setAlphaComponent(colors.onPrimaryContainer, 46));
+        linePaint.setColor(colors.outlineVariant);
         canvas.drawLine(inset, y, right, y, linePaint);
         if (progress > 0f) {
-            linePaint.setColor(colors.onPrimaryContainer);
+            linePaint.setColor(colors.primary);
             canvas.drawLine(inset, y, inset + (right - inset) * progress, y, linePaint);
         }
     }
@@ -388,12 +387,12 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
             borderMeasure.setPath(borderPath, false);
             borderLength = borderMeasure.getLength();
         }
-        linePaint.setColor(ColorUtils.setAlphaComponent(colors.onPrimaryContainer, 46));
+        linePaint.setColor(colors.outlineVariant);
         canvas.drawPath(borderPath, linePaint);
         if (progress > 0f) {
             borderSegment.rewind();
             borderMeasure.getSegment(0, borderLength * progress, borderSegment, true);
-            linePaint.setColor(colors.onPrimaryContainer);
+            linePaint.setColor(colors.primary);
             canvas.drawPath(borderSegment, linePaint);
         }
     }
@@ -462,7 +461,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     public int getCardColor() {
-        return colors.primaryContainer;
+        return colors.surfaceHigh;
     }
 
     public Bitmap getCoverBitmap() {
@@ -838,10 +837,10 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     private void updateTransportButtons() {
-        boolean voice = current != null && current.isVoice();
-        prevButton.setVisibility(!voice && PlayerStyle.miniPrevious() ? VISIBLE : GONE);
-        nextButton.setVisibility(!voice && PlayerStyle.miniNext() ? VISIBLE : GONE);
-        voiceSpeedButton.showForVoice(voice);
+        boolean spoken = Md3Player.supportsSpokenMessage(current);
+        prevButton.setVisibility(!spoken && PlayerStyle.miniPrevious() ? VISIBLE : GONE);
+        nextButton.setVisibility(!spoken && PlayerStyle.miniNext() ? VISIBLE : GONE);
+        voiceSpeedButton.showForVoice(spoken);
     }
 
     private void setShown(boolean value, boolean animated) {
@@ -873,25 +872,25 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
     private void applyColors(PlayerColors c) {
         colors = c;
-        cardBg.setColor(c.primaryContainer);
+        cardBg.setColor(c.surfaceHigh);
+        cardBg.setStroke(dp(1), ColorUtils.setAlphaComponent(c.outlineVariant, 0x99));
         if (Build.VERSION.SDK_INT >= 28) {
             card.setOutlineSpotShadowColor(c.shadow());
             card.setOutlineAmbientShadowColor(c.shadow());
         }
-        cover.setColors(c.secondaryContainer, c.onSecondaryContainer);
-        titleView.setTextColor(c.onPrimaryContainer);
-        artistView.setTextColor(c.onPrimaryContainer);
-        prevIcon.setColor(c.onPrimaryContainer);
-        nextIcon.setColor(c.onPrimaryContainer);
-        voiceSpeedButton.setColor(c.onPrimaryContainer);
-        closeIcon.setColor(c.onPrimaryContainer);
-        int ripple = ColorUtils.setAlphaComponent(c.onPrimaryContainer, 0x1f);
+        cover.setColors(c.primaryContainer, c.onPrimaryContainer);
+        titleView.setTextColor(c.onSurface);
+        artistView.setTextColor(c.onSurfaceVariant);
+        prevIcon.setColor(c.onSurfaceVariant);
+        nextIcon.setColor(c.onSurfaceVariant);
+        voiceSpeedButton.setPalette(c);
+        closeIcon.setColor(c.onSurfaceVariant);
+        int ripple = ColorUtils.setAlphaComponent(c.onSurface, 0x1f);
         prevButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         nextButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        voiceSpeedButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         closeButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        playButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
-        playButton.setColors(c.onPrimaryContainer, ColorUtils.setAlphaComponent(c.onPrimaryContainer, 46), c.onPrimaryContainer);
+        playButton.setForeground(Theme.createSelectorDrawable(ColorUtils.setAlphaComponent(c.onPrimary, 0x24), Theme.RIPPLE_MASK_CIRCLE_20DP));
+        playButton.setPalette(c);
         card.setForeground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_ALL));
         card.invalidate();
     }

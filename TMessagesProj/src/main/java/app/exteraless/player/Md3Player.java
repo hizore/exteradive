@@ -10,7 +10,9 @@ import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AudioPlayerAlert;
+import org.telegram.ui.LaunchActivity;
 
 import app.exteraless.appearance.AppearanceConfig;
 
@@ -29,19 +31,21 @@ public final class Md3Player {
 
     public static boolean supportsMiniPlayer(MessageObject message) {
         return message != null && message.getId() != 0
-                && (message.isMusic() || supportsVoice(message));
+                && (message.isMusic() || supportsSpokenMessage(message));
     }
 
-    static boolean supportsVoice(MessageObject message) {
-        return message != null && message.isVoice() && !message.isVoiceOnce();
+    static boolean supportsSpokenMessage(MessageObject message) {
+        return message != null && (message.isVoice() && !message.isVoiceOnce()
+                || message.isRoundVideo() && !message.isRoundOnce());
     }
 
     static String miniTitle(MessageObject message) {
-        return message.isVoice() ? message.getMusicAuthor() : message.getMusicTitle();
+        return message.isMusic() ? message.getMusicTitle() : message.getMusicAuthor();
     }
 
     static String miniSubtitle(MessageObject message) {
-        return message.isVoice() ? LocaleController.getString(R.string.AttachAudio) : message.getMusicAuthor();
+        if (message.isMusic()) return message.getMusicAuthor();
+        return LocaleController.getString(message.isRoundVideo() ? R.string.AttachRound : R.string.AttachAudio);
     }
 
     public static void closePlayer() {
@@ -72,6 +76,16 @@ public final class Md3Player {
         }
         MessageObject messageObject = MediaController.getInstance().getPlayingMessageObject();
         if (!supportsMiniPlayer(messageObject)) {
+            return;
+        }
+        if (messageObject.isRoundVideo()) {
+            if (fragment instanceof ChatActivity && fragment.getCurrentAccount() == messageObject.currentAccount
+                    && ((ChatActivity) fragment).getDialogId() == messageObject.getDialogId()
+                    && (((ChatActivity) fragment).getTopicId() == 0 || ((ChatActivity) fragment).getTopicId() == messageObject.getTopicId())) {
+                ((ChatActivity) fragment).scrollToMessageId(messageObject.getId(), 0, false, 0, true, 0);
+            } else if (fragment.getParentActivity() instanceof LaunchActivity) {
+                PlayerActions.showInChat((LaunchActivity) fragment.getParentActivity(), messageObject);
+            }
             return;
         }
         BottomSheet sheet = create(fragment.getParentActivity(), fragment.getResourceProvider());
