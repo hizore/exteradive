@@ -73,6 +73,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     private final RingPlayButton playButton;
     private final ImageView prevButton;
     private final ImageView nextButton;
+    private final VoiceSpeedButton voiceSpeedButton;
     private final ImageView closeButton;
     private final PlayerIcon prevIcon = PlayerIcon.fill(PlayerIcon.PREV, 24);
     private final PlayerIcon nextIcon = PlayerIcon.fill(PlayerIcon.NEXT, 24);
@@ -198,7 +199,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
             playButton.setOnClickListener(v -> {
                 MediaController mc = MediaController.getInstance();
                 MessageObject mo = mc.getPlayingMessageObject();
-                if (mo == null || mc.isDownloadingCurrentMessage()) {
+                if (!Md3Player.supportsMiniPlayer(mo) || mc.isDownloadingCurrentMessage()) {
                     return;
                 }
                 if (mc.isMessagePaused()) {
@@ -211,7 +212,9 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         card.addView(playButton, LayoutHelper.createLinear(48, 48));
 
         nextButton = addButton(context, nextIcon, R.string.Next, () -> MediaController.getInstance().playNextMessage());
-        closeButton = addButton(context, closeIcon, R.string.AccDescrClosePlayer, () -> MediaController.getInstance().cleanupPlayer(true, true));
+        voiceSpeedButton = new VoiceSpeedButton(context, fragment, resourcesProvider);
+        card.addView(voiceSpeedButton, LayoutHelper.createLinear(44, 48));
+        closeButton = addButton(context, closeIcon, R.string.AccDescrClosePlayer, Md3Player::closePlayer);
 
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
@@ -277,8 +280,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, compact ? 14 : 15);
         bindTexts();
-        prevButton.setVisibility(PlayerStyle.miniPrevious() ? VISIBLE : GONE);
-        nextButton.setVisibility(PlayerStyle.miniNext() ? VISIBLE : GONE);
+        updateTransportButtons();
         closeButton.setVisibility(PlayerStyle.miniClose() ? VISIBLE : GONE);
         progressStyle = PlayerStyle.miniProgress();
         playButton.setRingVisible(progressStyle == PlayerStyle.MINI_PROGRESS_RING);
@@ -292,7 +294,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     }
 
     private void refreshColors(boolean animated) {
-        if (PlayerStyle.miniThemeColors() || current == null) {
+        if (PlayerStyle.miniThemeColors() || current == null || current.isVoice()) {
             setTargetColors(PlayerColors.fromSeed(seed, dark), animated);
             return;
         }
@@ -789,10 +791,11 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
 
     public void bindPreview() {
         MessageObject mo = MediaController.getInstance().getPlayingMessageObject();
-        if (mo != null && mo.isMusic() && mo.getId() != 0) {
+        if (Md3Player.supportsMiniPlayer(mo)) {
             bind(mo);
         } else {
             current = null;
+            updateTransportButtons();
             titleText = getString(R.string.OEPlayerPreviewTitle);
             artistText = getString(R.string.OEPlayerPreviewArtist);
             bindTexts();
@@ -809,7 +812,7 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     public void update(boolean animated) {
         checkThemeColors();
         MessageObject mo = MediaController.getInstance().getPlayingMessageObject();
-        boolean want = Md3Player.miniEnabled() && mo != null && mo.isMusic() && mo.getId() != 0;
+        boolean want = Md3Player.miniEnabled() && Md3Player.supportsMiniPlayer(mo);
         if (want) {
             bind(mo);
         }
@@ -820,17 +823,25 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
     private void bind(MessageObject mo) {
         boolean changed = current != mo;
         current = mo;
-        titleText = mo.getMusicTitle();
-        artistText = mo.getMusicAuthor();
+        titleText = Md3Player.miniTitle(mo);
+        artistText = Md3Player.miniSubtitle(mo);
         bindTexts();
         cover.setMessage(mo);
         playButton.setMessage(mo);
         playButton.setContentDescription(getString(MediaController.getInstance().isMessagePaused() ? R.string.AccActionPlay : R.string.AccActionPause));
         if (changed) {
+            updateTransportButtons();
             drawnLineProgress = -1f;
             card.invalidate();
             refreshColors(isAttachedToWindow());
         }
+    }
+
+    private void updateTransportButtons() {
+        boolean voice = current != null && current.isVoice();
+        prevButton.setVisibility(!voice && PlayerStyle.miniPrevious() ? VISIBLE : GONE);
+        nextButton.setVisibility(!voice && PlayerStyle.miniNext() ? VISIBLE : GONE);
+        voiceSpeedButton.showForVoice(voice);
     }
 
     private void setShown(boolean value, boolean animated) {
@@ -872,10 +883,12 @@ public class PlayerMiniView extends FrameLayout implements NotificationCenter.No
         artistView.setTextColor(c.onPrimaryContainer);
         prevIcon.setColor(c.onPrimaryContainer);
         nextIcon.setColor(c.onPrimaryContainer);
+        voiceSpeedButton.setColor(c.onPrimaryContainer);
         closeIcon.setColor(c.onPrimaryContainer);
         int ripple = ColorUtils.setAlphaComponent(c.onPrimaryContainer, 0x1f);
         prevButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         nextButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
+        voiceSpeedButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         closeButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         playButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         playButton.setColors(c.onPrimaryContainer, ColorUtils.setAlphaComponent(c.onPrimaryContainer, 46), c.onPrimaryContainer);

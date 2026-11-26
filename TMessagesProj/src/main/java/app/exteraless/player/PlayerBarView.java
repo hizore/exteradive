@@ -21,6 +21,7 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 
@@ -33,12 +34,13 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
     private final TextView artistView;
     private final RingPlayButton playButton;
     private final ImageView nextButton;
+    private final VoiceSpeedButton voiceSpeedButton;
     private final ImageView closeButton;
     private final PlayerIcon nextIcon = PlayerIcon.fill(PlayerIcon.NEXT, 22);
     private final PlayerIcon closeIcon = PlayerIcon.stroke(PlayerIcon.CLOSE, 20);
     private MessageObject current;
 
-    public PlayerBarView(Context context, Theme.ResourcesProvider resourcesProvider, Runnable onOpen, Runnable onClose) {
+    public PlayerBarView(Context context, BaseFragment fragment, Theme.ResourcesProvider resourcesProvider, Runnable onOpen, Runnable onClose) {
         super(context);
         PlayerColors theme = PlayerColors.fromSeed(PlayerColors.fallbackSeed(resourcesProvider), PlayerColors.isDark(resourcesProvider));
 
@@ -71,7 +73,7 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         playButton.setOnClickListener(v -> {
             MediaController mc = MediaController.getInstance();
             MessageObject mo = mc.getPlayingMessageObject();
-            if (mo == null || mc.isDownloadingCurrentMessage()) {
+            if (!Md3Player.supportsMiniPlayer(mo) || mc.isDownloadingCurrentMessage()) {
                 return;
             }
             if (mc.isMessagePaused()) {
@@ -87,6 +89,8 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         nextButton.setContentDescription(getString(R.string.Next));
         nextButton.setOnClickListener(v -> MediaController.getInstance().playNextMessage());
         buttons.addView(nextButton, LayoutHelper.createLinear(40, 40));
+        voiceSpeedButton = new VoiceSpeedButton(context, fragment, resourcesProvider);
+        buttons.addView(voiceSpeedButton, LayoutHelper.createLinear(40, 40));
         closeButton = new ImageView(context);
         closeButton.setScaleType(ImageView.ScaleType.CENTER);
         closeButton.setImageDrawable(closeIcon);
@@ -101,9 +105,11 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
         titleView.setTextColor(text);
         artistView.setTextColor(ColorUtils.setAlphaComponent(secondary, 0xbf));
         nextIcon.setColor(icons);
+        voiceSpeedButton.setColor(icons);
         closeIcon.setColor(icons);
         int ripple = icons & 0x19ffffff;
         nextButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
+        voiceSpeedButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         closeButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         playButton.setBackground(Theme.createSelectorDrawable(ripple, Theme.RIPPLE_MASK_CIRCLE_20DP));
         int accent = Theme.getColor(Theme.key_inappPlayerPlayPause, resourcesProvider);
@@ -159,12 +165,15 @@ public class PlayerBarView extends FrameLayout implements NotificationCenter.Not
 
     public void update() {
         MessageObject mo = MediaController.getInstance().getPlayingMessageObject();
-        if (mo == null || !mo.isMusic()) {
+        if (!Md3Player.supportsMiniPlayer(mo)) {
             return;
         }
         current = mo;
-        titleView.setText(mo.getMusicTitle());
-        artistView.setText(mo.getMusicAuthor());
+        titleView.setText(Md3Player.miniTitle(mo));
+        artistView.setText(Md3Player.miniSubtitle(mo));
+        boolean voice = mo.isVoice();
+        nextButton.setVisibility(voice ? GONE : VISIBLE);
+        voiceSpeedButton.showForVoice(voice);
         cover.setMessage(mo);
         playButton.setMessage(mo);
         boolean paused = MediaController.getInstance().isMessagePaused();

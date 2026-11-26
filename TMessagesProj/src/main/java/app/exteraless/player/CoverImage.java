@@ -23,6 +23,7 @@ public class CoverImage extends BackupImageView {
     private boolean disc;
     private final RectF rect = new RectF();
     private final PlayerIcon note;
+    private final PlayerIcon mic;
     private int radius;
     private String currentKey;
     private MessageObject message;
@@ -32,6 +33,7 @@ public class CoverImage extends BackupImageView {
     public CoverImage(Context context, int noteSizeDp) {
         super(context);
         note = PlayerIcon.stroke(PlayerIcon.NOTE, noteSizeDp);
+        mic = PlayerIcon.stroke(PlayerIcon.MIC, noteSizeDp);
         getImageReceiver().setDelegate((imageReceiver, set, thumb, memCache) -> {
             if (set) {
                 onBitmap(imageReceiver.getBitmap());
@@ -53,6 +55,7 @@ public class CoverImage extends BackupImageView {
     public void setColors(int background, int foreground) {
         placeholderPaint.setColor(background);
         note.setColor(foreground);
+        mic.setColor(foreground);
         invalidate();
     }
 
@@ -73,10 +76,12 @@ public class CoverImage extends BackupImageView {
     }
 
     public void setMessage(MessageObject messageObject) {
-        if (messageObject == null) {
+        if (messageObject == null || messageObject.isVoice()) {
+            if (messageObject != null && message == messageObject) return;
             currentKey = null;
-            message = null;
+            message = messageObject;
             setImageDrawable(null);
+            invalidate();
             return;
         }
         Bitmap file = PlayerArt.fileCover(messageObject);
@@ -138,8 +143,9 @@ public class CoverImage extends BackupImageView {
         if (!getImageReceiver().hasBitmapImage()) {
             rect.set(0, 0, getWidth(), getHeight());
             canvas.drawRoundRect(rect, radius, radius, placeholderPaint);
-            note.setBounds(0, 0, getWidth(), getHeight());
-            note.draw(canvas);
+            PlayerIcon icon = message != null && message.isVoice() ? mic : note;
+            icon.setBounds(0, 0, getWidth(), getHeight());
+            icon.draw(canvas);
         }
         super.onDraw(canvas);
         if (disc && getImageReceiver().hasBitmapImage()) {
